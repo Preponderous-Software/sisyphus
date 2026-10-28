@@ -31,6 +31,7 @@ constexpr int kIssueWeight[kIssueKinds] = {0, 30, 25, 20, 15, 10};
 constexpr float kSpreadBelow = 0.5f;    // an advisory spreads once its module is this rotten
 constexpr float kSpreadRate = 1.0f / 10.0f;
 constexpr float kCascadeRot = 1.0f / 150.0f;  // using a module that is down
+constexpr float kRefactorBreaks = 0.25f;      // the chance a refactor breaks a test
 // Stamina, per second: pushing a light boulder takes it from full to spent
 // in about six minutes, a heavy one in under four; working, in ten.
 constexpr float kPushTire = 1.0f / 240.0f;  // times (0.4 + 0.6 * load)
@@ -246,7 +247,7 @@ void movePlayer(World& w, const Input& in) {
 }
 
 void doWork(World& w, const Input& in) {
-    const bool wants = (in.work || in.retire) && !w.player.sitting && !w.pushing;
+    const bool wants = (in.work || in.retire || in.refactor) && !w.player.sitting && !w.pushing;
     Work& k = w.work;
     if (!wants) {  // letting go starts the work over
         k = Work{};
@@ -254,15 +255,22 @@ void doWork(World& w, const Input& in) {
     }
     const int i = aimedModule(w);
     if (i < 0) return;
-    // A module as good as new needs nothing (it can still be retired).
-    if (!in.retire && w.modules[static_cast<size_t>(i)].health >= 0.98f) {
+    // R wins over F, and F over E.
+    const bool retiring = in.retire, refactoring = !retiring && in.refactor;
+    // A module as good as new needs nothing (it can still be retired or refactored).
+    if (!retiring && !refactoring && w.modules[static_cast<size_t>(i)].health >= 0.98f) {
         k = Work{};
         return;
     }
-    if (k.module != i || k.retiring != in.retire) {
+    if (refactoring && !canRefactor(w, i)) {
+        k = Work{};
+        return;
+    }
+    if (k.module != i || k.retiring != retiring || k.refactoring != refactoring) {
         k.module = i;
         k.seconds = 0;
-        k.retiring = in.retire;
+        k.retiring = retiring;
+        k.refactoring = refactoring;
     }
     k.seconds += kDt * strength(w);
     Module& m = w.modules[static_cast<size_t>(i)];
@@ -273,6 +281,23 @@ void doWork(World& w, const Input& in) {
         m.issue = Issue::None;
         ++w.retired;
         w.users *= 0.93f;
+        k = Work{};
+        return;
+    }
+    if (k.refactoring) {
+        if (k.seconds < kRefactorSeconds) return;
+        // Folded into the module it uses: one less thing to keep, and the
+        // code that is left is new. Sometimes it breaks a test.
+        const int into = dependency(w, i);
+        Module& kept = w.modules[static_cast<size_t>(into)];
+        m.active = false;
+        m.issue = Issue::None;
+        kept.health = 1;
+        kept.issue = Issue::None;
+        kept.born = w.releases;
+        ++w.refactored;
+        w.refactoredInto = into;
+        if (randomUnit(w.rng) < kRefactorBreaks) strike(w, into, Issue::Flaky);
         k = Work{};
         return;
     }
@@ -491,6 +516,10 @@ float rotRate(const World& w, int i) {
            (cascading(w, i) ? kCascadeRot : 0.0f);
 }
 
+bool canRefactor(const World& w, int i) {
+    return w.modules[static_cast<size_t>(i)].active && activeModules(w) > kMinModules && dependency(w, i) >= 0;
+}
+
 float patchSeconds(const Module& m) {
     return 1.2f + 2.6f * (1 - m.health) + (m.issue == Issue::Advisory ? 1.0f : 0.0f);
 }
@@ -576,6 +605,8 @@ uint64_t fingerprint(const World& w) {
     // Fields added after save format 1 count only when they differ from
     // their defaults, so a format-1 world's fingerprint is what it was.
     if (w.player.stamina != 1) f(w.player.stamina);
+    if (w.refactored != 0) i(w.refactored);
+    if (w.work.refactoring) i(1);
     return h;
 }
 

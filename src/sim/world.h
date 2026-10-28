@@ -12,6 +12,11 @@
 // stone. A module that is down makes everything that uses it rot fast, so
 // one outage spreads unless its cause is patched first.
 //
+// A module can be refactored into the module it uses: holding F on it for a
+// while folds the two into one, fresh, with one less thing to keep. It is
+// the slow middle way between patching and retiring, costs no users, and
+// can break a test on the way.
+//
 // Sisyphus tires. Pushing wears him out, the heavier the boulder the faster,
 // and so does working on modules; tired, he pushes and works slowly.
 // Standing still he gets his breath back a little; sitting down to look at
@@ -37,6 +42,7 @@ constexpr float kEyeHeight = 1.6f, kSitEyeHeight = 1.0f;
 constexpr float kReach = 3.0f;           // how far away a module can be patched, from the eye
 constexpr float kSummitPause = 8.0f;     // seconds at the summit before it rolls
 constexpr float kRetireSeconds = 3.0f;   // holding R on a module retires it
+constexpr float kRefactorSeconds = 10.0f; // holding F on a module refactors it into the one it uses
 
 // What has gone wrong with a module, if anything.
 enum class Issue : uint8_t { None, Drift, Flaky, Deprecated, Advisory, Certificate };
@@ -62,11 +68,13 @@ struct Boulder {
     float roll = 0;  // radians it has turned about x, rolling uphill
 };
 
-// Work on one module: patching it, or (holding R) retiring it.
+// Work on one module: patching it, or (holding R) retiring it, or (holding
+// F) refactoring it into the module it uses.
 struct Work {
     int32_t module = -1;
     float seconds = 0;
     bool retiring = false;
+    bool refactoring = false;  // save format 3
 };
 
 struct World {
@@ -91,15 +99,18 @@ struct World {
     int32_t lastIncident = -1;  // the module the newest incident hit
     Issue lastIssue = Issue::None;
     float satSeconds = 0;  // time spent sitting, looking at the valley
+    int32_t refactored = 0;  // modules folded into the ones they use (save format 3)
+    int32_t refactoredInto = -1;  // the module the newest refactor kept, until the next
 };
 
-// One tick's input. `work` and `retire` are held; `sit` toggles.
+// One tick's input. `work`, `retire` and `refactor` are held; `sit` toggles.
 struct Input {
     float forward = 0, strafe = 0;  // -1..1
     bool hurry = false;
     float yaw = 0, pitch = 0;
     bool work = false;
     bool retire = false;
+    bool refactor = false;
     bool sit = false;
 };
 
@@ -147,6 +158,8 @@ bool cascading(const World& w, int i);
 float rotRate(const World& w, int i);
 // Seconds of work to patch the module as it is now.
 float patchSeconds(const Module& m);
+// Whether module i can be refactored into the module it uses now.
+bool canRefactor(const World& w, int i);
 // "0.3", or "1.0" once the summit is reached.
 std::string versionText(const World& w);
 // The version the next terrace ships.

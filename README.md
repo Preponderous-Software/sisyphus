@@ -12,7 +12,9 @@ the slope however hard you push. A module rotted through goes down, and the town
 dark one by one as its users leave.
 
 So you stop on a terrace and walk round the stone, patching. A module stuck underneath can't be reached, so you roll
-the boulder to bring it round. A module not worth keeping can be retired. Then you push on. Pushing wears you out,
+the boulder to bring it round. A module not worth keeping can be retired, and some users miss it. Or it can be refactored into the
+module it uses: slower work, no users lost, the code that is left is new, though now and then it breaks a test. Then
+you push on. Pushing wears you out,
 the heavier the boulder the faster, and tired you push and patch slowly: sit down on a terrace and rest.
 
 At the summit the next major version ships. Then the platform under it reaches its end of life, and the boulder rolls
@@ -44,6 +46,7 @@ Or play it in a browser at https://sisyphus.play.danielstephenson.dev.
 | Roll it back to turn it (on a terrace, from above) | walk into it from above | the same |
 | Patch the module you look at | hold `E` | hold **Patch** |
 | Retire it (one less thing to keep) | hold `R` | hold **Retire** |
+| Refactor it into the module it uses | hold `F` | hold **Refactor** |
 | Sit and look at the view | `Q` | **Sit** |
 | From behind him, or back to his eyes (the default) | `V` | **Camera** |
 | Save / load the last save | `F5` / `F9` | **Save** |

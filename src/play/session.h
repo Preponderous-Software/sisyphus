@@ -44,11 +44,11 @@ public:
     void restart();
 
     // The page's input (the browser): look by a pixel delta; walk with a
-    // stick, -1..1 each, beyond 0.95 hurries; hold work (patch) or retire;
+    // stick, -1..1 each, beyond 0.95 hurries; hold work (patch), retire or refactor;
     // press a key by its SDL scancode.
     void look(float dx, float dy);
     void setStick(float forward, float strafe);
-    void setHeld(bool work, bool retire);
+    void setHeld(bool work, bool retire, bool refactor);
     void press(int scancode);
     void setCaptured(bool on) { captured_ = on; }
     void setHelp(bool on) { help_ = on; }
@@ -87,7 +87,7 @@ private:
     bool running_ = true, captured_ = false, help_ = true, compact_ = false, outside_ = false;
     float yaw_ = 0, pitch_ = 0;
     float stickForward_ = 0, stickStrafe_ = 0;
-    bool heldWork_ = false, heldRetire_ = false;
+    bool heldWork_ = false, heldRetire_ = false, heldRefactor_ = false;
     bool sitOnce_ = false;
     double pending_ = 0;
     double clock_ = 0, lastSave_ = 0;

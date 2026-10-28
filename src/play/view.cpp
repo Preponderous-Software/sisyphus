@@ -350,11 +350,17 @@ std::string prompt(const World& w) {
                                        : std::string(", uses ") + moduleName(dep);
     s += "\n";
     const bool working = w.work.module == i;
-    if (working && w.work.retiring) s += "Retiring " + bar(w.work.seconds / kRetireSeconds, 12);
-    else if (working) s += "Patching " + bar(w.work.seconds / patchSeconds(m), 12);
+    if (working && w.work.retiring) return s + "Retiring " + bar(w.work.seconds / kRetireSeconds, 12);
+    if (working && w.work.refactoring)
+        return s + "Refactoring it into " + moduleName(dep) + " " + bar(w.work.seconds / kRefactorSeconds, 12);
+    if (working) s += "Patching " + bar(w.work.seconds / patchSeconds(m), 12);
     else if (m.health >= 0.98f) s += "Nothing to patch";
     else s += "Hold E to patch";
-    if (activeModules(w) > kMinModules && !(working && w.work.retiring)) s += "   (hold R to retire it)";
+    if (activeModules(w) > kMinModules) {
+        s += "\n(hold R to retire it";
+        if (canRefactor(w, i)) s += std::string(", F to refactor it into ") + moduleName(dep);
+        s += ")";
+    }
     return s;
 }
 
@@ -493,7 +499,7 @@ void render(strata::Engine& engine, const World& w, const Camera& cam, bool outs
     }
     if (o.help) {
         std::vector<std::string> items = {"W A S D walk / push", "Shift hurry", "Mouse look", "E hold: patch",
-                                          "R hold: retire", "Q sit", "V camera", "M sound"};
+                                          "R hold: retire", "F hold: refactor", "Q sit", "V camera", "M sound"};
         if (o.saves) items.insert(items.end(), {"F5 save", "F9 load"});
         items.insert(items.end(), {"F1 hide help", "Esc free mouse"});
         std::vector<std::string> lines(1);

@@ -120,6 +120,11 @@ struct Fields {
         v(w.lastIssue);
         v(w.satSeconds);
         if (version >= 2) v(w.player.stamina);
+        if (version >= 3) {
+            v(w.work.refactoring);
+            v(w.refactored);
+            v(w.refactoredInto);
+        }
     }
 };
 
@@ -159,6 +164,9 @@ bool plausible(const World& w, std::string* error) {
     const int last = static_cast<int>(w.lastIssue);
     if (last < 0 || last >= kIssueKinds) return fail("an unknown kind of issue");
     if (w.falling && w.summitSeconds >= 0) return fail("both at the summit and rolling down");
+    if (w.work.retiring && w.work.refactoring) return fail("retiring and refactoring at once");
+    if (w.refactored < 0 || w.refactoredInto < -1 || w.refactoredInto >= kMaxModules)
+        return fail("the refactoring history is impossible");
     return true;
 }
 
