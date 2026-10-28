@@ -145,10 +145,16 @@ void Session::setMuted(bool muted, bool announce) {
 
 void Session::listen(double dt) {
     for (audio::Cue c : audio::cues(heard_, w_)) sound_.play(c);
-    const float dx = w_.player.x - heard_.player.x, dz = w_.player.z - heard_.player.z;
-    const float speed = dt > 0 ? std::sqrt(dx * dx + dz * dz) / static_cast<float>(dt) : 0.0f;
-    const float steps = speed > 0.3f && speed < 20.0f ? speed / 0.75f : 0.0f;  // a stride is about 0.75 m
-    sound_.setAmbience(audio::ambience(w_, eyePosition(w_), steps, sunHeight(w_)));
+    // His pace from the rules' own ticks, not from frames: a frame that
+    // drew no new tick, or two, must not make him stop or sprint.
+    (void)dt;
+    if (w_.tick != heard_.tick) {
+        const float dx = w_.player.x - heard_.player.x, dz = w_.player.z - heard_.player.z;
+        const float seconds = static_cast<float>(w_.tick - heard_.tick) / kTickRate;
+        const float speed = seconds > 0 ? std::sqrt(dx * dx + dz * dz) / seconds : 0.0f;
+        steps_ = speed > 0.3f && speed < 6.0f ? speed / 0.75f : 0.0f;  // a stride is about 0.75 m
+    }
+    sound_.setAmbience(audio::ambience(w_, eyePosition(w_), steps_, sunHeight(w_)));
     heard_ = w_;
 }
 
