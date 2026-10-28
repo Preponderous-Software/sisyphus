@@ -266,6 +266,8 @@ std::vector<HudLine> hudLines(const World& w) {
     const float L = load(w);
     out.push_back({"Weight  " + bar(L, 10) + (L >= 1 ? "  too heavy to push uphill" : L >= 0.7f ? "  heavy" : ""), false, L >= 1});
     if (L >= 0.7f) out.push_back({"  (rot and modules weigh it down: patch, or retire, to lighten it)"});
+    if (w.player.stamina < 0.9f)
+        out.push_back({"Stamina " + bar(w.player.stamina, 10) + (tired(w) ? "  tired: sit down (Q) to rest" : ""), false, tired(w)});
     if (w.summitSeconds >= 0) out.push_back({"At the summit: " + versionText(w) + " ships."});
     else if (w.falling) out.push_back({"It rolls. Follow it down."});
     else if (w.boulder.v < -0.5f && !w.pushing) out.push_back({"The boulder is rolling back down!", false, true});
@@ -324,6 +326,7 @@ std::string prompt(const World& w) {
         if (w.slipping) return "Too heavy: it slides back. Let it settle on a terrace, and patch the rot.";
         if (w.pushingBack) return "Rolling it back to turn it";
         if (load(w) >= 1) return "Too heavy to push uphill; on level ground it only inches round";
+        if (tired(w)) return "Tired: he pushes slowly. Sit down (Q) to rest";
         return "";
     }
     const int i = aimedModule(w);

@@ -324,6 +324,26 @@ int main() {
         tick(w, sit);
         CHECK(!w.player.sitting);
     }
+    // Stamina: pushing wears him out, a spent Sisyphus is weaker, and
+    // sitting down restores him.
+    {
+        World w = quiet();
+        heal(w);
+        standBelow(w);
+        CHECK(strength(w) == 1);
+        run(w, pushIn(), 10);
+        CHECK(w.player.stamina < 0.99f);
+        w.player.stamina = 0;
+        CHECK(tired(w));
+        CHECK(strength(w) == kSpentStrength);
+        Input sit;
+        sit.sit = true;
+        tick(w, sit);
+        CHECK(w.player.sitting);
+        run(w, Input{}, 21);
+        CHECK(w.player.stamina == 1);
+        CHECK(!tired(w));
+    }
     // Dependencies: every module but the oldest uses an older one, and a
     // module that is down makes the ones that use it rot fast.
     {

@@ -2,8 +2,8 @@
 // worst module it can reach while the boulder rests on a terrace, pushes on
 // when the boulder is light enough, retires a module when it is too heavy
 // and nothing within reach can be patched, cuts a module that is down when
-// more is down than it can patch, and walks down after it when it rolls
-// back to the trailhead.
+// more is down than it can patch, sits down to rest when it is spent, and
+// walks down after it when it rolls back to the trailhead.
 #pragma once
 
 #include <array>
@@ -34,6 +34,6 @@ bool playthroughDone(const World& w);
 
 // The world's fingerprint at the end of the playthrough from seed 1. Any
 // change to the rules or the autopilot moves it: update it in the same change.
-constexpr uint64_t kPlaythroughFingerprint = 0xb0a2e0bdfaae817full;
+constexpr uint64_t kPlaythroughFingerprint = 0xb4a941683f19d955ull;
 
 }  // namespace sisyphus

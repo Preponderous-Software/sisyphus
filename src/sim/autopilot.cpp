@@ -9,6 +9,9 @@ namespace {
 constexpr float kStandOff = 0.55f;  // from the boulder's surface, to work on it
 constexpr float kNeedy = 0.8f;      // patch modules below this health before pushing on
 constexpr float kPushBelow = 0.7f; // start a push only when the load is under this
+constexpr float kSitBelow = 0.25f;  // sit down to rest below this stamina ...
+constexpr float kRested = 0.95f;    // ... until this
+constexpr float kRestBeforePush = 0.5f;
 
 struct Reach {
     bool ok = false;
@@ -116,8 +119,13 @@ Input Autopilot::next(const World& w) {
     const Player& p = w.player;
     if (p.sitting) {
         Input in;
-        in.sit = true;  // stand up
         in.yaw = p.yaw;
+        // Resting while the boulder rests; up again when rested, or if it moves.
+        if (p.stamina < kRested && boulderResting(w)) {
+            doing_ = "resting";
+            return in;
+        }
+        in.sit = true;  // stand up
         return in;
     }
     const Vec3 c = boulderCentre(w);
@@ -156,6 +164,15 @@ Input Autopilot::next(const World& w) {
     const bool resting = boulderResting(w) || w.summitSeconds >= 0;
     const float L = load(w);
     if (resting) pushingOn_ = false;
+    // Spent, with the boulder settled and at most one module down: sit down for a while.
+    const auto sitDown = [&] {
+        doing_ = "sitting down to rest";
+        Input in;
+        in.yaw = p.yaw;
+        in.sit = true;
+        return in;
+    };
+    if (boulderResting(w) && p.stamina < kSitBelow && brokenModules(w) <= 1) return sitDown();
     bool push = false, patch = false, turn = false;
     if (w.summitSeconds >= 0) patch = worst >= 0;  // nothing to push at the top
     else if (!resting) push = pushingOn_ && (L < 1 || hill::level(w.boulder.s));
@@ -165,6 +182,8 @@ Input Autopilot::next(const World& w) {
     else if (needyOutOfReach(w)) turn = true;  // roll it to bring them round
     else if (worst >= 0 && worstHealth < 0.98f) patch = true;
     else push = L < 1;
+    // About to push on from a terrace half spent: rest first.
+    if (push && boulderResting(w) && p.stamina < kRestBeforePush) return sitDown();
 
     if (!push && !patch && !turn && !resting) {
         // Slipping back to the terrace below: wait beside it.

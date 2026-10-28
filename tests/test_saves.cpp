@@ -29,6 +29,7 @@ int main(int argc, char** argv) {
     std::string why;
     CHECK(decodeSave(bytes, back, &why));
     CHECK(fingerprint(back) == fingerprint(w));
+    CHECK(w.player.stamina < 1 && back.player.stamina == w.player.stamina);  // format 2
     // ... and plays on the same.
     {
         World a = w, b = back;
@@ -64,6 +65,9 @@ int main(int argc, char** argv) {
         odd.boulder.s = 9999;
         World x;
         CHECK(!decodeSave(encodeSave(odd), x, &why));
+        World spent = w;
+        spent.player.stamina = 1.5f;
+        CHECK(!decodeSave(encodeSave(spent), x, &why));
     }
     // Files: the save before last is kept, and loaded when the latest is damaged.
     const std::string slot = (fs::path(argc > 1 ? argv[1] : ".") / "test-slot").string();
@@ -113,6 +117,7 @@ int main(int argc, char** argv) {
         CHECK(fingerprint(x) == f.fingerprint);
         CHECK(versionText(x) == f.version);
         CHECK(activeModules(x) == f.modules);
+        CHECK(x.player.stamina == 1);  // format 1 had no stamina: he loads rested
         // ... and the game plays on from it.
         Autopilot a;
         for (int t = 0; t < 30 * kTickRate; ++t) tick(x, a.next(x));

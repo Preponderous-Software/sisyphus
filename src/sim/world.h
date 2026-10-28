@@ -12,6 +12,11 @@
 // stone. A module that is down makes everything that uses it rot fast, so
 // one outage spreads unless its cause is patched first.
 //
+// Sisyphus tires. Pushing wears him out, the heavier the boulder the faster,
+// and so does working on modules; tired, he pushes and works slowly.
+// Standing still he gets his breath back a little; sitting down to look at
+// the valley, he rests properly.
+//
 // Fixed-step and deterministic: the same seed and inputs give the same
 // world on every compiler (no libm trigonometry; see math.h).
 #pragma once
@@ -48,6 +53,7 @@ struct Player {
     float x = 0, z = 6;
     float yaw = 0, pitch = 0;  // yaw 0 looks up the hill (-z)
     bool sitting = false;
+    float stamina = 1;  // 1 rested .. 0 spent (save format 2)
 };
 
 struct Boulder {
@@ -113,6 +119,12 @@ int openIssues(const World& w);
 inline bool outage(const World& w) { return brokenModules(w) > 0; }
 // How heavy the boulder is to push: below 1 it moves, at 1 or more it will not.
 float load(const World& w);
+// How much of his strength Sisyphus has: 1 while he has some stamina left,
+// down to kSpentStrength when it is gone. Pushing and working go at this rate.
+constexpr float kTired = 0.4f;  // below this stamina he is tired
+constexpr float kSpentStrength = 0.55f;
+float strength(const World& w);
+inline bool tired(const World& w) { return w.player.stamina < kTired; }
 // The module's centre on the unrotated boulder (a unit vector), and where it
 // is now the boulder has rolled.
 Vec3 moduleDirection(int i);
