@@ -30,6 +30,14 @@ int main(int argc, char** argv) {
     CHECK(decodeSave(bytes, back, &why));
     CHECK(fingerprint(back) == fingerprint(w));
     CHECK(w.player.stamina < 1 && back.player.stamina == w.player.stamina);  // format 2
+    {
+        World r = w;  // format 3
+        r.refactored = 4;
+        r.refactoredInto = 2;
+        World rb;
+        CHECK(decodeSave(encodeSave(r), rb, &why));
+        CHECK(rb.refactored == 4 && rb.refactoredInto == 2 && fingerprint(rb) == fingerprint(r));
+    }
     // ... and plays on the same.
     {
         World a = w, b = back;
@@ -65,6 +73,9 @@ int main(int argc, char** argv) {
         odd.boulder.s = 9999;
         World x;
         CHECK(!decodeSave(encodeSave(odd), x, &why));
+        World both = w;
+        both.work.retiring = both.work.refactoring = true;
+        CHECK(!decodeSave(encodeSave(both), x, &why));
         World spent = w;
         spent.player.stamina = 1.5f;
         CHECK(!decodeSave(encodeSave(spent), x, &why));

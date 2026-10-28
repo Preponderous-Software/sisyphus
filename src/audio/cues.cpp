@@ -35,7 +35,7 @@ std::vector<Cue> cues(const World& before, const World& after) {
         out.push_back(after.lastIssue == Issue::Advisory ? Cue::Advisory : Cue::Incident);
     if (after.breakdowns > before.breakdowns) out.push_back(Cue::Down);
     if (after.patched > before.patched) out.push_back(Cue::Patched);
-    if (after.retired > before.retired) out.push_back(Cue::Retired);
+    if (after.retired > before.retired || after.refactored > before.refactored) out.push_back(Cue::Retired);
     if (after.slipping && !before.slipping) out.push_back(Cue::Slip);
     return out;
 }

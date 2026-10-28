@@ -283,6 +283,35 @@ int main() {
         CHECK(any);
         CHECK(activeModules(few) == kMinModules);
     }
+    // Refactoring: hold F and the module folds into the one it uses, which
+    // comes out new. No users are lost. The oldest module cannot be refactored.
+    {
+        World w = quiet();
+        int target = -1;
+        for (int i = 1; i < kStartModules && target < 0; ++i)
+            if (aimAt(w, i) && canRefactor(w, i)) target = i;
+        CHECK(target >= 0);
+        if (target >= 0) {
+            const int into = dependency(w, target);
+            w.modules[static_cast<size_t>(into)].health = 0.3f;
+            const float users = w.users;
+            Input in;
+            in.yaw = w.player.yaw;
+            in.pitch = w.player.pitch;
+            in.refactor = true;
+            run(w, in, kRefactorSeconds - 1);
+            CHECK(w.modules[static_cast<size_t>(target)].active);  // not yet
+            run(w, in, 1.2f);
+            CHECK(!w.modules[static_cast<size_t>(target)].active);
+            CHECK(w.refactored == 1 && w.refactoredInto == into);
+            const Module& kept = w.modules[static_cast<size_t>(into)];
+            CHECK(kept.active && kept.health > 0.99f && kept.born == w.releases);
+            CHECK(kept.issue == Issue::None || kept.issue == Issue::Flaky);
+            CHECK(w.users == users);
+            CHECK(activeModules(w) == kStartModules - 1);
+        }
+        CHECK(!canRefactor(w, 0));
+    }
     // The summit ships the next major version; then it rolls all the way back
     // to the trailhead, every module still aboard, and the next major begins.
     {

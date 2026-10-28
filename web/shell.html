@@ -107,6 +107,7 @@
   <div id="pad" role="group" aria-label="Actions">
     <button id="patchBtn" title="Hold on a module to patch it (E)">Patch</button>
     <button id="retireBtn" title="Hold on a module to retire it (R)">Retire</button>
+    <button id="refactorBtn" title="Hold on a module to refactor it into the one it uses (F)">Refactor</button>
     <button data-key="20" title="Sit and look at the view (Q)">Sit</button>
     <button data-key="25" title="From behind him, or back to his eyes (V)">Camera</button>
   </div>
@@ -125,14 +126,15 @@
   <ul class="for-keys">
     <li>Mouse: look. <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>: walk; walk into the boulder from below to push it.
       On a terrace, push from above to roll it back and turn it. <kbd>Shift</kbd>: hurry.</li>
-    <li>Hold <kbd>E</kbd> on a module to patch it. Hold <kbd>R</kbd> to retire it: one less thing to keep.</li>
+    <li>Hold <kbd>E</kbd> on a module to patch it. Hold <kbd>R</kbd> to retire it: one less thing to keep.
+      Hold <kbd>F</kbd> to refactor it into the module it uses: slower, but no users lost.</li>
     <li><kbd>Q</kbd>: sit and look at the view. <kbd>V</kbd>: see him from behind, or back to his eyes. <kbd>M</kbd>: sound. <kbd>F1</kbd>: the controls on screen.
       <kbd>Esc</kbd>: free the mouse.</li>
   </ul>
   <ul class="for-touch">
     <li>Drag on the left half to walk (all the way out to hurry); walk into the boulder from below to push it.
       Drag on the right half to look.</li>
-    <li>Hold <b>Patch</b> while looking at a module to patch it; hold <b>Retire</b> to retire it.
+    <li>Hold <b>Patch</b> while looking at a module to patch it; hold <b>Retire</b> to retire it, or <b>Refactor</b> to fold it into the module it uses.
       <b>Sit</b> looks at the view; <b>Camera</b> switches between his eyes (the default) and a view from behind him. <b>Sound</b> along the top turns the sound on or off.</li>
   </ul>
   <p style="color:var(--dim);font-size:13px">The game saves every minute, when you press Save (or <kbd>F5</kbd>), and when
@@ -196,7 +198,8 @@
     if (!touchMode || !text) return text;
     return text.replace(/Hold E to patch/g, 'Hold Patch').replace(/hold R to retire it/g, 'hold Retire to retire it')
                .replace(/\(W, into it\)/g, '(walk into it)').replace(/Hold E on one/g, 'Hold Patch on one')
-               .replace(/Q to sit/g, 'Sit');
+               .replace(/Q to sit/g, 'Sit').replace(/, F to refactor it into/g, ', Refactor to fold it into')
+               .replace(/sit down \(Q\)/gi, function (m) { return m.charAt(0) + 'it down (Sit)'; });
   }
 
   // ---- the page's view of the game
@@ -226,6 +229,9 @@
     }
     $('prompt').textContent = touchWords(s.prompt);
     $('msg').textContent = touchWords(s.message);
+    // The message goes below the prompt, however many lines the prompt takes.
+    var p = $('prompt'), below = p.offsetHeight ? p.offsetTop + p.offsetHeight + 8 : 0;
+    $('msg').style.top = below ? 'max(calc(50% + 70px), ' + below + 'px)' : '';
     $('quote').textContent = s.quote;
     window.sisyphusStatus = s;
   }
@@ -305,12 +311,12 @@
   }
   ['pointerup', 'pointercancel'].forEach(function (t) { touchLayer.addEventListener(t, release); });
 
-  // Patch and Retire are held, like E and R.
-  var held = { patch: false, retire: false };
+  // Patch, Retire and Refactor are held, like E, R and F.
+  var held = { patch: false, retire: false, refactor: false };
   function hold(which, on, button) {
     held[which] = on;
     button.classList.toggle('held', on);
-    call.hold(held.patch ? 1 : 0, held.retire ? 1 : 0);
+    call.hold(held.patch ? 1 : 0, held.retire ? 1 : 0, held.refactor ? 1 : 0);
   }
   function holdable(id, which) {
     var b = $(id);
@@ -329,6 +335,7 @@
     });
     holdable('patchBtn', 'patch');
     holdable('retireBtn', 'retire');
+    holdable('refactorBtn', 'refactor');
     $('panel').addEventListener('click', function () { $('panel').classList.toggle('folded'); });
     $('soundBtn').addEventListener('click', function () {
       var on = window.sisyphusStatus ? window.sisyphusStatus.muted : false;  // muted now, so this turns it on
@@ -383,7 +390,7 @@
       call = {
         look: api('sisyphus_look', null, ['number', 'number']),
         stick: api('sisyphus_stick', null, ['number', 'number']),
-        hold: api('sisyphus_hold', null, ['number', 'number']),
+        hold: api('sisyphus_hold', null, ['number', 'number', 'number']),
         press: api('sisyphus_press', null, ['number']),
         captured: api('sisyphus_captured', null, ['number']),
         save: api('sisyphus_save', 'number'),

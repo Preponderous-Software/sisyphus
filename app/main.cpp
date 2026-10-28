@@ -7,7 +7,7 @@
 //
 // Controls: mouse to look, W A S D to walk (walk into the boulder from below
 // to push it up the hill; on a terrace, from above to roll it back and turn
-// it), Shift to hurry, hold E on a module to patch it, hold R to retire it,
+// it), Shift to hurry, hold E on a module to patch it, hold R to retire it, hold F to refactor it into the module it uses,
 // Q to sit and look at the view, V to see him from behind (or back through his eyes), M for sound, F5 to save, F9 to
 // load the last save, F1 for help, Esc to free the mouse (Esc again quits).
 //

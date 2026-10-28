@@ -7,7 +7,7 @@
 //    gives it back) and turns mouse movement into sisyphus_look(); there is
 //    no quit.
 //  - On a touch screen the page draws a stick, a look pad, and buttons held
-//    to patch or retire (sisyphus_hold) or pressed to sit and change camera.
+//    to patch, retire or refactor (sisyphus_hold) or pressed to sit and change camera.
 //  - On a narrow page the canvas shows no words: the page shows the HUD, the
 //    crosshair and the prompt as text (sisyphus_status()).
 //  - Saves are the desktop format (src/save), written to
@@ -85,8 +85,8 @@ EMSCRIPTEN_KEEPALIVE void sisyphus_stick(double forward, double strafe) {
     if (g) g->session->setStick(static_cast<float>(forward), static_cast<float>(strafe));
 }
 // The page's Patch and Retire buttons, held down or let go.
-EMSCRIPTEN_KEEPALIVE void sisyphus_hold(int work, int retire) {
-    if (g) g->session->setHeld(work != 0, retire != 0);
+EMSCRIPTEN_KEEPALIVE void sisyphus_hold(int work, int retire, int refactor) {
+    if (g) g->session->setHeld(work != 0, retire != 0, refactor != 0);
 }
 // A key press from an on-screen button (an SDL scancode, as the keyboard sends).
 EMSCRIPTEN_KEEPALIVE void sisyphus_press(int scancode) {

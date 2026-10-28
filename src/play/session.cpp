@@ -12,7 +12,7 @@ namespace {
 
 // SDL scancodes.
 constexpr int kM = 16;
-constexpr int kW = 26, kA = 4, kS = 22, kD = 7, kE = 8, kR = 21, kQ = 20, kV = 25, kLShift = 225, kRShift = 229,
+constexpr int kW = 26, kA = 4, kS = 22, kD = 7, kE = 8, kF = 9, kR = 21, kQ = 20, kV = 25, kLShift = 225, kRShift = 229,
               kEscape = 41, kF1 = 58, kF5 = 62, kF9 = 66;
 constexpr float kLookPerPixel = 0.0025f;
 constexpr double kAutosaveSeconds = 60;
@@ -98,6 +98,12 @@ void Session::noticeChanges() {
         say(std::string(moduleName(b.lastIncident)) + ": " + issueName(b.lastIssue) + ".", 4);
     } else if (b.retired > a.retired) {
         say("Retired. One less thing to keep, and a few users miss it.", 5);
+    } else if (b.refactored > a.refactored && b.refactoredInto >= 0) {
+        const std::string into = moduleName(b.refactoredInto);
+        say(b.modules[static_cast<size_t>(b.refactoredInto)].issue == Issue::Flaky
+                ? "Refactored into " + into + ". One less thing to keep, but it broke a test."
+                : "Refactored into " + into + ". One less thing to keep, and what is left is new.",
+            5);
     } else if (b.boulder.v < -1.0f && a.boulder.v >= -1.0f && !b.falling && !b.pushing) {
         say("It is rolling back down! It stops at the terrace below.", 5);
     } else if (b.slipping && !a.slipping) {
@@ -161,9 +167,10 @@ void Session::setStick(float forward, float strafe) {
     stickStrafe_ = clampf(strafe, -1.0f, 1.0f);
 }
 
-void Session::setHeld(bool work, bool retire) {
+void Session::setHeld(bool work, bool retire, bool refactor) {
     heldWork_ = work;
     heldRetire_ = retire;
+    heldRefactor_ = refactor;
 }
 
 void Session::press(int scancode) { onKeyDown(scancode, false); }
@@ -230,6 +237,7 @@ void Session::step() {
     in.hurry = keys_[kLShift] || keys_[kRShift] || stickForward_ * stickForward_ + stickStrafe_ * stickStrafe_ > kHurryStick * kHurryStick;
     in.work = keys_[kE] || heldWork_;
     in.retire = keys_[kR] || heldRetire_;
+    in.refactor = keys_[kF] || heldRefactor_;
     in.sit = sitOnce_;
     sitOnce_ = false;
     // Getting up by walking off.
