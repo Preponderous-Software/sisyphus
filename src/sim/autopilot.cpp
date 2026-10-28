@@ -55,6 +55,21 @@ bool needyOutOfReach(const World& w) {
     return false;
 }
 
+// More is down than one pair of hands can bring back: time to cut features.
+bool overwhelmed(const World& w, float load) {
+    const int down = brokenModules(w);
+    return activeModules(w) > kMinModules && (down >= 3 || (down >= 2 && load >= 1));
+}
+
+// A module that is down and can be reached, or -1.
+int downInReach(const World& w) {
+    for (int i = 0; i < kMaxModules; ++i) {
+        const Module& m = w.modules[static_cast<size_t>(i)];
+        if (m.active && m.health <= 0 && reachFor(w, i).ok) return i;
+    }
+    return -1;
+}
+
 }  // namespace
 
 Input Autopilot::walkTo(const World& w, float x, float z, float within) {
@@ -144,6 +159,7 @@ Input Autopilot::next(const World& w) {
     bool push = false, patch = false, turn = false;
     if (w.summitSeconds >= 0) patch = worst >= 0;  // nothing to push at the top
     else if (!resting) push = pushingOn_ && (L < 1 || hill::level(w.boulder.s));
+    else if (overwhelmed(w, L) && downInReach(w) >= 0) {}  // more down than it can patch: cut one (below)
     else if (worst >= 0 && worstHealth < kNeedy) patch = true;
     else if (L < kPushBelow) push = true;
     else if (needyOutOfReach(w)) turn = true;  // roll it to bring them round
@@ -202,12 +218,16 @@ Input Autopilot::next(const World& w) {
     }
 
     if (!push) {
-        // Too heavy, and nothing in reach to patch: cut a feature.
+        // Too heavy, and nothing in reach to patch, or overwhelmed: cut a feature.
         doing_ = "retiring a module";
         int victim = -1;
         float lowest = 2;
         Reach vr;
-        for (int i = 0; i < kMaxModules; ++i) {
+        if (overwhelmed(w, L)) {  // only one that is down
+            victim = downInReach(w);
+            if (victim >= 0) vr = reachFor(w, victim);
+        }
+        for (int i = 0; i < kMaxModules && victim < 0; ++i) {
             const Module& m = w.modules[static_cast<size_t>(i)];
             if (!m.active || m.health >= lowest) continue;
             const Reach r = reachFor(w, i);

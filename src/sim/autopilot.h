@@ -1,8 +1,9 @@
 // A player made of rules, for screenshots, CI and watching: it patches the
 // worst module it can reach while the boulder rests on a terrace, pushes on
 // when the boulder is light enough, retires a module when it is too heavy
-// and nothing within reach can be patched, and walks down after it when it
-// rolls back to the trailhead.
+// and nothing within reach can be patched, cuts a module that is down when
+// more is down than it can patch, and walks down after it when it rolls
+// back to the trailhead.
 #pragma once
 
 #include <array>

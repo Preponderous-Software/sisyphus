@@ -5,7 +5,9 @@ A first-person game about keeping software alive, on the [Strata](https://github
 The boulder is your software. Push it up the hill: every terrace you reach ships a release. Every release adds a
 module, so the boulder grows. Every module rots, slowly on its own and fast when something happens to it. A dependency
 drifts three majors behind, a test turns flaky, an API is deprecated, a certificate is about to expire, a security
-advisory lands and spreads to the module next to it. Rot makes the boulder heavy. Too heavy, and it slides back down
+advisory lands and spreads to the module next to it. Modules use one another, too: when one goes down, everything that
+uses it rots fast until it is patched, and red lines on the stone show where the outage spreads. Rot makes the boulder
+heavy. Too heavy, and it slides back down
 the slope however hard you push. A module rotted through goes down, and the town's lit windows in the valley below go
 dark one by one as its users leave.
 

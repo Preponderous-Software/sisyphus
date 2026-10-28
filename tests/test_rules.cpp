@@ -324,5 +324,30 @@ int main() {
         tick(w, sit);
         CHECK(!w.player.sitting);
     }
+    // Dependencies: every module but the oldest uses an older one, and a
+    // module that is down makes the ones that use it rot fast.
+    {
+        World w = quiet();
+        heal(w);
+        CHECK(dependency(w, 0) == -1);
+        for (int i = 1; i < kStartModules; ++i) {
+            const int d = dependency(w, i);
+            CHECK(d >= 0 && d < i);
+        }
+        const int user = kStartModules - 1, used = dependency(w, user);
+        const float before = rotRate(w, user);
+        CHECK(!cascading(w, user));
+        w.modules[static_cast<size_t>(used)].health = 0;
+        CHECK(cascading(w, user));
+        CHECK(rotRate(w, user) > before + 0.005f);
+        // Patching the cause stops it.
+        w.modules[static_cast<size_t>(used)].health = 1;
+        CHECK(!cascading(w, user));
+        CHECK(rotRate(w, user) == before);
+        // Retiring what it used: it uses the next nearest older module.
+        w.modules[static_cast<size_t>(used)].active = false;
+        const int next = dependency(w, user);
+        CHECK(next != used && next < user);
+    }
     TEST_MAIN_END();
 }

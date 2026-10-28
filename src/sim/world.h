@@ -8,6 +8,10 @@
 // end of life: the boulder rolls back to the trailhead, every module still
 // aboard, and the next major version begins.
 //
+// Modules depend on one another: each uses the nearest older module on the
+// stone. A module that is down makes everything that uses it rot fast, so
+// one outage spreads unless its cause is patched first.
+//
 // Fixed-step and deterministic: the same seed and inputs give the same
 // world on every compiler (no libm trigonometry; see math.h).
 #pragma once
@@ -122,8 +126,13 @@ int moduleOnSight(const World& w, Vec3 eye, Vec3 dir, Vec3* hit = nullptr);
 Vec3 eyePosition(const World& w);
 // The module the player is looking at, within reach, or -1.
 int aimedModule(const World& w);
-// How fast a module is rotting now, in health per second.
-float rotRate(const World& w, const Module& m);
+// The module that module i uses: the nearest older active module on the
+// stone, or -1 for the oldest.
+int dependency(const World& w, int i);
+// Module i uses a module that is down, and rots fast for it.
+bool cascading(const World& w, int i);
+// How fast module i is rotting now, in health per second.
+float rotRate(const World& w, int i);
 // Seconds of work to patch the module as it is now.
 float patchSeconds(const Module& m);
 // "0.3", or "1.0" once the summit is reached.
