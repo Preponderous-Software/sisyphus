@@ -116,16 +116,20 @@ std::vector<float> patched(Rng& r) {
     return out;
 }
 
-// A footstep on dry gravel.
+// A footstep on packed dirt: a soft, low thud with a faint scuff, quiet
+// beside the wind.
 std::vector<float> step(Rng& r) {
-    std::vector<float> out(static_cast<size_t>(samples(0.12f)));
-    float lo = 0, hi = 0;
-    const float tone = r.between(0.7f, 1.1f);
+    std::vector<float> out(static_cast<size_t>(samples(0.14f)));
+    float lo = 0, mid = 0, mid2 = 0;
+    const float tone = r.between(0.85f, 1.15f);
     for (size_t i = 0; i < out.size(); ++i) {
         const float t = at(i), n = r.next();
-        lo += pole(600 * tone) * (n - lo);
-        hi += pole(3000 * tone) * (n - hi);
-        out[i] = (0.9f * lo + 0.35f * (hi - lo)) * std::exp(-t / 0.03f) * attack(t, 0.003f);
+        lo += pole(180 * tone) * (n - lo);
+        mid += pole(1400 * tone) * (n - mid);
+        mid2 += pole(700 * tone) * (n - mid2);
+        const float thud = 0.45f * lo + 0.03f * std::sin(kTwoPi * 70 * tone * t);
+        const float scuff = 0.04f * (mid - mid2) * std::exp(-t / 0.012f);
+        out[i] = (thud * std::exp(-t / 0.04f) + scuff) * attack(t, 0.006f);
     }
     return out;
 }
@@ -214,7 +218,7 @@ float Synth::next() {
     s += 0.035f * now_.alarm * pulse * std::sin(kTwoPi * 392 * t);
 
     // Footsteps and crickets, from their clocks.
-    stepClock_ += now_.steps * kDt;
+    stepClock_ += std::fmin(now_.steps, 4.0f) * kDt;  // never faster than a run
     if (stepClock_ >= 1) {
         stepClock_ -= 1;
         playing_.push_back({&steps_[static_cast<size_t>(step_++ % static_cast<int>(steps_.size()))], 0});
