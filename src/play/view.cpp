@@ -236,14 +236,16 @@ std::vector<HudLine> hudLines(const World& w) {
     else out.push_back({"Users " + std::to_string(users)});
     out.push_back({"Modules " + std::to_string(activeModules(w)) + "   health " + bar(health(w), 10) + " " + percent(health(w))});
     const float L = load(w);
-    out.push_back({"Weight  " + bar(L, 10) + (L >= 1 ? "  too heavy to push uphill" : ""), false, L >= 1});
+    out.push_back({"Weight  " + bar(L, 10) + (L >= 1 ? "  too heavy to push uphill" : L >= 0.7f ? "  heavy" : ""), false, L >= 1});
+    if (L >= 0.7f) out.push_back({"  (rot and modules weigh it down: patch, or retire, to lighten it)"});
     if (w.summitSeconds >= 0) out.push_back({"At the summit: " + versionText(w) + " ships."});
     else if (w.falling) out.push_back({"It rolls. Follow it down."});
     else if (w.boulder.v < -0.5f && !w.pushing) out.push_back({"The boulder is rolling back down!", false, true});
     else {
         const int next = w.best + 1;
         const float d = hill::terraceStart(next) - w.boulder.s;
-        out.push_back({"Next release " + nextVersionText(w) + ": " + std::to_string(static_cast<int>(std::ceil(d))) + " m uphill"});
+        out.push_back({"Next release " + nextVersionText(w) + (next >= hill::kSummit ? " (the summit)" : "") + ": " +
+                       std::to_string(static_cast<int>(std::ceil(d))) + " m uphill"});
     }
     // Where the boulder is, once it is out of reach.
     {
@@ -276,7 +278,10 @@ std::vector<HudLine> hudLines(const World& w) {
         const int i = open[k];
         const Module& m = w.modules[static_cast<size_t>(i)];
         const std::string what = m.health <= 0 ? "DOWN" : m.issue == Issue::None ? "rotting" : issueName(m.issue);
-        out.push_back({padded(moduleName(i), 14) + padded(what, 21) + percent(m.health), false, m.health <= 0});
+        // How fast it is going: percent a minute.
+        const int perMinute = static_cast<int>(std::lround(rotRate(w, m) * 6000.0f));
+        const std::string pace = m.health <= 0 ? "" : "  -" + std::to_string(perMinute) + "%/min";
+        out.push_back({padded(moduleName(i), 14) + padded(what, 21) + padded(percent(m.health), 5) + pace, false, m.health <= 0});
     }
     if (open.size() > shown) out.push_back({"... and " + std::to_string(open.size() - shown) + " more"});
     return out;
@@ -450,8 +455,9 @@ void render(strata::Engine& engine, const World& w, const Camera& cam, bool outs
     }
     if (o.help) {
         std::vector<std::string> items = {"W A S D walk / push", "Shift hurry", "Mouse look", "E hold: patch",
-                                          "R hold: retire", "Q sit", "V camera", "M sound", "F5 save", "F9 load", "F1 hide help",
-                                          "Esc free mouse"};
+                                          "R hold: retire", "Q sit", "V camera", "M sound"};
+        if (o.saves) items.insert(items.end(), {"F5 save", "F9 load"});
+        items.insert(items.end(), {"F1 hide help", "Esc free mouse"});
         std::vector<std::string> lines(1);
         for (const std::string& item : items) {
             if (!lines.back().empty() && lines.back().size() + 3 + item.size() > columns) lines.emplace_back();

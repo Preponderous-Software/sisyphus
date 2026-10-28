@@ -1,0 +1,98 @@
+{
+  "session": "s03",
+  "goal": "The whole climb: get the boulder to the summit (1.0), watch what happens there, follow it back down to the trailhead, and then sit (Q) and look at the view for a while. Note where the climb felt unfair, too slow or too easy, and answer the questions at the end.",
+  "build": {
+    "version": "0.6 (in-game version reached; session.json version null)",
+    "commit": "a4a953e"
+  },
+  "seed": 3,
+  "durationSec": 2417,
+  "outcome": "partial",
+  "findings": [
+    {
+      "severity": "major",
+      "category": "balance",
+      "title": "Last terrace (0.6 -> 1.0) slows to a crawl once weight reaches 8/10 and a module is DOWN",
+      "detail": "Early terraces push at about 1.2 m/s (6 m per 5 s of W at 0.0; 33 m per ~30 s at 0.3). On the final 35 m terrace, with 12 modules, weight 8/10 and search DOWN, 22 s of holding W moved the boulder only 6 m (20 -> 14 m). I ran out of time 14 m short of 1.0. Nothing on screen explains what weight is made of or that patching/retiring would lighten it, so a player who just pushes hits a wall without knowing which lever to pull. Expected either a visible hint (e.g. 'rotting modules make it heavier') or a gentler curve.",
+      "repro": "pt start --profile sisyphus-strata --seed 3; pt hold w 5; pt hold Shift_L+w 10; pt hold w 13; pt hold w 30; pt hold w 32; pt hold w 3; (patch ui) pt hold e 4.5; pt hold w 30; pt hold w 36; pt hold w 38; pt hold w 8; pt hold w 2.5; pt hold w 25; pt hold w 22; pt shot slow",
+      "screenshot": "shots/slow.png",
+      "tick": 15500
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Rot backlog outpaces patching while pushing; no guidance on when to stop and patch",
+      "detail": "By 0.5 five modules were rotting at once (13-64%). A patch takes ~4 s held and needs the module under the crosshair; modules under the boulder need it rolled back. With continuous pushing, the backlog only grows and the first module hits 0% shortly after 0.6. The HUD lists issues clearly, but there is no sense of how fast each rots, so it is hard to plan which to patch.",
+      "repro": "As above up to 0.5; pt shot rotpile",
+      "screenshot": "shots/rotpile.png",
+      "tick": 12000
+    },
+    {
+      "severity": "minor",
+      "category": "bug",
+      "title": "Patch prompt keeps showing a stale 'Patching [####...]' bar after the module is healthy and E is released",
+      "detail": "Held E on ui (security advisory 52%) for 3 s, then 1.5 s more. ui became 'healthy (100%)' and left the issues list, but the prompt line still read 'Patching [#########...]' with a partial bar instead of returning to 'Hold E to patch'.",
+      "repro": "At v0.3 with crosshair on ui: pt hold e 3; pt hold e 1.5; pt shot",
+      "screenshot": "shots/stalebar.png",
+      "tick": 6000
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "Help bar advertises F5 save / F9 load in a driven session where they do nothing",
+      "detail": "The controls strip shown after each release lists 'F5 save  F9 load'. In this headless driven session they are documented as no-ops; the strip could omit them when saving is disabled.",
+      "repro": "pt hold w 18 from start to ship 0.1; pt shot",
+      "screenshot": "shots/p3.png",
+      "tick": 1700
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Outage feedback is clear and well done (positive)",
+      "detail": "When search hit 0% it shows DOWN in red, HUD line 2 turns red 'OUTAGE: users are leaving' and users drop 400 -> 349 -> 280. Consequence is legible immediately. Version jump 0.6 -> 1.0 on the next terrace was a nice surprise ('Next release 1.0: 35 m uphill').",
+      "repro": "Continue pushing past 0.6 without patching; pt shot outage",
+      "screenshot": "shots/outage.png",
+      "tick": 14000
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Sit (Q) is a lovely beat (positive)",
+      "detail": "Q hides the HUD, pulls the camera out to the view up the hill, caption 'The boulder is still. For a moment, so are you.' The boulder holds still on the slope.",
+      "repro": "Mid-climb: pt key q; pt wait 3; pt shot sit",
+      "screenshot": "shots/sitview.png",
+      "tick": 15800
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 0,
+    "deaths": 0,
+    "secondsToObjective": {
+      "ship 0.1": 120.0,
+      "ship 0.2": 320.0,
+      "ship 0.3": 650.0,
+      "ship 0.4": 1210.0,
+      "ship 0.5": 1730.0,
+      "ship 0.6": 1860.0
+    },
+    "versionReached": 0.6,
+    "metresShortOfSummit": 14,
+    "modulesAtStop": 12,
+    "usersPeak": 400,
+    "usersAtStop": 280,
+    "patchesDone": 1,
+    "gameSecondsPlayed": 263
+  },
+  "fun": 3,
+  "verdict": "The metaphor lands fast: every release adds a module, every module rots, and an untended one takes the service DOWN and users leave, all legible from the HUD. But the last terrace became a crawl (weight 8/10, ~0.27 m/s) and I stopped 14 m short of 1.0, so I never saw the summit, the roll-back or the descent; the game never tells you that rot is what makes the boulder heavy. Times are wall-clock seconds (no probe) on a heavily shared machine running ~5-14x slower than game time, so they overstate real play time.",
+  "answers": [
+    {
+      "question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?",
+      "answer": "Maintaining software is an endless uphill push. The boulder is the codebase/product; each terrace is a release that wins users but bolts on another module, making the thing heavier. The rot is entropy in dependencies: drift, deprecated APIs, flaky tests, security advisories. Progress itself creates more upkeep, and (from the title and the 'It will not last' line) I expect the summit to undo it all, though I did not get there to see it."
+    },
+    {
+      "question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?",
+      "answer": "Mostly fair: the issues list ranks by worst, names the kind of rot, and an outage is clearly signalled. Hardest to tell: how fast each module rots and that rot (or module count) is what makes the boulder heavier, so the final slowdown felt like a wall rather than a choice. Hardest to do: reaching modules on the far/under side of the boulder to patch them while also keeping up the push; patching one module (~4 s) never kept pace with five rotting at once."
+    }
+  ]
+}

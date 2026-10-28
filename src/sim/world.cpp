@@ -98,14 +98,10 @@ int neighbour(const World& w, int i) {
 }
 
 void rot(World& w) {
-    const float age = 1.0f + 0.1f * static_cast<float>(w.major);
     for (Module& m : w.modules) {
         if (!m.active) continue;
         const float was = m.health;
-        // Older modules rot faster: legacy.
-        const float years = static_cast<float>(w.releases - m.born);
-        const float rate = kBaseRot * age * (1.0f + 0.04f * (years < 10 ? years : 10)) + kIssueRot[static_cast<int>(m.issue)];
-        m.health = clamp01(m.health - rate * kDt);
+        m.health = clamp01(m.health - rotRate(w, m) * kDt);
         if (was > 0 && m.health <= 0) ++w.breakdowns;
     }
     const int n = activeModules(w);
@@ -428,6 +424,14 @@ Vec3 eyePosition(const World& w) {
 
 int aimedModule(const World& w) {
     return moduleOnSight(w, eyePosition(w), lookDirection(w.player.yaw, w.player.pitch));
+}
+
+float rotRate(const World& w, const Module& m) {
+    // Everything ages, faster in later major versions; older modules rot
+    // faster (legacy); an issue makes it fast.
+    const float age = 1.0f + 0.1f * static_cast<float>(w.major);
+    const float years = static_cast<float>(w.releases - m.born);
+    return kBaseRot * age * (1.0f + 0.04f * (years < 10 ? years : 10)) + kIssueRot[static_cast<int>(m.issue)];
 }
 
 float patchSeconds(const Module& m) {

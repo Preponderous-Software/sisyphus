@@ -52,6 +52,7 @@ struct Overlay {
     std::string message;         // the newest news, above the middle
     std::string quote;           // while sitting: words over the view
     bool aim = true;             // the crosshair (outside him, it marks where he aims)
+    bool saves = true;           // the game saves (F5 and F9 do something)
 };
 
 // Draws one frame (not presented) from `cam`.

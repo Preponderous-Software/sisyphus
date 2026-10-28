@@ -1,0 +1,103 @@
+{
+  "session": "s02",
+  "goal": "Upkeep: push to the second terrace (0.2), then stay there a while and keep the boulder alive: patch modules as issues arrive (hold E), roll the boulder back from above to reach a module underneath, and retire one module (hold R). Say whether you could always tell which module was in trouble and where it was. Then push on as far as your time allows, and answer the questions at the end.",
+  "build": {
+    "version": "0.1",
+    "commit": "a4a953e"
+  },
+  "seed": 2,
+  "durationSec": 1990,
+  "outcome": "partial",
+  "findings": [
+    {
+      "severity": "major",
+      "category": "balance",
+      "title": "Boulder repeatedly escapes when pushing from the 0.1 terrace toward 0.2; three tries, never got past ~2 m",
+      "detail": "The first climb (0.0 to 0.1, about 33 m) went smoothly with hold w 5/12/15. Starting from the 0.1 terrace, I lined Sisyphus up on the trail centre with the boulder just ahead, but each push (hold w 15, hold w 6, hold w 5) lost the boulder within about 2 m. It slid off to the side and rolled back to the terrace while Sisyphus kept walking uphill alone. Nothing on screen shows that contact was lost or that he is off-centre; I only found out by turning the camera around. I expected the second push to feel like the first, or at least to get a cue such as 'it's slipping' or a lean animation. I never reached 0.2.",
+      "repro": "pt start --profile sisyphus-strata --seed 2; push to 0.1 (hold w ~32 s total); walk round below the boulder on the 0.1 terrace, face up the trail; pt hold w 5; pt shot; turn around: boulder back on the terrace",
+      "screenshot": "shots/slip2.png",
+      "tick": 9668
+    },
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "No way to see WHERE on the boulder the rotting module is; the HUD names it but the boulder does not mark it",
+      "detail": "The HUD lists open issues by name (router, storage, parser). The only way to locate one is to roll the boulder and read the crosshair prompt face by face. Rolling straight back keeps the same great circle, so the same faces come round again: ui stayed under the crosshair for 6+ nudges. Finding parser took about 10 minutes. It only came into reach when I pushed the boulder sideways along the terrace from its side, which nothing in the game teaches. The rotting faces have no colour, glow or marker. So: I could always tell WHICH module was in trouble, but never WHERE it was.",
+      "repro": "pt start ... --seed 2; reach 0.1; let parser rot; stand above the boulder; repeat (pt hold w 0.4; pt wait 0.4; pt shot) and read the prompt",
+      "screenshot": "shots/parser_lost.png",
+      "tick": 11000
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "'Hold E to patch' is offered mid-slope, but stopping to patch lets the boulder roll back down",
+      "detail": "9 m short of 0.2 the prompt said 'router: dependency drift ... Hold E to patch'. I held E, and the boulder rolled back down the slope to the 0.1 terrace (next release 9 m -> 28 m), so the patch never happened. Either the prompt should be hidden on the slope or there should be a warning; the opening text never says you can only patch on a terrace.",
+      "repro": "push to within ~10 m of 0.2 with an open issue under the crosshair; pt hold e 2; pt shot",
+      "screenshot": "shots/rolledback.png",
+      "tick": 3500
+    },
+    {
+      "severity": "minor",
+      "category": "bug",
+      "title": "Patch/retire progress bar stays on screen after the key is released, attached to the next (healthy) module",
+      "detail": "After a patch finishes, if E is still held the bar restarts on the healthy module ('storage: healthy (100%)  Patching [#..........]'). After release the bar freezes and stays for 3+ s of game time. Retire does the same: after auth was retired, 'router: healthy (92%)  Retiring [######.....]' stayed on screen, so it looked as if the healthy router was being retired (it was not). I expected the bar to clear when the action completes or the key is released.",
+      "repro": "on a terrace, crosshair on a rotting module; pt hold e 6 (longer than the patch needs); pt wait 2; pt shot",
+      "screenshot": "shots/ret3.png",
+      "tick": 10900
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "World-space terrace sign label ('0.1') draws on top of the HUD issue percentages",
+      "detail": "On the 0.1 terrace the yellow '0.1' marker label overlaps the open-issue percentage column in the HUD, which makes the numbers hard to read (for example '0.1' over '65%'). The HUD should draw above world labels or keep clear of them.",
+      "repro": "stand on the 0.1 terrace facing downhill toward the sign; pt shot",
+      "screenshot": "shots/patched_storage.png",
+      "tick": 4400
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "Help bar lists 'F5 save  F9 load' in a driven session where they do nothing",
+      "detail": "The controls strip shows F5 save / F9 load, but in a driven session they do nothing. Minor, but the help should match what works.",
+      "repro": "pt start ...; pt hold w 5; pt shot (help strip at bottom)",
+      "screenshot": "shots/p1.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Rolling-back and retire feedback is good (positive)",
+      "detail": "'Rolling it back to turn it' appears as soon as you push from above. Retiring shows 'Retired. One less thing to keep, and a few users miss it.' with Modules 7->6 and Users 50->46, which makes the trade-off clear. 'No open issues. It will not last.' sets the tone well.",
+      "repro": "on a terrace, from above: pt hold w 1; then pt hold r 4 on a module",
+      "screenshot": "shots/roll1.png",
+      "tick": null
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 4,
+    "deaths": 0,
+    "secondsToObjective": {
+      "ship 0.1": 60.0,
+      "patch first module (storage)": 680.0,
+      "retire a module (auth)": 1720.0,
+      "all issues cleared": 1960.0
+    },
+    "versionReached": "0.1",
+    "modulesPatched": 4,
+    "modulesRetired": 1,
+    "pushAttemptsFrom0_1Failed": 3,
+    "minutesSearchingForParser": 10
+  },
+  "fun": 3,
+  "verdict": "The metaphor works right away: a boulder of modules that rot as you climb, with friendly, wry text ('It will not last.'), and rolling it back to bring a face round and holding R to retire are both satisfying. Two things blocked the goal. The second push from 0.1 kept losing the boulder with no cue why, so I never reached 0.2, and nothing on the boulder marks where the rotting module sits, so finding it is a slow face-by-face hunt (side-pushing turns a new axis, but the game never says so). secondsToObjective are wall-clock seconds; there is no probe.",
+  "answers": [
+    {
+      "question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?",
+      "answer": "It is about maintaining software: the work never ends, and every success adds to the load. The boulder is the codebase, each coloured patch a module (router, storage, parser, ui, auth, search, core). The terraces are releases: each one brings more users and a new module, which makes the boulder heavier to keep. The rot stands for dependency drift and deprecated APIs, the decay that happens to code even when nobody touches it. Retiring a module is cutting a feature: less to maintain, but some users leave."
+    },
+    {
+      "question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?",
+      "answer": "The rot felt fair and readable in the HUD: named issues with a clear cause and a percentage that falls slowly enough to plan around, worst first. The hardest part was physical, not informational. I could always tell WHICH module was in trouble, but never WHERE it was on the boulder; I had to roll it and read the crosshair prompt face by face, and rolling straight keeps showing the same faces. Pushing from the side to turn it is the trick, but I found it by accident. Hardest of all was keeping contact while pushing from 0.1 toward 0.2: the boulder kept escaping with no cue, so I never shipped 0.2."
+    }
+  ]
+}

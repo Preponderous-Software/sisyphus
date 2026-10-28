@@ -1,0 +1,117 @@
+{
+  "session": "s01",
+  "goal": "Play as a brand-new player who has never heard of the game. Read the HUD and the first message, work out how to push the boulder and how to patch a module, and get as far up the hill as you can (each terrace is a release: 0.1, 0.2, ...). Note every moment of confusion, and answer the questions at the end.",
+  "build": {
+    "version": "0.1 (in-game version reached; session.json version null)",
+    "commit": "a4a953e"
+  },
+  "seed": 1,
+  "durationSec": 1871,
+  "outcome": "partial",
+  "findings": [
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "After the boulder rolls back to a terrace, re-engaging it to push uphill is nearly impossible",
+      "detail": "Once the boulder had rolled back to the 0.1 terrace I spent ~15 minutes and 7+ attempts (third-person and first-person, look/strafe/walk then hold W) trying to get behind it and push it uphill again. Every 'hold w' either slid me past it onto the grass or did nothing; 'Next release 0.2: 27 m uphill' never changed. The first push from the trailhead (pre-aligned) worked perfectly, so the problem is getting lined up again: the over-the-shoulder crosshair is left of centre and is not where the character walks, and there is no cue for 'you are in pushing position'. Expected: walking into the boulder from roughly below moves it, or a visible push-contact cue.",
+      "repro": "pt start --profile sisyphus-strata --seed 1; pt hold w 29 (ships 0.1); pt hold w 12; pt key v; look around for ~30 s so the boulder rolls back to 0.1; then try to walk below it and pt hold w 4",
+      "screenshot": "shots/j12.png",
+      "tick": null
+    },
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "Boulder silently rolls all the way back to the previous terrace with no message or indicator",
+      "detail": "I stopped pushing on the slope to look at modules in first-person (V). The boulder rolled back down to the 0.1 terrace out of view; 'Next release' jumped 16 m -> 28 m with no message. I could not find it for ~3 minutes (it was below the crest). This is the theme of the game so the rollback is fine, but a player needs to be told ('The boulder rolls back to 0.1') and needs a way to find it (off-screen arrow, or camera that keeps it framed).",
+      "repro": "pt start ...; pt hold w 29; pt hold w 12; pt key v; pt look -140 0 (several small looks, ~60 s total of commands with only short steps); pt hold w 15 -> boulder gone, 28 m",
+      "screenshot": "shots/rolledback.png",
+      "tick": 3650
+    },
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "No way to tell which coloured patch of the boulder is the module named in an open issue",
+      "detail": "The HUD lists 'search  flaky test 93%' but the boulder is several large patches in similar dark colours (very dark in shadow) and nothing ties a colour to a name. The only way is to sweep the crosshair across the boulder and read the label. Finding 'search' took ~4 minutes of full-circle camera sweeps; the module was apparently underneath. Expected: the rotting module glows/pulses (I saw a faint yellow glow once on auth, but not consistently), or the issue line shows its colour swatch.",
+      "repro": "pt start ...; pt hold w 29; pt hold w 15 -> 'search flaky test' issue; try to find 'search' on the boulder",
+      "screenshot": "shots/whichmodule.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "bug",
+      "title": "Crosshair module label does not match what the crosshair is visually over",
+      "detail": "Several times the label under the crosshair named a module while the crosshair was visibly over sky/ground beside the boulder (e.g. 'search: flaky test' with the crosshair on the village background), and when I then held E the patch went to a different module ('ui', already healthy) because the boulder had moved. Labels also seemed to lag one look behind. Expected: the label reflects exactly the surface under the crosshair this frame.",
+      "repro": "pt start ...; after 0.1 with boulder on the terrace, pt key v; pt look 300 0 repeatedly, pt step 2, pt shot each time",
+      "screenshot": "shots/aimmismatch.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Boulder keeps rolling while you patch, so the hold-E lands on the wrong module",
+      "detail": "Aimed at 'search' (n0) and held E 3 s; the boulder rotated under the crosshair and the progress went to 'ui' instead. search stayed at 57%. Patching on a slope means fighting the roll.",
+      "repro": "with the boulder near the bottom of a slope, aim at an unhealthy module, pt hold e 3",
+      "screenshot": "shots/n1.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "bug",
+      "title": "'Patching [###...]' bar stays on screen after releasing E and does not track module health",
+      "detail": "After patching auth the module read 'healthy (100%)' within ~2 s but the bar kept filling; after release, 'Patching [######......]' stayed under every label for minutes (including over other modules), instead of reverting to 'Hold E to patch'. I could not tell when a patch was done.",
+      "repro": "pt hold e 2 on a rotting module; release; pt look around; pt shot",
+      "screenshot": "shots/z2.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "bug",
+      "title": "Floating terrace labels '0.2'/'0.3' render through the boulder and over the prompt text",
+      "detail": "In first-person (V) the world-space version labels draw on top of the boulder and collide with the crosshair prompt, producing garbled text like 'pa0s2r' and 'patch0.3'.",
+      "repro": "pt start ...; pt hold w 29; pt hold w 12; pt key v; pt look 0 -80; pt shot",
+      "screenshot": "shots/labelbleed.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Mouse pitch feels inverted / inconsistent and yaw scale differs between views",
+      "detail": "pt look 0 +60 tilted the view up in third-person and pt look 0 -80 looked down, the opposite of the harness convention (+ down). A 600 px yaw was ~180 degrees one time and ~90 another, which made 'turn around' guesswork.",
+      "repro": "pt look 0 60; pt step 2; pt shot; compare with pt look 0 -60",
+      "screenshot": "shots/k5.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "Opening message and first push are excellent",
+      "detail": "Positive: the first screen explains everything in three lines ('The boulder is your software. Push it up to the next terrace to ship a release (W, into it). Every release adds a module, and every module rots. Hold E on one to patch it.'), and 'No open issues. It will not last.' sets the tone. Shipping 0.1 ('Shipped 0.1. New module: search.', users 10 -> 50) felt great. Note the full controls bar only appeared after shipping 0.1, not at the start.",
+      "repro": "pt start ...; pt shot start; pt hold w 29; pt shot",
+      "screenshot": "shots/ship01.png",
+      "tick": null
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 1,
+    "deaths": 0,
+    "secondsToObjective": {
+      "Ship 0.1 (wall-clock, from start)": 171.0
+    },
+    "versionReached": "0.1",
+    "modulesPatched": 2,
+    "minutesSpentFailingToReEngageBoulder": 15,
+    "finalHealthPercent": 85
+  },
+  "fun": 2,
+  "verdict": "The premise and the opening are strong: the first message tells you everything and shipping 0.1 feels good. But the moment the boulder rolls back (which it will, the instant you stop to patch), the game becomes a fight with the camera: I could not find which patch was the rotting module, patches landed on the wrong module as the boulder turned, and I never managed to line up behind the boulder again, so I stalled at 0.1 for 25 minutes. secondsToObjective is wall-clock (no probe); the push itself was only ~29 s of game time.",
+  "answers": [
+    {
+      "question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?",
+      "answer": "It is about maintaining software: the boulder is the codebase/product you keep pushing forward, each terrace is a release (version number, more users, one more module to carry), and the rot is the steady decay every module suffers (flaky tests, expiring certificates, deprecated APIs) that you must keep patching just to stay where you are. Stop pushing and it rolls back. The Sisyphus framing says the work never ends; the HUD line 'No open issues. It will not last.' sums it up."
+    },
+    {
+      "question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?",
+      "answer": "The rot rate itself felt fair and readable: one issue at a time, losing roughly 1% every few seconds, with a clear name and percentage in the HUD, and patching restored a module to 100% in 2-4 s. What felt arbitrary was the physical side: I could not tell which coloured patch was the module named in the issue, the label under the crosshair did not always match what it was over, the boulder kept rolling while I held E so the patch went to the wrong module, and once the boulder rolled back to the terrace I could not get behind it to push again. Hardest of all was re-engaging the boulder; second was finding the rotting module."
+    }
+  ]
+}

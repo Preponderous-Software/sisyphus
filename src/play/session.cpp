@@ -265,6 +265,7 @@ void Session::frame(double dt) {
     o.message = message_;
     o.quote = quote();
     o.aim = !options_.autopilot;
+    o.saves = !options_.slot.empty();
     const Camera cam = !out ? cameraAtEyes(w_) : options_.autopilot ? cameraBehind(w_) : cameraOverShoulder(w_);
     render(engine_, w_, cam, out, o);
 }
