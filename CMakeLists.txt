@@ -67,11 +67,18 @@ target_include_directories(sisyphus_save PUBLIC src)
 target_link_libraries(sisyphus_save PUBLIC sisyphus_sim)
 sisyphus_warnings(sisyphus_save)
 
+# The sounds, worked out from the world and synthesized (no recordings). No
+# device here: the sound card is opened only by the game (below).
+add_library(sisyphus_audio STATIC src/audio/cues.cpp src/audio/synth.cpp)
+target_include_directories(sisyphus_audio PUBLIC src)
+target_link_libraries(sisyphus_audio PUBLIC sisyphus_sim)
+sisyphus_warnings(sisyphus_audio)
+
 if(SISYPHUS_BUILD_TESTS)
   enable_testing()
-  foreach(t hill rules autopilot determinism geometry saves)
+  foreach(t hill rules autopilot determinism geometry saves audio)
     add_executable(test_${t} tests/test_${t}.cpp)
-    target_link_libraries(test_${t} PRIVATE sisyphus_sim sisyphus_geometry sisyphus_save)
+    target_link_libraries(test_${t} PRIVATE sisyphus_sim sisyphus_geometry sisyphus_save sisyphus_audio)
     target_include_directories(test_${t} PRIVATE tests)
     sisyphus_warnings(test_${t})
     if(EMSCRIPTEN)
@@ -100,9 +107,19 @@ if(SISYPHUS_WITH_STRATA OR SISYPHUS_WEB)
     GIT_TAG ${SISYPHUS_STRATA_REF})
   FetchContent_MakeAvailable(strata)
 
+  # The sound card, through miniaudio (public domain or MIT-0, third_party/miniaudio/),
+  # built with its own warnings.
+  find_package(Threads REQUIRED)
+  add_library(sisyphus_miniaudio STATIC src/audio/miniaudio.cpp)
+  target_include_directories(sisyphus_miniaudio SYSTEM PUBLIC third_party/miniaudio)
+  target_link_libraries(sisyphus_miniaudio PUBLIC Threads::Threads ${CMAKE_DL_LIBS})
+  add_library(sisyphus_sound STATIC src/audio/device.cpp)
+  target_link_libraries(sisyphus_sound PUBLIC sisyphus_audio PRIVATE sisyphus_miniaudio)
+  sisyphus_warnings(sisyphus_sound)
+
   add_library(sisyphus_play STATIC src/bridge/scene.cpp src/play/session.cpp src/play/view.cpp)
   target_include_directories(sisyphus_play PUBLIC src)
-  target_link_libraries(sisyphus_play PUBLIC sisyphus_geometry sisyphus_save strata::static)
+  target_link_libraries(sisyphus_play PUBLIC sisyphus_geometry sisyphus_save sisyphus_sound strata::static)
   sisyphus_warnings(sisyphus_play)
 endif()
 
@@ -123,7 +140,7 @@ if(SISYPHUS_WEB)
   target_link_options(sisyphus-web PRIVATE
     -sSTACK_SIZE=1MB
     -lidbfs.js
-    "-sEXPORTED_FUNCTIONS=_main,_sisyphus_look,_sisyphus_stick,_sisyphus_hold,_sisyphus_press,_sisyphus_captured,_sisyphus_help,_sisyphus_save,_sisyphus_restart,_sisyphus_resize,_sisyphus_status"
+    "-sEXPORTED_FUNCTIONS=_main,_sisyphus_look,_sisyphus_stick,_sisyphus_hold,_sisyphus_press,_sisyphus_captured,_sisyphus_help,_sisyphus_sound,_sisyphus_save,_sisyphus_restart,_sisyphus_resize,_sisyphus_status"
     -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,UTF8ToString,FS,IDBFS,addRunDependency,removeRunDependency
     "--shell-file=${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html")
   set_property(TARGET sisyphus-web APPEND PROPERTY LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html")

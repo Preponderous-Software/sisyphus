@@ -100,6 +100,11 @@ EMSCRIPTEN_KEEPALIVE int sisyphus_save() { return g && g->session->save("Saved."
 EMSCRIPTEN_KEEPALIVE void sisyphus_restart() {
     if (g) g->session->restart();
 }
+// Sound on or off, from the page's Sound button (or its remembered choice,
+// quietly, when the page opens).
+EMSCRIPTEN_KEEPALIVE void sisyphus_sound(int on, int announce) {
+    if (g) g->session->setMuted(on == 0, announce != 0);
+}
 EMSCRIPTEN_KEEPALIVE void sisyphus_help(int on) {
     if (g) g->session->setHelp(on != 0);
 }
@@ -130,6 +135,7 @@ EMSCRIPTEN_KEEPALIVE const char* sisyphus_status() {
     jsonBool(o, "outside", s.outside());
     jsonBool(o, "sitting", w.player.sitting);
     jsonBool(o, "pushing", w.pushing);
+    jsonBool(o, "muted", s.muted());
     o += ",\"message\":";
     jsonString(o, s.message());
     o += ",\"quote\":";

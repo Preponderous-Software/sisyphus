@@ -1,0 +1,51 @@
+// The hill's sounds, made from nothing: every sound is synthesized (no
+// recordings ship with the game). The steady sounds are generated sample by
+// sample from the Ambience; the one-off sounds are rendered once, when the
+// synth is made, and mixed in when they are played. Mono, at kRate.
+//
+// Not thread-safe on its own: the device (device.h) locks around it.
+#pragma once
+
+#include <array>
+#include <cstdint>
+#include <vector>
+
+#include "audio/cues.h"
+
+namespace sisyphus::audio {
+
+constexpr int kRate = 48000;
+
+class Synth {
+public:
+    Synth();
+
+    // Where the steady sounds are heading; they glide there over about half a second.
+    void setAmbience(const Ambience& a) { target_ = a; }
+    void play(Cue c);
+    // Writes `frames` samples, each in -1..1.
+    void render(float* out, int frames);
+
+    // The rendered one-off sound for a cue (for the tests).
+    const std::vector<float>& sound(Cue c) const { return cues_[static_cast<size_t>(c)]; }
+
+private:
+    struct Playing {
+        const std::vector<float>* samples;
+        size_t at;
+    };
+    float noise();
+    float next();
+
+    uint32_t seed_ = 0x2545F491u;
+    Ambience target_, now_;
+    std::array<std::vector<float>, static_cast<size_t>(Cue::Count)> cues_;
+    std::vector<std::vector<float>> steps_, chirps_;
+    std::vector<Playing> playing_;
+    float windLow_ = 0, windSlow_ = 0, grindLow_ = 0, grindRumble_ = 0, townLow_ = 0;
+    double time_ = 0;
+    float stepClock_ = 0, chirpClock_ = 0, alarmPhase_ = 0;
+    int step_ = 0;
+};
+
+}  // namespace sisyphus::audio

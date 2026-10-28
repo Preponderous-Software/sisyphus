@@ -89,6 +89,7 @@
   <span class="note" id="saveNote" title="Saves stay in this browser on this device">Saves in this browser</span>
   <button id="saveBtn" title="Save now (F5)">Save</button>
   <button id="newBtn" title="Start again at 0.0">New</button>
+  <button id="soundBtn" title="Sound on or off (M)" aria-pressed="true">Sound: on</button>
   <button id="helpBtn" title="How to play" aria-label="How to play">?</button>
 </div>
 
@@ -125,14 +126,14 @@
     <li>Mouse: look. <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>: walk; walk into the boulder from below to push it.
       On a terrace, push from above to roll it back and turn it. <kbd>Shift</kbd>: hurry.</li>
     <li>Hold <kbd>E</kbd> on a module to patch it. Hold <kbd>R</kbd> to retire it: one less thing to keep.</li>
-    <li><kbd>Q</kbd>: sit and look at the view. <kbd>V</kbd>: his eyes, or back over his shoulder. <kbd>F1</kbd>: the controls on screen.
+    <li><kbd>Q</kbd>: sit and look at the view. <kbd>V</kbd>: his eyes, or back over his shoulder. <kbd>M</kbd>: sound. <kbd>F1</kbd>: the controls on screen.
       <kbd>Esc</kbd>: free the mouse.</li>
   </ul>
   <ul class="for-touch">
     <li>Drag on the left half to walk (all the way out to hurry); walk into the boulder from below to push it.
       Drag on the right half to look.</li>
     <li>Hold <b>Patch</b> while looking at a module to patch it; hold <b>Retire</b> to retire it.
-      <b>Sit</b> looks at the view; <b>Camera</b> switches between his eyes and over his shoulder.</li>
+      <b>Sit</b> looks at the view; <b>Camera</b> switches between his eyes and over his shoulder. <b>Sound</b> along the top turns the sound on or off.</li>
   </ul>
   <p style="color:var(--dim);font-size:13px">The game saves every minute, when you press Save (or <kbd>F5</kbd>), and when
   you leave the page; <kbd>F9</kbd> loads the last save. Saves stay in this browser on this device. Built on the
@@ -205,6 +206,8 @@
     try { s = JSON.parse(call.status()); } catch (e) { return; }
     $('version').textContent = 'version ' + s.version;
     $('users').textContent = s.users + ' users';
+    $('soundBtn').textContent = s.muted ? 'Sound: off' : 'Sound: on';
+    $('soundBtn').setAttribute('aria-pressed', s.muted ? 'false' : 'true');
     document.body.classList.toggle('sitting', s.sitting);
     var showClick = !touchMode && !s.captured && !dialogOpen();
     $('clickToPlay').style.display = showClick ? 'flex' : 'none';
@@ -327,6 +330,12 @@
     holdable('patchBtn', 'patch');
     holdable('retireBtn', 'retire');
     $('panel').addEventListener('click', function () { $('panel').classList.toggle('folded'); });
+    $('soundBtn').addEventListener('click', function () {
+      var on = window.sisyphusStatus ? window.sisyphusStatus.muted : false;  // muted now, so this turns it on
+      call.sound(on ? 1 : 0, 1);
+      try { localStorage.setItem('sisyphus-sound', on ? 'on' : 'off'); } catch (e) {}
+      setTimeout(refresh, 60);
+    });
     $('saveBtn').addEventListener('click', function () { call.save(); refresh(); });
     $('newBtn').addEventListener('click', function () {
       if (document.pointerLockElement) document.exitPointerLock();
@@ -380,6 +389,7 @@
         save: api('sisyphus_save', 'number'),
         restart: api('sisyphus_restart'),
         help: api('sisyphus_help', null, ['number']),
+        sound: api('sisyphus_sound', null, ['number', 'number']),
         resize: api('sisyphus_resize', null, ['number', 'number', 'number']),
         status: api('sisyphus_status', 'string')
       };
@@ -389,6 +399,7 @@
       setTouch(touchMode);
       wire();
       sizeCanvas();
+      try { if (localStorage.getItem('sisyphus-sound') === 'off') call.sound(0, 0); } catch (e) {}
       var seen = false;
       try { seen = localStorage.getItem('sisyphus-seen-help') === '1'; } catch (e) {}
       if (!seen) $('help').style.display = 'block';

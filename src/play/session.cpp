@@ -1,5 +1,8 @@
 #include "play/session.h"
 
+#include <cmath>
+
+#include "audio/cues.h"
 #include "save/save.h"
 #include "sim/hill.h"
 
@@ -8,6 +11,7 @@ namespace sisyphus::play {
 namespace {
 
 // SDL scancodes.
+constexpr int kM = 16;
 constexpr int kW = 26, kA = 4, kS = 22, kD = 7, kE = 8, kR = 21, kQ = 20, kV = 25, kLShift = 225, kRShift = 229,
               kEscape = 41, kF1 = 58, kF5 = 62, kF9 = 66;
 constexpr float kLookPerPixel = 0.0025f;
@@ -32,6 +36,7 @@ constexpr float kQuoteSeconds = 7.0f;
 
 Session::Session(strata::Engine& engine, const SessionOptions& options)
     : engine_(engine), options_(options), w_(newWorld(options.seed)), scene_(engine) {
+    if (options_.sound) sound_.start();
     World start = w_;
     outside_ = true;  // over his shoulder; V for his eyes
     if (!options_.slot.empty() && !options_.fresh && hasSave(options_.slot)) {
@@ -49,6 +54,7 @@ Session::Session(strata::Engine& engine, const SessionOptions& options)
 void Session::adopt(const World& w) {
     w_ = w;
     seen_ = w;
+    heard_ = w;  // a loaded or new world is not a change to be heard
     yaw_ = w_.player.yaw;
     pitch_ = w_.player.pitch;
     pilot_ = Autopilot{};
@@ -124,6 +130,20 @@ void Session::restart() {
     say(kGreeting, 14);
 }
 
+void Session::setMuted(bool muted, bool announce) {
+    sound_.setMuted(muted);
+    if (announce) say(muted ? "Sound off (M turns it on)" : "Sound on", 3);
+}
+
+void Session::listen(double dt) {
+    for (audio::Cue c : audio::cues(heard_, w_)) sound_.play(c);
+    const float dx = w_.player.x - heard_.player.x, dz = w_.player.z - heard_.player.z;
+    const float speed = dt > 0 ? std::sqrt(dx * dx + dz * dz) / static_cast<float>(dt) : 0.0f;
+    const float steps = speed > 0.3f && speed < 20.0f ? speed / 0.75f : 0.0f;  // a stride is about 0.75 m
+    sound_.setAmbience(audio::ambience(w_, eyePosition(w_), steps, sunHeight(w_)));
+    heard_ = w_;
+}
+
 void Session::capture(bool on) {
     if (!options_.browser) engine_.setRelativeMouseMode(on);
     captured_ = on;
@@ -160,6 +180,7 @@ void Session::onKeyDown(int scancode, bool repeat) {
         else save("Saved.");
     } else if (scancode == kF9) load();
     else if (scancode == kV) outside_ = !outside_;
+    else if (scancode == kM) setMuted(!sound_.muted());
     else if (scancode == kQ && !options_.autopilot) {
         sitOnce_ = true;
         // Sitting down, he turns to the view.
@@ -231,6 +252,7 @@ void Session::frame(double dt) {
         yaw_ = w_.player.yaw;
         pitch_ = w_.player.pitch;
     }
+    listen(dt);
     noticeChanges();
     const bool sitting = w_.player.sitting;
     const bool out = outside_ && !sitting;

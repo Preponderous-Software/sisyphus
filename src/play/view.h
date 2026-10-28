@@ -11,6 +11,9 @@
 
 namespace sisyphus::play {
 
+// How high the sun is for the world's time of day, -1..1 (below 0 is night).
+float sunHeight(const World& w);
+
 // `lightweight`: fewer, smaller shadow cascades, for phones and the browser.
 void setLighting(strata::Engine& engine, bool lightweight = false);
 

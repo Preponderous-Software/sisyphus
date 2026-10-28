@@ -8,7 +8,7 @@
 // Controls: mouse to look, W A S D to walk (walk into the boulder from below
 // to push it up the hill; on a terrace, from above to roll it back and turn
 // it), Shift to hurry, hold E on a module to patch it, hold R to retire it,
-// Q to sit and look at the view, V for his eyes (or back over his shoulder), F5 to save, F9 to
+// Q to sit and look at the view, V for his eyes (or back over his shoulder), M for sound, F5 to save, F9 to
 // load the last save, F1 for help, Esc to free the mouse (Esc again quits).
 //
 // The game continues from its save in DIR (by default %APPDATA%\Sisyphus\default
@@ -210,7 +210,10 @@ int runGame(strata::Engine& engine, const Args& args) {
     const bool driven = engine.driven();
     if (!args.autopilot && !driven) o.slot = args.slot.empty() ? defaultSlot() : args.slot;
     o.fresh = args.fresh;
-    if (driven) std::puts("sisyphus: driven by a test harness; this game does not save");
+    // A driven run is silent: its clock may be stepped, and synthesized sound
+    // would drift against it.
+    o.sound = !driven;
+    if (driven) std::puts("sisyphus: driven by a test harness; this game does not save and is silent");
     play::Session session(engine, o);
     while (session.running()) {
         StrataEvent e;

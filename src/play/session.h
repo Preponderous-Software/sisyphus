@@ -7,6 +7,7 @@
 #include <functional>
 #include <string>
 
+#include "audio/device.h"
 #include "bridge/scene.h"
 #include "play/view.h"
 #include "sim/autopilot.h"
@@ -24,6 +25,7 @@ struct SessionOptions {
     // In a browser the page owns the pointer lock and the canvas size; Esc
     // never quits.
     bool browser = false;
+    bool sound = true;       // open the sound card (it runs silent if there is none)
     // Called after every save written (the browser flushes it to IndexedDB).
     std::function<void()> afterSave;
 };
@@ -51,6 +53,9 @@ public:
     void setCaptured(bool on) { captured_ = on; }
     void setHelp(bool on) { help_ = on; }
     void setCompactHud(bool on) { compact_ = on; }
+    // Sound on or off (M); it fades rather than stops. `announce` says so on screen.
+    void setMuted(bool muted, bool announce = true);
+    bool muted() const { return sound_.muted(); }
 
     const World& world() const { return w_; }
     bool captured() const { return captured_; }
@@ -67,11 +72,14 @@ private:
     void say(const std::string& text, double seconds = 5);
     void noticeChanges();
     void adopt(const World& w);
+    void listen(double dt);  // the sounds of this frame's change, and of the place
 
     strata::Engine& engine_;
     SessionOptions options_;
     World w_;
-    World seen_;  // the world as last reported, for the news
+    audio::Sound sound_;
+    World seen_;   // the world as last reported, for the news
+    World heard_;  // the world as it last sounded, for this frame's cues
     bridge::Scene scene_;
     Autopilot pilot_;
     static constexpr int kMaxScancode = 512;

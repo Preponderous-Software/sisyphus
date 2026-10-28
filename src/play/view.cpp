@@ -26,12 +26,19 @@ StrataCamera lookFrom(Vec3 eye, float yaw, float pitch, float aspect) {
 // Where the sun is: up for the first three quarters of the day, from the
 // east over the south (behind you as you climb) to the west; below the
 // horizon for the last quarter. Returns how far up it is, -1..1.
-float setSky(strata::Engine& engine, const World& w) {
+void sunDirection(const World& w, float to[3]) {
     const float u = timeOfDay(w);
     const float a = u < 0.75f ? u / 0.75f * kPi : kPi + (u - 0.75f) / 0.25f * kPi;
-    float to[3] = {std::cos(a), 0.9f * std::sin(a), 0.45f};
+    to[0] = std::cos(a);
+    to[1] = 0.9f * std::sin(a);
+    to[2] = 0.45f;
     const float l = std::sqrt(to[0] * to[0] + to[1] * to[1] + to[2] * to[2]);
-    for (float& c : to) c /= l;
+    for (int i = 0; i < 3; ++i) to[i] /= l;
+}
+
+float setSky(strata::Engine& engine, const World& w) {
+    float to[3];
+    sunDirection(w, to);
     engine.setSunDirection(to);
     return to[1];
 }
@@ -148,6 +155,12 @@ std::string padded(std::string s, size_t n) {
 }
 
 }  // namespace
+
+float sunHeight(const World& w) {
+    float to[3];
+    sunDirection(w, to);
+    return to[1];
+}
 
 void setLighting(strata::Engine& engine, bool lightweight) {
     StrataLighting light = strata::lightingDefaults(STRATA_LIGHTING_SUN);
@@ -369,7 +382,7 @@ void render(strata::Engine& engine, const World& w, const Camera& cam, bool outs
     }
     if (o.help) {
         std::vector<std::string> items = {"W A S D walk / push", "Shift hurry", "Mouse look", "E hold: patch",
-                                          "R hold: retire", "Q sit", "V camera", "F5 save", "F9 load", "F1 hide help",
+                                          "R hold: retire", "Q sit", "V camera", "M sound", "F5 save", "F9 load", "F1 hide help",
                                           "Esc free mouse"};
         std::vector<std::string> lines(1);
         for (const std::string& item : items) {
