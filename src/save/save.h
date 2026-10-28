@@ -25,7 +25,8 @@
 namespace sisyphus {
 
 // 1: the first.
-constexpr uint32_t kSaveVersion = 1;
+// 2: Sisyphus's stamina (a format-1 save loads rested).
+constexpr uint32_t kSaveVersion = 2;
 
 // The World as save bytes, and back. decode returns false (with a reason)
 // on anything it does not accept.

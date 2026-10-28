@@ -31,6 +31,13 @@ constexpr int kIssueWeight[kIssueKinds] = {0, 30, 25, 20, 15, 10};
 constexpr float kSpreadBelow = 0.5f;    // an advisory spreads once its module is this rotten
 constexpr float kSpreadRate = 1.0f / 10.0f;
 constexpr float kCascadeRot = 1.0f / 150.0f;  // using a module that is down
+// Stamina, per second: pushing a light boulder takes it from full to spent
+// in about six minutes, a heavy one in under four; working, in ten.
+constexpr float kPushTire = 1.0f / 240.0f;  // times (0.4 + 0.6 * load)
+constexpr float kWorkTire = 1.0f / 600.0f;
+constexpr float kHurryTire = 1.0f / 400.0f;
+constexpr float kCatchBreath = 1.0f / 300.0f;  // standing, or walking
+constexpr float kRest = 1.0f / 20.0f;          // sitting
 
 const char* const kNames[kMaxModules] = {
     "core",          "auth",         "parser",        "router",       "storage",       "ui",
@@ -98,6 +105,17 @@ int neighbour(const World& w, int i) {
     return best;
 }
 
+void tire(World& w, const Input& in) {
+    Player& p = w.player;
+    float change;
+    if (p.sitting) change = kRest;
+    else if (w.pushing) change = -kPushTire * (0.4f + 0.6f * clampf(load(w), 0, 1));
+    else if (w.work.module >= 0) change = -kWorkTire;
+    else if (in.hurry && (in.forward != 0 || in.strafe != 0)) change = -kHurryTire;
+    else change = kCatchBreath;
+    p.stamina = clamp01(p.stamina + change * kDt);
+}
+
 void rot(World& w) {
     // Every rate first, so a module going down this tick does not speed up
     // the rest until the next one.
@@ -145,7 +163,7 @@ void moveBoulder(World& w, const Input& in) {
         const float L = load(w);
         float target;
         const float f = in.forward < 1 ? in.forward : 1;
-        if (L < 1) target = kPushSpeed * (flat ? kFlatEase : 1.0f) * (1 - L) * f;
+        if (L < 1) target = kPushSpeed * (flat ? kFlatEase : 1.0f) * (1 - L) * f * strength(w);
         else target = flat ? 0 : -kSlideBack;
         if (flat && target < kInch * f) target = kInch * f;
         if (w.pushingBack) target = -target;
@@ -199,7 +217,8 @@ void movePlayer(World& w, const Input& in) {
         f /= l;
         s /= l;
     }
-    const float speed = (in.hurry ? kHurrySpeed : kWalkSpeed) * kDt;
+    const bool hurry = in.hurry && w.player.stamina > 0.15f;  // too tired to hurry
+    const float speed = (hurry ? kHurrySpeed : kWalkSpeed) * kDt;
     const float sy = detSin(p.yaw), cy = detCos(p.yaw);
     float x = p.x + (sy * f + cy * s) * speed;
     float z = p.z + (-cy * f + sy * s) * speed;
@@ -245,7 +264,7 @@ void doWork(World& w, const Input& in) {
         k.seconds = 0;
         k.retiring = in.retire;
     }
-    k.seconds += kDt;
+    k.seconds += kDt * strength(w);
     Module& m = w.modules[static_cast<size_t>(i)];
     if (k.retiring) {
         if (activeModules(w) <= kMinModules || k.seconds < kRetireSeconds) return;
@@ -327,6 +346,7 @@ void tick(World& w, const Input& in) {
 
     movePlayer(w, in);
     doWork(w, in);
+    tire(w, in);
     rot(w);
     if (outage(w)) w.users *= 1.0f - 0.01f * kDt;  // a module is down: users leave
 }
@@ -367,6 +387,11 @@ int openIssues(const World& w) {
     int n = 0;
     for (const Module& m : w.modules) n += m.active && m.issue != Issue::None ? 1 : 0;
     return n;
+}
+
+float strength(const World& w) {
+    const float s = w.player.stamina;
+    return s >= kTired ? 1.0f : kSpentStrength + (1 - kSpentStrength) * s / kTired;
 }
 
 float load(const World& w) {
@@ -548,6 +573,9 @@ uint64_t fingerprint(const World& w) {
     i(w.retired);
     i(w.breakdowns);
     i(w.pushingBack);
+    // Fields added after save format 1 count only when they differ from
+    // their defaults, so a format-1 world's fingerprint is what it was.
+    if (w.player.stamina != 1) f(w.player.stamina);
     return h;
 }
 

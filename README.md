@@ -12,7 +12,8 @@ the slope however hard you push. A module rotted through goes down, and the town
 dark one by one as its users leave.
 
 So you stop on a terrace and walk round the stone, patching. A module stuck underneath can't be reached, so you roll
-the boulder to bring it round. A module not worth keeping can be retired. Then you push on.
+the boulder to bring it round. A module not worth keeping can be retired. Then you push on. Pushing wears you out,
+the heavier the boulder the faster, and tired you push and patch slowly: sit down on a terrace and rest.
 
 At the summit the next major version ships. Then the platform under it reaches its end of life, and the boulder rolls
 all the way back to the trailhead with every old module still aboard. The next major version starts there: more code,

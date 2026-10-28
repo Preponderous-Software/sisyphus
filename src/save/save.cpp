@@ -119,6 +119,7 @@ struct Fields {
         v(w.lastIncident);
         v(w.lastIssue);
         v(w.satSeconds);
+        if (version >= 2) v(w.player.stamina);
     }
 };
 
@@ -129,10 +130,12 @@ bool plausible(const World& w, std::string* error) {
         return false;
     };
     const float floats[] = {w.player.x, w.player.z, w.player.yaw, w.player.pitch, w.boulder.s, w.boulder.v,
-                            w.boulder.roll, w.users, w.summitSeconds, w.work.seconds, w.satSeconds};
+                            w.boulder.roll, w.users, w.summitSeconds, w.work.seconds, w.satSeconds,
+                            w.player.stamina};
     for (float f : floats)
         if (!std::isfinite(f)) return fail("a number in the save is not finite");
     if (w.tick < 0) return fail("the clock is impossible");
+    if (w.player.stamina < 0 || w.player.stamina > 1) return fail("Sisyphus's stamina is out of range");
     if (std::fabs(w.player.x) > hill::kWalkHalf + 1 || hill::sOf(w.player.z) < hill::kValleyS ||
         hill::sOf(w.player.z) > hill::kTopS + 1)
         return fail("Sisyphus is off the hill");
