@@ -105,7 +105,7 @@ void Session::noticeChanges() {
                 : "Refactored into " + into + ". One less thing to keep, and what is left is new.",
             5);
     } else if (b.boulder.v < -1.0f && a.boulder.v >= -1.0f && !b.falling && !b.pushing) {
-        say("It is rolling back down! It stops at the terrace below.", 5);
+        say("It is rolling back down! Let go only on a terrace: it stops at the one below.", 6);
     } else if (b.slipping && !a.slipping) {
         say("Too heavy. It slides back.", 4);
     }
@@ -238,13 +238,21 @@ void Session::step() {
     in.work = keys_[kE] || heldWork_;
     in.retire = keys_[kR] || heldRetire_;
     in.refactor = keys_[kF] || heldRefactor_;
+    // A retire or refactor that finished does not run on into the next
+    // module under the crosshair: let go first.
+    if (letGo_) {
+        if (!in.retire && !in.refactor) letGo_ = false;
+        in.retire = in.refactor = false;
+    }
     in.sit = sitOnce_;
     sitOnce_ = false;
     // Getting up by walking off.
     if (w_.player.sitting && (in.forward != 0 || in.strafe != 0)) in.sit = true;
     in.yaw = yaw_;
     in.pitch = pitch_;
+    const int32_t cut = w_.retired + w_.refactored;
     tick(w_, in);
+    if (w_.retired + w_.refactored != cut) letGo_ = true;
 }
 
 void Session::frame(double dt) {

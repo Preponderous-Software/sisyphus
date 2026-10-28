@@ -131,7 +131,10 @@ void rot(World& w) {
         if (was > 0 && m.health <= 0) ++w.breakdowns;
     }
     const int n = activeModules(w);
-    const float p = static_cast<float>(n) * kIncidentRate * (1.0f + 0.1f * static_cast<float>(w.major)) * kDt;
+    // Trouble comes more slowly while much is already open, so one pair of
+    // hands is pressed, not buried.
+    const float p = static_cast<float>(n) * kIncidentRate * (1.0f + 0.1f * static_cast<float>(w.major)) /
+                    (1.0f + 0.25f * static_cast<float>(openIssues(w))) * kDt;
     if (randomUnit(w.rng) < p) {
         for (int tries = 0; tries < 8; ++tries) {
             const int i = randomBelow(w.rng, kMaxModules);
@@ -240,6 +243,12 @@ void movePlayer(World& w, const Input& in) {
     const float sy = detSin(p.yaw), cy = detCos(p.yaw);
     float x = p.x + (sy * f + cy * s) * speed;
     float z = p.z + (-cy * f + sy * s) * speed;
+    // Pushing, he leans straight into it: no drifting off round its side
+    // however he faces, and no stepping sideways (squaring up does the rest).
+    if (w.pushing) {
+        x = p.x;
+        z = p.z + (w.pushingBack ? 1.0f : -1.0f) * (f > 0 ? f : 0) * speed;
+    }
     // The boulder is in the way.
     const float R = boulderRadius(w);
     const float bz = hill::zOf(w.boulder.s);

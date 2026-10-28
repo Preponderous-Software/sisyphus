@@ -106,7 +106,9 @@ int main() {
     // A push from a terrace carries it up the slope to the next one, even
     // started a little off-centre and not quite square to the hill: he stays
     // on it rather than sliding round it (a playtest lost the boulder this way).
-    for (float off : {-0.5f, 0.3f, 0.6f}) {
+    // Turned well off the hill too (a second playtest slid off this way).
+    for (float yaw : {-0.6f, -0.15f, 0.15f, 0.35f, 0.6f}) {
+        const float off = yaw < 0 ? -0.5f : yaw < 0.3f ? 0.3f : 0.6f;
         World w = quiet();
         heal(w);
         w.best = 1;
@@ -114,7 +116,7 @@ int main() {
         standBelow(w);
         w.player.x = off;
         Input in = pushIn();
-        in.yaw = 0.15f * (off < 0 ? -1.0f : 1.0f);
+        in.yaw = yaw;
         for (int t = 0; t < 90 * kTickRate && w.best < 2; ++t) {
             heal(w);
             tick(w, in);
