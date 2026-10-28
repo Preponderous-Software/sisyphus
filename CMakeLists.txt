@@ -87,6 +87,8 @@ if(SISYPHUS_BUILD_TESTS)
     endif()
     add_test(NAME ${t} COMMAND test_${t} "${CMAKE_CURRENT_BINARY_DIR}")
   endforeach()
+  # The saves test loads the committed fixtures (tests/fixtures).
+  target_compile_definitions(test_saves PRIVATE SISYPHUS_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures")
 endif()
 
 # ---------------------------------------------------------------- the game on Strata

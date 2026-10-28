@@ -202,6 +202,9 @@ function colourCount(png) {
   }
 
   // Save, reload, and the boulder is where it was, with the patch counted.
+  // An earlier autosave may already have set the note: clear it, so the wait
+  // below is for this save's flush to IndexedDB.
+  await page.evaluate(() => { document.getElementById('saveNote').textContent = ''; });
   await page.locator('#saveBtn').click();
   await page.waitForFunction(() => /Saved in this browser/.test(document.getElementById('saveNote').textContent), null,
     { timeout: 20000 }).catch(() => {});
