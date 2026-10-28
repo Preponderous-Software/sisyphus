@@ -117,7 +117,7 @@ int main() {
     {
         World w = quiet();
         for (Module& m : w.modules)
-            if (m.active) m.health = 0.05f;
+            if (m.active) m.health = 0;
         CHECK(load(w) >= 1);
         w.boulder.s = H::terraceStart(1) + H::kFlat + 10.0f;
         standBelow(w);
@@ -145,6 +145,10 @@ int main() {
         run(w, in, 2);
         CHECK(w.pushingBack);
         CHECK(w.boulder.s < s0 - 0.3f);
+        // Kept at it, it stops at the terrace's edge instead of going over.
+        run(w, in, 15);
+        CHECK(w.boulder.s >= H::terraceStart(2) + 0.29f);
+        CHECK(H::terraceAt(w.boulder.s) == 2);
     }
     // Rot: every module ages, an incident makes one rot fast, and a module
     // rotted through is down, and users leave.

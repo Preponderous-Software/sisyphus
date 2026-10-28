@@ -5,6 +5,7 @@
 // rolls back to the trailhead.
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <string>
 
@@ -22,6 +23,7 @@ private:
     Input walkTo(const World& w, float x, float z, float within);
     bool pushingOn_ = false;  // started a push from a terrace; keep going to the next
     int releasesSeen_ = 0;    // a push ends when it ships a release
+    std::array<int64_t, kMaxModules> skipUntil_{};  // modules it could not get a clear line to, until this tick
     std::string doing_;
 };
 
@@ -31,6 +33,6 @@ bool playthroughDone(const World& w);
 
 // The world's fingerprint at the end of the playthrough from seed 1. Any
 // change to the rules or the autopilot moves it: update it in the same change.
-constexpr uint64_t kPlaythroughFingerprint = 0x974ce19b32f6b911ull;
+constexpr uint64_t kPlaythroughFingerprint = 0x765ac999319cbe41ull;
 
 }  // namespace sisyphus

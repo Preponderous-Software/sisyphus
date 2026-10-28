@@ -20,8 +20,11 @@ struct Camera {
 };
 // At his eyes, looking where he looks.
 Camera cameraAtEyes(const World& w);
-// Behind and above him, looking past him up the hill (V).
+// Behind and above him, looking past him (the autopilot's view, and screenshots).
 Camera cameraBehind(const World& w);
+// Over his right shoulder, looking where he looks: the view you play in,
+// until V switches to his eyes.
+Camera cameraOverShoulder(const World& w);
 // Off to his side, looking across at him and the boulder (the tour's shots).
 Camera cameraBeside(const World& w, float side = 1.0f, float back = 2.0f);
 
@@ -45,6 +48,7 @@ struct Overlay {
     bool noText = false;         // a narrow browser page shows the words itself
     std::string message;         // the newest news, above the middle
     std::string quote;           // while sitting: words over the view
+    bool aim = true;             // the crosshair (outside him, it marks where he aims)
 };
 
 // Draws one frame (not presented) from `cam`.
