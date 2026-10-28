@@ -225,10 +225,18 @@ void movePlayer(World& w, const Input& in) {
 
 void doWork(World& w, const Input& in) {
     const bool wants = (in.work || in.retire) && !w.player.sitting && !w.pushing;
-    if (!wants) return;  // progress is kept until another module is worked on
+    Work& k = w.work;
+    if (!wants) {  // letting go starts the work over
+        k = Work{};
+        return;
+    }
     const int i = aimedModule(w);
     if (i < 0) return;
-    Work& k = w.work;
+    // A module as good as new needs nothing (it can still be retired).
+    if (!in.retire && w.modules[static_cast<size_t>(i)].health >= 0.98f) {
+        k = Work{};
+        return;
+    }
     if (k.module != i || k.retiring != in.retire) {
         k.module = i;
         k.seconds = 0;
@@ -275,20 +283,26 @@ void tick(World& w, const Input& in) {
     p.yaw = wrapAngle(in.yaw);
     p.pitch = clampf(in.pitch, -1.45f, 1.45f);
 
-    // Pushing: close to the boulder on its downhill side, facing up the hill,
-    // walking into it.
+    // Pushing: close to the boulder, walking into it, either from below
+    // facing up the hill, or (on level ground, to turn it) from above facing
+    // down it. Facing the boulder roughly is enough: he squares up to it as
+    // he pushes.
     const float R = boulderRadius(w);
     const float rx = p.x, rz = p.z - hill::zOf(w.boulder.s);
     const float d = std::sqrt(rx * rx + rz * rz);
-    // Pushing: close to the boulder, walking into it, either from below
-    // facing up the hill, or (on level ground, to turn it) from above facing
-    // down it.
+    const float lookX = detSin(p.yaw), lookZ = -detCos(p.yaw);
+    const float atIt = d > 1e-4f ? -(lookX * rx + lookZ * rz) / d : 1;  // 1 looking straight at its centre
     const bool free = !p.sitting && !w.falling && w.summitSeconds < 0 && in.forward > 0.3f && d <= R + kContact &&
-                      (rx < 0 ? -rx : rx) < 0.8f * R;
+                      (rx < 0 ? -rx : rx) < 0.9f * R && atIt > 0.6f;
     const float facing = detCos(p.yaw);  // 1 up the hill, -1 down it
-    w.pushing = free && rz > 0.35f * R && facing > 0.6f;
-    w.pushingBack = free && !w.pushing && rz < -0.35f * R && facing < -0.6f && hill::level(w.boulder.s);
+    w.pushing = free && rz > 0.2f * R && facing > 0.3f;
+    w.pushingBack = free && !w.pushing && rz < -0.2f * R && facing < -0.3f && hill::level(w.boulder.s);
     w.pushing = w.pushing || w.pushingBack;
+    if (w.pushing) {
+        // Squaring up: drawn towards the line through its centre.
+        const float pull = 0.6f * kDt;
+        p.x += rx > pull ? -pull : rx < -pull ? pull : -rx;
+    }
 
     moveBoulder(w, in);
 
