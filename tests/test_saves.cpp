@@ -119,17 +119,20 @@ int main(int argc, char** argv) {
     fs::remove_all(slot);
 
     // Saves written by released builds still load, exactly: the fixtures were
-    // written by 0.1.0 (tools/make_save_fixtures.cpp; tests/fixtures/README.md).
+    // written by 0.1.0 and 0.2.0 (tools/make_save_fixtures.cpp; tests/fixtures/README.md).
     // A fixture is never edited; a new save format gets fixtures of its own.
     struct Fixture {
         const char* name;
         uint64_t fingerprint;
         const char* version;
         int modules;
+        int cairns;  // format 1 had none, and loads rested
     };
     const Fixture fixtures[] = {
-        {"v1-first-climb.save", 0xaa131e98cf4f4146ull, "0.3", 9},
-        {"v1-after-summit.save", 0xb0a2e0bdfaae817full, "1.0", 13},
+        {"v1-first-climb.save", 0xaa131e98cf4f4146ull, "0.3", 9, 0},
+        {"v1-after-summit.save", 0xb0a2e0bdfaae817full, "1.0", 13, 0},
+        {"v4-after-summit.save", 0xa3efaf36e40ffa97ull, "1.0", 13, 1},
+        {"v4-second-climb.save", 0x63e8b136888800c6ull, "1.3", 16, 1},
     };
     for (const Fixture& f : fixtures) {
         std::ifstream in(fs::path(SISYPHUS_FIXTURES) / f.name, std::ios::binary);
@@ -141,7 +144,9 @@ int main(int argc, char** argv) {
         CHECK(fingerprint(x) == f.fingerprint);
         CHECK(versionText(x) == f.version);
         CHECK(activeModules(x) == f.modules);
-        CHECK(x.player.stamina == 1);  // format 1 had no stamina: he loads rested
+        CHECK(x.cairnCount == f.cairns);
+        if (f.cairns == 0) CHECK(x.player.stamina == 1);  // format 1 had no stamina: he loads rested
+        else CHECK(x.player.stamina < 1);
         // ... and the game plays on from it.
         Autopilot a;
         for (int t = 0; t < 30 * kTickRate; ++t) tick(x, a.next(x));
