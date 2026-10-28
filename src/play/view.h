@@ -25,9 +25,9 @@ struct Camera {
 Camera cameraAtEyes(const World& w);
 // Behind and above him, looking past him (the autopilot's view, and screenshots).
 Camera cameraBehind(const World& w);
-// Over his right shoulder, looking where he looks: the view you play in,
-// until V switches to his eyes.
-Camera cameraOverShoulder(const World& w);
+// Straight behind him, looking where he looks: the view V switches to from
+// his eyes.
+Camera cameraFollow(const World& w);
 // Off to his side, looking across at him and the boulder (the tour's shots).
 Camera cameraBeside(const World& w, float side = 1.0f, float back = 2.0f);
 
