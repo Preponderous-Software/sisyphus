@@ -197,12 +197,11 @@ Camera cameraBehind(const World& w) {
     return c;
 }
 
-Camera cameraOverShoulder(const World& w) {
+Camera cameraFollow(const World& w) {
     const Player& p = w.player;
     const Vec3 dir = lookDirection(p.yaw, p.pitch);
-    const Vec3 right{std::cos(p.yaw), 0, std::sin(p.yaw)};
     Camera c;
-    c.eye = eyePosition(w) - dir * 3.6f + right * 1.1f + Vec3{0, 0.9f, 0};
+    c.eye = eyePosition(w) - dir * 3.8f + Vec3{0, 0.9f, 0};
     c.eye.y = std::max(c.eye.y, hill::groundHeight(c.eye.x, c.eye.z) + 0.6f);
     c.yaw = p.yaw;
     c.pitch = p.pitch;
