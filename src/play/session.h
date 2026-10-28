@@ -87,6 +87,7 @@ private:
     bool running_ = true, captured_ = false, help_ = true, compact_ = false, outside_ = false;
     float yaw_ = 0, pitch_ = 0;
     float stickForward_ = 0, stickStrafe_ = 0;
+    float steps_ = 0;  // footsteps a second, from the last ticks
     bool heldWork_ = false, heldRetire_ = false, heldRefactor_ = false;
     bool sitOnce_ = false;
     double pending_ = 0;
