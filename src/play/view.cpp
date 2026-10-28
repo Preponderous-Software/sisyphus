@@ -103,6 +103,35 @@ void drawGlows(strata::Engine& engine, const World& w, float night) {
         p.flags = STRATA_POINT_SOFT;
         pts.push_back(p);
     }
+    // Who uses whom: from a module that is down, red links to everything
+    // that uses it; from the module you look at, faint links to its own.
+    const int aimed = w.player.sitting ? -1 : aimedModule(w);
+    for (int i = 0; i < kMaxModules; ++i) {
+        if (!w.modules[static_cast<size_t>(i)].active) continue;
+        const int d = dependency(w, i);
+        if (d < 0) continue;
+        const bool down = w.modules[static_cast<size_t>(d)].health <= 0;
+        if (!down && i != aimed && d != aimed) continue;
+        const Vec3 from = moduleDirection(i), to = moduleDirection(d);
+        for (int k = 1; k < 12; ++k) {
+            const float f = static_cast<float>(k) / 12.0f;
+            const Vec3 mid = from * (1 - f) + to * f;
+            if (length(mid) < 1e-3f) continue;
+            const Vec3 dir = rolled(w, mid * (1.0f / length(mid)));
+            const Vec3 at = c + dir * (R + 0.04f);
+            StrataPoint p{};
+            p.position[0] = at.x;
+            p.position[1] = at.y;
+            p.position[2] = at.z;
+            p.world_diameter = 0.07f * R;
+            p.color[0] = down ? 1.0f : 0.95f;
+            p.color[1] = down ? 0.25f : 0.92f;
+            p.color[2] = down ? 0.15f : 0.85f;
+            p.color[3] = down ? 0.9f : 0.55f;
+            p.flags = STRATA_POINT_SOFT;
+            pts.push_back(p);
+        }
+    }
     // The town's windows: one lit for every few users.
     static const std::vector<Vec3> windows = bridge::townWindows();
     const size_t lit = std::min(windows.size(), static_cast<size_t>(w.users / bridge::kUsersPerWindow));
@@ -266,7 +295,7 @@ std::vector<HudLine> hudLines(const World& w) {
     std::vector<int> open;
     for (int i = 0; i < kMaxModules; ++i) {
         const Module& m = w.modules[static_cast<size_t>(i)];
-        if (m.active && (m.issue != Issue::None || m.health <= 0.5f)) open.push_back(i);
+        if (m.active && (m.issue != Issue::None || m.health <= 0.5f || cascading(w, i))) open.push_back(i);
     }
     std::sort(open.begin(), open.end(), [&](int a, int b) {
         const float ha = w.modules[static_cast<size_t>(a)].health, hb = w.modules[static_cast<size_t>(b)].health;
@@ -277,9 +306,12 @@ std::vector<HudLine> hudLines(const World& w) {
     for (size_t k = 0; k < shown; ++k) {
         const int i = open[k];
         const Module& m = w.modules[static_cast<size_t>(i)];
-        const std::string what = m.health <= 0 ? "DOWN" : m.issue == Issue::None ? "rotting" : issueName(m.issue);
+        const std::string what = m.health <= 0               ? "DOWN"
+                                 : m.issue != Issue::None      ? issueName(m.issue)
+                                 : cascading(w, i)             ? std::string("uses ") + moduleName(dependency(w, i)) + ", down"
+                                                               : "rotting";
         // How fast it is going: percent a minute.
-        const int perMinute = static_cast<int>(std::lround(rotRate(w, m) * 6000.0f));
+        const int perMinute = static_cast<int>(std::lround(rotRate(w, i) * 6000.0f));
         const std::string pace = m.health <= 0 ? "" : "  -" + std::to_string(perMinute) + "%/min";
         out.push_back({padded(moduleName(i), 14) + padded(what, 21) + padded(percent(m.health), 5) + pace, false, m.health <= 0});
     }
@@ -310,7 +342,11 @@ std::string prompt(const World& w) {
     if (m.health <= 0) s += "DOWN";
     else if (m.issue != Issue::None) s += std::string(issueName(m.issue)) + ", " + issueLine(m.issue);
     else s += m.health > 0.9f ? "healthy" : "rotting";
-    s += " (" + percent(m.health) + ")\n";
+    s += " (" + percent(m.health) + ")";
+    const int dep = dependency(w, i);
+    if (dep >= 0) s += cascading(w, i) ? std::string(", and ") + moduleName(dep) + ", which it uses, is DOWN"
+                                       : std::string(", uses ") + moduleName(dep);
+    s += "\n";
     const bool working = w.work.module == i;
     if (working && w.work.retiring) s += "Retiring " + bar(w.work.seconds / kRetireSeconds, 12);
     else if (working) s += "Patching " + bar(w.work.seconds / patchSeconds(m), 12);

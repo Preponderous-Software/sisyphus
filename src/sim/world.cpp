@@ -30,6 +30,7 @@ constexpr float kIncidentRate = 1.0f / 240.0f;
 constexpr int kIssueWeight[kIssueKinds] = {0, 30, 25, 20, 15, 10};
 constexpr float kSpreadBelow = 0.5f;    // an advisory spreads once its module is this rotten
 constexpr float kSpreadRate = 1.0f / 10.0f;
+constexpr float kCascadeRot = 1.0f / 150.0f;  // using a module that is down
 
 const char* const kNames[kMaxModules] = {
     "core",          "auth",         "parser",        "router",       "storage",       "ui",
@@ -98,10 +99,16 @@ int neighbour(const World& w, int i) {
 }
 
 void rot(World& w) {
-    for (Module& m : w.modules) {
+    // Every rate first, so a module going down this tick does not speed up
+    // the rest until the next one.
+    std::array<float, kMaxModules> rate{};
+    for (int i = 0; i < kMaxModules; ++i)
+        if (w.modules[static_cast<size_t>(i)].active) rate[static_cast<size_t>(i)] = rotRate(w, i);
+    for (int i = 0; i < kMaxModules; ++i) {
+        Module& m = w.modules[static_cast<size_t>(i)];
         if (!m.active) continue;
         const float was = m.health;
-        m.health = clamp01(m.health - rotRate(w, m) * kDt);
+        m.health = clamp01(m.health - rate[static_cast<size_t>(i)] * kDt);
         if (was > 0 && m.health <= 0) ++w.breakdowns;
     }
     const int n = activeModules(w);
@@ -426,12 +433,37 @@ int aimedModule(const World& w) {
     return moduleOnSight(w, eyePosition(w), lookDirection(w.player.yaw, w.player.pitch));
 }
 
-float rotRate(const World& w, const Module& m) {
+int dependency(const World& w, int i) {
+    // Older means added earlier, and modules take slots in the order they
+    // are added. Ties go to the lower slot, the same on every compiler.
+    const Vec3 a = moduleDirection(i);
+    int best = -1;
+    float bestDot = -2;
+    for (int j = 0; j < i; ++j) {
+        if (!w.modules[static_cast<size_t>(j)].active) continue;
+        const float d = dot(a, moduleDirection(j));
+        if (d > bestDot) {
+            bestDot = d;
+            best = j;
+        }
+    }
+    return best;
+}
+
+bool cascading(const World& w, int i) {
+    const int d = dependency(w, i);
+    return d >= 0 && w.modules[static_cast<size_t>(d)].health <= 0;
+}
+
+float rotRate(const World& w, int i) {
     // Everything ages, faster in later major versions; older modules rot
-    // faster (legacy); an issue makes it fast.
+    // faster (legacy); an issue makes it fast, and so does using a module
+    // that is down.
+    const Module& m = w.modules[static_cast<size_t>(i)];
     const float age = 1.0f + 0.1f * static_cast<float>(w.major);
     const float years = static_cast<float>(w.releases - m.born);
-    return kBaseRot * age * (1.0f + 0.04f * (years < 10 ? years : 10)) + kIssueRot[static_cast<int>(m.issue)];
+    return kBaseRot * age * (1.0f + 0.04f * (years < 10 ? years : 10)) + kIssueRot[static_cast<int>(m.issue)] +
+           (cascading(w, i) ? kCascadeRot : 0.0f);
 }
 
 float patchSeconds(const Module& m) {
