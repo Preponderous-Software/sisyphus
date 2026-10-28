@@ -20,11 +20,17 @@ older code, faster rot. There is no end. You can always sit down and look at the
 
 | | |
 |---|---|
-| ![Patching a flaky test, up against the stone](docs/images/patching.jpg) | ![Pushing at night; the modules in trouble glow](docs/images/night.jpg) |
+| ![At the trailhead, over his shoulder](docs/images/trailhead.jpg) | ![The modules in trouble, named where they are on the stone](docs/images/trouble.jpg) |
 | ![The summit: 1.0 ships](docs/images/summit.jpg) | ![End of life: it rolls back down](docs/images/rolling-back.jpg) |
 | ![From the summit, looking down at all of it](docs/images/summit-view.jpg) | ![Back at the trailhead, sitting](docs/images/sitting.jpg) |
 
 *Screenshots from the game's own headless playthrough (`sisyphus --headless --frames DIR`), rendered by Strata.*
+
+## Download
+
+Windows and Linux builds are on the [releases page](https://github.com/Preponderous-Software/sisyphus/releases)
+(0.1.0 is a pre-release). Unzip and run `sisyphus.exe`, or `./sisyphus` on Linux; each needs an OpenGL 4.5 driver.
+Or play it in a browser at https://sisyphus.play.danielstephenson.dev.
 
 ## Playing
 
