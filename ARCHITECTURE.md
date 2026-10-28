@@ -23,13 +23,13 @@ web/         the page around the browser build, and its smoke test
   active modules. Pushing (close behind it, facing up the hill, walking forward) drives it towards
   `kPushSpeed * (1 - load)`, which is easier on level ground. Left on a slope it rolls back until a terrace stops it.
   At `load >= 1` it slides back even while pushed, though on level ground it can always be inched along. From
-  above, on level ground, it can be pushed back to turn it.
+  above, on level ground, it can be pushed back to turn it, as far as the terrace's edge and no further.
 - **Modules** sit at fixed points on the sphere: a Fibonacci sphere visited 29 points at a time, so a young boulder's
   few modules are spread out. Each face of the boulder belongs to the nearest active module. A module has a health
   (1 fresh, 0 down), an issue, and the release it shipped in. It rots slowly on its own, faster when it is old, and
   fast with an issue. Incidents arrive at a rate that grows with the number of modules and the major version. An
   advisory left to rot spreads to its nearest neighbour.
-- **Weight**: `load = 0.25 + 0.01 * modules + 0.8 * (1 - mean health) + 0.15 * modules down`.
+- **Weight**: `load = 0.25 + 0.01 * modules + 0.7 * (1 - mean health) + 0.15 * modules down`.
 - **Releases**: the first time the boulder reaches each terrace in a major version, a release ships. It adds users
   and a new module (until all 48 have shipped). The summit ships the next major. After `kSummitPause` seconds the
   boulder rolls all the way back to the trailhead, and the major version goes up.

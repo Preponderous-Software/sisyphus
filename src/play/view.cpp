@@ -173,6 +173,18 @@ Camera cameraBehind(const World& w) {
     return c;
 }
 
+Camera cameraOverShoulder(const World& w) {
+    const Player& p = w.player;
+    const Vec3 dir = lookDirection(p.yaw, p.pitch);
+    const Vec3 right{std::cos(p.yaw), 0, std::sin(p.yaw)};
+    Camera c;
+    c.eye = eyePosition(w) - dir * 3.6f + right * 1.1f + Vec3{0, 0.9f, 0};
+    c.eye.y = std::max(c.eye.y, hill::groundHeight(c.eye.x, c.eye.z) + 0.6f);
+    c.yaw = p.yaw;
+    c.pitch = p.pitch;
+    return c;
+}
+
 Camera cameraBeside(const World& w, float side, float back) {
     const Player& p = w.player;
     const Vec3 b = boulderCentre(w);
@@ -340,11 +352,20 @@ void render(strata::Engine& engine, const World& w, const Camera& cam, bool outs
             const float c[4] = {shipped ? gold[0] : ink[0], shipped ? gold[1] : ink[1], shipped ? gold[2] : ink[2], a};
             if (sx > 420 * gTextScale || sy > static_cast<float>(height) / 2) text(texts, keep, sx - gTextSize, sy, v, c);
         }
-        if (!outside) text(texts, keep, static_cast<float>(width) / 2 - gTextSize / 2, static_cast<float>(height) / 2 - gTextSize / 2, "+", ink);
-        float py = static_cast<float>(height) / 2 + 2 * gLine;
+        if (o.aim && !outside) text(texts, keep, static_cast<float>(width) / 2 - gTextSize / 2, static_cast<float>(height) / 2 - gTextSize / 2, "+", ink);
+        if (o.aim && outside) {
+            // From behind him, the crosshair marks where his own line of sight lands.
+            const Vec3 eye = eyePosition(w), dir = lookDirection(w.player.yaw, w.player.pitch);
+            Vec3 at;
+            if (moduleOnSight(w, eye, dir, &at) < 0) at = eye + dir * 8.0f;
+            float sx = 0, sy = 0;
+            if (toScreen(camera, at, width, height, sx, sy)) text(texts, keep, sx - gTextSize / 2, sy - gTextSize / 2, "+", ink);
+        }
+        // From behind him the crosshair sits low on the screen: the words go below it.
+        float py = static_cast<float>(height) * (outside ? 0.68f : 0.5f) + 2 * gLine;
         const std::string here = prompt(w);
         if (!here.empty()) py = centred(here, py, w.slipping ? alarm : ink);
-        if (!o.message.empty()) centred(o.message, std::max(static_cast<float>(height) / 2 + 5 * gLine, py + gLine), gold);
+        if (!o.message.empty()) centred(o.message, std::max(static_cast<float>(height) * (outside ? 0.68f : 0.5f) + 5 * gLine, py + gLine), gold);
     }
     if (o.help) {
         std::vector<std::string> items = {"W A S D walk / push", "Shift hurry", "Mouse look", "E hold: patch",

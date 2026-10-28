@@ -90,7 +90,9 @@ Input Autopilot::walkTo(const World& w, float x, float z, float within) {
         }
     }
     in.yaw = yawTo(tx - p.x, tz - p.z);
-    in.forward = 1;
+    // Slowing for the last step, so it stops where it meant to.
+    const float step = 2.2f / kTickRate;
+    in.forward = len < step ? len / step : 1;
     in.hurry = len > 8;
     return in;
 }
@@ -123,7 +125,7 @@ Input Autopilot::next(const World& w) {
         float need = m.health;
         if (m.issue == Issue::Advisory) need -= 0.2f;  // it spreads
         if (m.issue != Issue::None) need -= 0.1f;
-        if (need >= worstHealth) continue;
+        if (need >= worstHealth || w.tick < skipUntil_[static_cast<size_t>(i)]) continue;
         const Reach r = reachFor(w, i);
         if (!r.ok) continue;
         worst = i;
@@ -164,10 +166,18 @@ Input Autopilot::next(const World& w) {
         const Module& m = w.modules[static_cast<size_t>(worst)];
         doing_ = std::string(m.issue == Issue::None ? "tending " : "patching ") + moduleName(worst);
         const float dx = worstReach.x - p.x, dz = worstReach.z - p.z;
-        if (dx * dx + dz * dz > 0.3f * 0.3f) return walkTo(w, worstReach.x, worstReach.z, 0.25f);
-        Input in;
         const Vec3 eye = eyePosition(w);
         const Vec3 to = worstReach.at - eye;
+        // From where it actually stands, the line of sight must land on this module.
+        const bool onTarget = moduleOnSight(w, eye, to * (1.0f / length(to))) == worst;
+        if (!onTarget && dx * dx + dz * dz > 0.03f * 0.03f) return walkTo(w, worstReach.x, worstReach.z, 0.02f);
+        if (!onTarget) {
+            skipUntil_[static_cast<size_t>(worst)] = w.tick + 10 * kTickRate;  // try another for a while
+            Input still;
+            still.yaw = p.yaw;
+            return still;
+        }
+        Input in;
         in.yaw = yawTo(to.x, to.z);
         in.pitch = detAtan2(to.y, std::sqrt(to.x * to.x + to.z * to.z));
         in.work = true;

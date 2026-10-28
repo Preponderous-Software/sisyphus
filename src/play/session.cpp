@@ -33,7 +33,7 @@ constexpr float kQuoteSeconds = 7.0f;
 Session::Session(strata::Engine& engine, const SessionOptions& options)
     : engine_(engine), options_(options), w_(newWorld(options.seed)), scene_(engine) {
     World start = w_;
-    outside_ = options_.autopilot;
+    outside_ = true;  // over his shoulder; V for his eyes
     if (!options_.slot.empty() && !options_.fresh && hasSave(options_.slot)) {
         World loaded;
         const LoadResult r = loadSave(options_.slot, loaded);
@@ -240,7 +240,9 @@ void Session::frame(double dt) {
     o.noText = compact_;
     o.message = message_;
     o.quote = quote();
-    render(engine_, w_, out ? cameraBehind(w_) : cameraAtEyes(w_), out, o);
+    o.aim = !options_.autopilot;
+    const Camera cam = !out ? cameraAtEyes(w_) : options_.autopilot ? cameraBehind(w_) : cameraOverShoulder(w_);
+    render(engine_, w_, cam, out, o);
 }
 
 }  // namespace sisyphus::play

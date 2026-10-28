@@ -36,7 +36,7 @@ older code, faster rot. There is no end. You can always sit down and look at the
 | Patch the module you look at | hold `E` | hold **Patch** |
 | Retire it (one less thing to keep) | hold `R` | hold **Retire** |
 | Sit and look at the view | `Q` | **Sit** |
-| Watch from behind | `V` | **Camera** |
+| His eyes, or back over his shoulder (the default) | `V` | **Camera** |
 | Save / load the last save | `F5` / `F9` | **Save** |
 | Controls on screen / free the mouse | `F1` / `Esc` | |
 

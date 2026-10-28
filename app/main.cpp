@@ -8,7 +8,7 @@
 // Controls: mouse to look, W A S D to walk (walk into the boulder from below
 // to push it up the hill; on a terrace, from above to roll it back and turn
 // it), Shift to hurry, hold E on a module to patch it, hold R to retire it,
-// Q to sit and look at the view, V to watch from behind, F5 to save, F9 to
+// Q to sit and look at the view, V for his eyes (or back over his shoulder), F5 to save, F9 to
 // load the last save, F1 for help, Esc to free the mouse (Esc again quits).
 //
 // The game continues from its save in DIR (by default %APPDATA%\Sisyphus\default
@@ -134,7 +134,7 @@ int runPlaythrough(strata::Engine& engine, const Args& args) {
     bridge::Scene scene(engine);
     Autopilot pilot;
     Shooter shot{engine, scene, args.framesDir};
-    shot.shoot(w, "trailhead", play::cameraAtEyes(w), false, true,
+    shot.shoot(w, "trailhead", play::cameraOverShoulder(w), true, true,
                "The boulder is your software. Push it up to the next terrace to ship a release.");
     bool pushed = false, patched = false, summit = false, fell = false, night = false;
     int releases = 0;

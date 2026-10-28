@@ -11,7 +11,7 @@ namespace {
 
 constexpr float kDt = 1.0f / kTickRate;
 constexpr float kWalkSpeed = 2.2f, kHurrySpeed = 3.6f;  // metres per second
-constexpr float kPushSpeed = 1.6f;    // an unrotted boulder, pushed up a slope
+constexpr float kPushSpeed = 1.7f;    // an unrotted boulder, pushed up a slope
 constexpr float kFlatEase = 1.35f;    // pushing along a terrace is easier
 constexpr float kRollAccel = 2.2f;    // a boulder left on a slope speeds downhill
 constexpr float kMaxRoll = 8.0f;
@@ -23,9 +23,9 @@ constexpr float kContact = 0.75f;     // close enough to push
 
 // Rot, per second. Everything ages slowly; an issue makes it fast.
 constexpr float kBaseRot = 1.0f / 1200.0f;
-constexpr float kIssueRot[kIssueKinds] = {0, 1.0f / 160, 1.0f / 200, 1.0f / 140, 1.0f / 70, 1.0f / 90};
+constexpr float kIssueRot[kIssueKinds] = {0, 1.0f / 200, 1.0f / 240, 1.0f / 180, 1.0f / 90, 1.0f / 110};
 // Incidents a second, per active module (more modules, more trouble).
-constexpr float kIncidentRate = 1.0f / 200.0f;
+constexpr float kIncidentRate = 1.0f / 240.0f;
 // How likely each kind of incident is (weights, in Issue order after None).
 constexpr int kIssueWeight[kIssueKinds] = {0, 30, 25, 20, 15, 10};
 constexpr float kSpreadBelow = 0.5f;    // an advisory spreads once its module is this rotten
@@ -109,7 +109,7 @@ void rot(World& w) {
         if (was > 0 && m.health <= 0) ++w.breakdowns;
     }
     const int n = activeModules(w);
-    const float p = static_cast<float>(n) * kIncidentRate * (1.0f + 0.15f * static_cast<float>(w.major)) * kDt;
+    const float p = static_cast<float>(n) * kIncidentRate * (1.0f + 0.1f * static_cast<float>(w.major)) * kDt;
     if (randomUnit(w.rng) < p) {
         for (int tries = 0; tries < 8; ++tries) {
             const int i = randomBelow(w.rng, kMaxModules);
@@ -158,6 +158,15 @@ void moveBoulder(World& w, const Input& in) {
     }
     const float before = b.s;
     b.s += b.v * kDt;
+    // Rolled back to turn it, it stops at the terrace's edge rather than going over.
+    if (w.pushingBack) {
+        const int t = hill::terraceAt(before);
+        const float edge = t >= 0 ? hill::terraceStart(t) + 0.3f : hill::kRestS;
+        if (b.s < edge) {
+            b.s = before > edge ? edge : before;
+            b.v = 0;
+        }
+    }
     const float top = hill::terraceStart(hill::kSummit) + 8.0f;
     if (b.s > top) {
         b.s = top;
@@ -344,7 +353,7 @@ int openIssues(const World& w) {
 }
 
 float load(const World& w) {
-    return 0.25f + 0.01f * static_cast<float>(activeModules(w)) + 0.8f * (1 - health(w)) +
+    return 0.25f + 0.01f * static_cast<float>(activeModules(w)) + 0.7f * (1 - health(w)) +
            0.15f * static_cast<float>(brokenModules(w));
 }
 
