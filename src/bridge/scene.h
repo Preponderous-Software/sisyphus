@@ -31,8 +31,9 @@ private:
     void remove(uint32_t& id);
 
     strata::Engine& engine_;
-    uint32_t town_ = 0, markers_ = 0, boulder_ = 0, avatar_ = 0;
+    uint32_t town_ = 0, markers_ = 0, cairns_ = 0, boulder_ = 0, avatar_ = 0;
     int markersBest_ = -1;
+    uint64_t cairnsKey_ = 0;
     uint64_t boulderKey_ = 0;
     bool avatarPushing_ = false;
     size_t meshes_ = 0;

@@ -38,6 +38,19 @@ int main(int argc, char** argv) {
         CHECK(decodeSave(encodeSave(r), rb, &why));
         CHECK(rb.refactored == 4 && rb.refactoredInto == 2 && fingerprint(rb) == fingerprint(r));
     }
+    {
+        World c = played(400);  // format 4: the cairns
+        CHECK(c.cairnCount >= 1);
+        World cb;
+        CHECK(decodeSave(encodeSave(c), cb, &why));
+        CHECK(cb.cairnCount == c.cairnCount && cb.cairns[0].major == c.cairns[0].major && fingerprint(cb) == fingerprint(c));
+        World odd = c;
+        odd.cairnCount = kMaxCairns + 1;
+        CHECK(!decodeSave(encodeSave(odd), cb, &why));
+        odd = c;
+        odd.cairns[0].tick = c.tick + 1;  // from the future
+        CHECK(!decodeSave(encodeSave(odd), cb, &why));
+    }
     // ... and plays on the same.
     {
         World a = w, b = back;

@@ -338,6 +338,26 @@ int main() {
         CHECK(versionText(w) == "1.0");
         CHECK(nextVersionText(w) == "1.1");
         CHECK(activeModules(w) == modules);
+        // ... and a cairn for 1.0 stands at the trailhead, telling its climb.
+        CHECK(w.cairnCount == 1);
+        CHECK(w.cairns[0].major == 1 && w.cairns[0].modules == modules && w.cairns[0].tick == w.tick);
+        CHECK(cairnStory(w, 0).find("The cairn for 1.0") == 0);
+        const Vec3 b = cairnBase(0);
+        w.player.x = b.x;
+        w.player.z = b.z + 0.5f;
+        CHECK(cairnHere(w) == 0);
+        // The oldest goes when there are too many.
+        World many = w;
+        for (int k = 1; k < kMaxCairns + 3; ++k) {
+            many.cairns[static_cast<size_t>(many.cairnCount - 1)].major = 0;  // see that the oldest are the ones dropped
+            many.major = k + 1;
+            many.falling = true;
+            many.boulder.s = H::kRestS + 0.01f;
+            many.boulder.v = -1;
+            for (int t = 0; t < 10 && many.falling; ++t) tick(many, Input{});
+        }
+        CHECK(many.cairnCount == kMaxCairns);
+        CHECK(many.cairns[static_cast<size_t>(kMaxCairns - 1)].major == many.major);
     }
     // Sitting: he stays put, and the time is counted.
     {

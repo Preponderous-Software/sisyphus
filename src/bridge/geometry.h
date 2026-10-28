@@ -48,6 +48,10 @@ TerrainData buildTerrain();
 // shipped this major version (`best`), and a cairn at the summit.
 MeshData buildTown();
 MeshData buildMarkers(int best);
+// The cairns at the trailhead, one for each major version: taller for a
+// bigger codebase. `cairnsKey` says what they were built from.
+MeshData buildCairns(const World& w);
+uint64_t cairnsKey(const World& w);
 
 // The boulder, a unit sphere around the origin: each face belongs to the
 // nearest active module and is coloured by its health and its issue; the

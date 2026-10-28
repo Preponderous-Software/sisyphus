@@ -330,6 +330,7 @@ std::string prompt(const World& w) {
         return "";
     }
     const int i = aimedModule(w);
+    if (i < 0 && cairnHere(w) >= 0) return cairnStory(w, cairnHere(w));
     if (i < 0) {
         // Close to it but not pushing: say how.
         const Vec3 c = boulderCentre(w);
@@ -453,6 +454,19 @@ void render(strata::Engine& engine, const World& w, const Camera& cam, bool outs
             const bool shipped = w.falling || i <= w.best;
             const float a = clampf((80.0f - d) / 20.0f, 0, 1) * 0.9f;
             const float c[4] = {shipped ? gold[0] : ink[0], shipped ? gold[1] : ink[1], shipped ? gold[2] : ink[2], a};
+            if (!overHud(sx - gTextSize, sy)) text(texts, keep, sx - gTextSize, sy, v, c);
+        }
+        // The versions over the cairns at the trailhead.
+        for (int k = 0; k < w.cairnCount; ++k) {
+            const Vec3 b = cairnBase(k);
+            const Vec3 at{b.x, b.y + 2.0f, b.z};
+            const float dx = at.x - cam.eye.x, dz = at.z - cam.eye.z;
+            const float d = std::sqrt(dx * dx + dz * dz);
+            float sx = 0, sy = 0;
+            if (d < 1.0f || d > 30.0f || !toScreen(camera, at, width, height, sx, sy)) continue;
+            if (behindBoulder(w, cam.eye, at)) continue;
+            const std::string v = std::to_string(w.cairns[static_cast<size_t>(k)].major) + ".0";
+            const float c[4] = {gold[0], gold[1], gold[2], clampf((30.0f - d) / 10.0f, 0, 1) * 0.85f};
             if (!overHud(sx - gTextSize, sy)) text(texts, keep, sx - gTextSize, sy, v, c);
         }
         // The names of the modules in trouble, on the stone where they are.

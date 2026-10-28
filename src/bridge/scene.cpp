@@ -28,6 +28,13 @@ void Scene::update(const World& w, bool avatar) {
         markersBest_ = best;
     }
 
+    const uint64_t ck = cairnsKey(w);
+    if (ck != cairnsKey_) {
+        remove(cairns_);
+        cairns_ = upload(buildCairns(w));
+        cairnsKey_ = ck;
+    }
+
     const uint64_t key = boulderKey(w);
     if (!boulder_ || key != boulderKey_) {
         remove(boulder_);
@@ -70,6 +77,7 @@ Scene::~Scene() {
     try {
         remove(town_);
         remove(markers_);
+        remove(cairns_);
         remove(boulder_);
         remove(avatar_);
         engine_.setTerrain(nullptr);

@@ -19,7 +19,8 @@ the heavier the boulder the faster, and tired you push and patch slowly: sit dow
 
 At the summit the next major version ships. Then the platform under it reaches its end of life, and the boulder rolls
 all the way back to the trailhead with every old module still aboard. The next major version starts there: more code,
-older code, faster rot. There is no end. You can always sit down and look at the view.
+older code, faster rot. A cairn is raised beside the path there for the version that shipped: stand at one to read how
+its climb went. Over a long game they pile up. There is no end. You can always sit down and look at the view.
 
 ![Pushing the boulder up to the next release](docs/images/pushing.jpg)
 

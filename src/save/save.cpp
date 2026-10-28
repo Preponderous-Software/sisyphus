@@ -125,6 +125,19 @@ struct Fields {
             v(w.refactored);
             v(w.refactoredInto);
         }
+        if (version >= 4) {
+            v(w.cairnCount);
+            for (Cairn& c : w.cairns) {
+                v(c.major);
+                v(c.tick);
+                v(c.users);
+                v(c.modules);
+                v(c.patched);
+                v(c.retired);
+                v(c.refactored);
+                v(c.breakdowns);
+            }
+        }
     }
 };
 
@@ -167,6 +180,15 @@ bool plausible(const World& w, std::string* error) {
     if (w.work.retiring && w.work.refactoring) return fail("retiring and refactoring at once");
     if (w.refactored < 0 || w.refactoredInto < -1 || w.refactoredInto >= kMaxModules)
         return fail("the refactoring history is impossible");
+    if (w.cairnCount < 0 || w.cairnCount > kMaxCairns) return fail("an impossible number of cairns");
+    for (int k = 0; k < w.cairnCount; ++k) {
+        const Cairn& c = w.cairns[static_cast<size_t>(k)];
+        const Cairn* before = k > 0 ? &w.cairns[static_cast<size_t>(k - 1)] : nullptr;
+        if (!std::isfinite(c.users) || c.users < 0 || c.major < 1 || c.major > w.major || c.tick < 0 || c.tick > w.tick ||
+            c.modules < kMinModules || c.modules > kMaxModules || c.patched < 0 || c.retired < 0 || c.refactored < 0 ||
+            c.breakdowns < 0 || (before && (c.tick < before->tick || c.major <= before->major)))
+            return fail("a cairn's record is impossible");
+    }
     return true;
 }
 

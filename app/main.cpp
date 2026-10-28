@@ -182,6 +182,16 @@ int runPlaythrough(strata::Engine& engine, const Args& args) {
                        "The platform it runs on reached its end of life.");
         }
     }
+    // The cairn raised for 1.0, beside the path, telling its climb.
+    if (w.cairnCount > 0) {
+        World at = w;
+        const Vec3 b = cairnBase(0);
+        at.player.x = b.x - 1.3f;
+        at.player.z = b.z + 0.6f;
+        at.player.yaw = 1.2f;
+        at.player.pitch = -0.45f;
+        shot.shoot(at, "cairn", play::cameraAtEyes(at), false, true);
+    }
     // Back at the trailhead: sit, and look at the town.
     World sit = w;
     sit.player.x = 2.5f;
