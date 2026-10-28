@@ -136,7 +136,7 @@ int runPlaythrough(strata::Engine& engine, const Args& args) {
     Shooter shot{engine, scene, args.framesDir};
     shot.shoot(w, "trailhead", play::cameraOverShoulder(w), true, true,
                "The boulder is your software. Push it up to the next terrace to ship a release.");
-    bool pushed = false, patched = false, summit = false, fell = false, night = false;
+    bool pushed = false, patched = false, summit = false, fell = false, night = false, trouble = false;
     int releases = 0;
     const int64_t limit = 60LL * 60 * kTickRate;
     for (int64_t t = 0; t < limit && !playthroughDone(w); ++t) {
@@ -156,6 +156,11 @@ int runPlaythrough(strata::Engine& engine, const Args& args) {
                 const std::string name = "release-" + versionText(w);
                 shot.shoot(w, name.c_str(), play::cameraBeside(w, w.releases % 2 ? -1.0f : 1.0f, 3.0f), true, false);
             }
+        }
+        // Trouble on the stone: the names of the modules with issues, where they are.
+        if (!trouble && openIssues(w) >= 2 && boulderResting(w)) {
+            trouble = true;
+            shot.shoot(w, "trouble", lookingAt(boulderCentre(w), {4.0f, 2.5f, 5.0f}), true, true);
         }
         const float tod = timeOfDay(w);
         if (!night && tod > 0.8f && tod < 0.95f) {

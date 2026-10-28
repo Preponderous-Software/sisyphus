@@ -103,6 +103,49 @@ int main() {
         CHECK(w.users > users);
         CHECK(versionText(w) == "0.1");
     }
+    // A push from a terrace carries it up the slope to the next one, even
+    // started a little off-centre and not quite square to the hill: he stays
+    // on it rather than sliding round it (a playtest lost the boulder this way).
+    for (float off : {-0.5f, 0.3f, 0.6f}) {
+        World w = quiet();
+        heal(w);
+        w.best = 1;
+        w.boulder.s = H::terraceStart(1) + 2.0f;
+        standBelow(w);
+        w.player.x = off;
+        Input in = pushIn();
+        in.yaw = 0.15f * (off < 0 ? -1.0f : 1.0f);
+        for (int t = 0; t < 90 * kTickRate && w.best < 2; ++t) {
+            heal(w);
+            tick(w, in);
+        }
+        CHECK(w.best == 2);
+    }
+    // Letting go of E starts the work over.
+    {
+        World w = quiet();
+        int target = -1;
+        for (int i = 0; i < kStartModules && target < 0; ++i)
+            if (aimAt(w, i)) target = i;
+        if (target >= 0) {
+            w.modules[static_cast<size_t>(target)].health = 0.4f;
+            Input in;
+            in.yaw = w.player.yaw;
+            in.pitch = w.player.pitch;
+            in.work = true;
+            run(w, in, 1);
+            CHECK(w.work.module == target && w.work.seconds > 0.9f);
+            in.work = false;
+            tick(w, in);
+            CHECK(w.work.module == -1 && w.work.seconds == 0);
+            // And a module as good as new has nothing to patch.
+            w.modules[static_cast<size_t>(target)].health = 1;
+            in.work = true;
+            run(w, in, 3);
+            CHECK(w.patched == 0);
+        }
+        CHECK(target >= 0);
+    }
     // Left on a slope, it rolls back down to the terrace below and stops there.
     {
         World w = quiet();

@@ -95,11 +95,11 @@ void drawGlows(strata::Engine& engine, const World& w, float night) {
         p.position[0] = at.x;
         p.position[1] = at.y;
         p.position[2] = at.z;
-        p.world_diameter = 0.45f * R;
+        p.world_diameter = 0.6f * R;
         p.color[0] = col.r;
         p.color[1] = col.g;
         p.color[2] = col.b;
-        p.color[3] = (0.35f + 0.4f * night) * beat + 0.15f;
+        p.color[3] = (0.55f + 0.3f * night) * beat + 0.25f;
         p.flags = STRATA_POINT_SOFT;
         pts.push_back(p);
     }
@@ -145,6 +145,17 @@ bool toScreen(const StrataCamera& cam, Vec3 p, int32_t width, int32_t height, fl
     x = (c[0] / c[3] * 0.5f + 0.5f) * static_cast<float>(width);
     y = (0.5f - c[1] / c[3] * 0.5f) * static_cast<float>(height);
     return x > 0 && x < static_cast<float>(width) && y > 0 && y < static_cast<float>(height);
+}
+
+// Whether the boulder stands between the eye and a point.
+bool behindBoulder(const World& w, Vec3 eye, Vec3 p) {
+    const Vec3 c = boulderCentre(w);
+    const float R = boulderRadius(w);
+    Vec3 dir = p - eye;
+    const float len = length(dir);
+    dir = dir * (1.0f / len);
+    float t = 0;
+    return sightPasses(eye, dir, c, R, t) && t < len;
 }
 
 std::string percent(float v) { return std::to_string(static_cast<int>(std::lround(v * 100))) + "%"; }
@@ -225,13 +236,30 @@ std::vector<HudLine> hudLines(const World& w) {
     else out.push_back({"Users " + std::to_string(users)});
     out.push_back({"Modules " + std::to_string(activeModules(w)) + "   health " + bar(health(w), 10) + " " + percent(health(w))});
     const float L = load(w);
-    out.push_back({"Weight  " + bar(L, 10) + (L >= 1 ? "  too heavy to push uphill" : ""), false, L >= 1});
+    out.push_back({"Weight  " + bar(L, 10) + (L >= 1 ? "  too heavy to push uphill" : L >= 0.7f ? "  heavy" : ""), false, L >= 1});
+    if (L >= 0.7f) out.push_back({"  (rot and modules weigh it down: patch, or retire, to lighten it)"});
     if (w.summitSeconds >= 0) out.push_back({"At the summit: " + versionText(w) + " ships."});
     else if (w.falling) out.push_back({"It rolls. Follow it down."});
+    else if (w.boulder.v < -0.5f && !w.pushing) out.push_back({"The boulder is rolling back down!", false, true});
     else {
         const int next = w.best + 1;
         const float d = hill::terraceStart(next) - w.boulder.s;
-        out.push_back({"Next release " + nextVersionText(w) + ": " + std::to_string(static_cast<int>(std::ceil(d))) + " m uphill"});
+        out.push_back({"Next release " + nextVersionText(w) + (next >= hill::kSummit ? " (the summit)" : "") + ": " +
+                       std::to_string(static_cast<int>(std::ceil(d))) + " m uphill"});
+    }
+    // Where the boulder is, once it is out of reach.
+    {
+        const Vec3 c = boulderCentre(w);
+        const float dx = c.x - w.player.x, dz = c.z - w.player.z;
+        const float d = std::sqrt(dx * dx + dz * dz);
+        if (d > boulderRadius(w) + 4.0f) {
+            float turn = std::atan2(dx, -dz) - w.player.yaw;
+            while (turn > kPi) turn -= 2 * kPi;
+            while (turn < -kPi) turn += 2 * kPi;
+            const char* where = std::fabs(turn) < 0.5f ? "ahead" : std::fabs(turn) > 2.6f ? "behind you"
+                                : turn > 0 ? "to your right" : "to your left";
+            out.push_back({"The boulder: " + std::to_string(static_cast<int>(d)) + " m " + where});
+        }
     }
     out.push_back({""});
     // The open issues, worst first.
@@ -250,7 +278,10 @@ std::vector<HudLine> hudLines(const World& w) {
         const int i = open[k];
         const Module& m = w.modules[static_cast<size_t>(i)];
         const std::string what = m.health <= 0 ? "DOWN" : m.issue == Issue::None ? "rotting" : issueName(m.issue);
-        out.push_back({padded(moduleName(i), 14) + padded(what, 21) + percent(m.health), false, m.health <= 0});
+        // How fast it is going: percent a minute.
+        const int perMinute = static_cast<int>(std::lround(rotRate(w, m) * 6000.0f));
+        const std::string pace = m.health <= 0 ? "" : "  -" + std::to_string(perMinute) + "%/min";
+        out.push_back({padded(moduleName(i), 14) + padded(what, 21) + padded(percent(m.health), 5) + pace, false, m.health <= 0});
     }
     if (open.size() > shown) out.push_back({"... and " + std::to_string(open.size() - shown) + " more"});
     return out;
@@ -265,7 +296,15 @@ std::string prompt(const World& w) {
         return "";
     }
     const int i = aimedModule(w);
-    if (i < 0) return "";
+    if (i < 0) {
+        // Close to it but not pushing: say how.
+        const Vec3 c = boulderCentre(w);
+        const float dx = c.x - w.player.x, dz = c.z - w.player.z;
+        if (std::sqrt(dx * dx + dz * dz) < boulderRadius(w) + 2.5f && !w.falling && w.summitSeconds < 0)
+            return dz < 0 ? "Face the boulder and walk into it (W) to push it up the hill"
+                          : "From up here, walking into it (W) rolls it back (on level ground)";
+        return "";
+    }
     const Module& m = w.modules[static_cast<size_t>(i)];
     std::string s = std::string(moduleName(i)) + ": ";
     if (m.health <= 0) s += "DOWN";
@@ -275,6 +314,7 @@ std::string prompt(const World& w) {
     const bool working = w.work.module == i;
     if (working && w.work.retiring) s += "Retiring " + bar(w.work.seconds / kRetireSeconds, 12);
     else if (working) s += "Patching " + bar(w.work.seconds / patchSeconds(m), 12);
+    else if (m.health >= 0.98f) s += "Nothing to patch";
     else s += "Hold E to patch";
     if (activeModules(w) > kMinModules && !(working && w.work.retiring)) s += "   (hold R to retire it)";
     return s;
@@ -347,10 +387,14 @@ void render(strata::Engine& engine, const World& w, const Camera& cam, bool outs
         if (!o.quote.empty()) centred(o.quote, static_cast<float>(height) * 0.25f, ink);
     } else {
         float y = kMargin;
+        float hudRight = 0;  // the HUD's block, which labels keep out of
         for (const HudLine& l : hudLines(w)) {
             if (!l.text.empty()) text(texts, keep, kMargin, y, l.text, l.alarm ? alarm : l.heading ? gold : ink);
+            hudRight = std::max(hudRight, kMargin + gTextSize * static_cast<float>(l.text.size()));
             y += gLine;
         }
+        const float hudBottom = y;
+        auto overHud = [&](float x, float top) { return x < hudRight + gTextSize && top < hudBottom; };
         // The release numbers over the terraces ahead.
         for (int i = 1; i < hill::kTerraces; ++i) {
             const float s = hill::terraceStart(i) + hill::kFlat / 2;
@@ -359,12 +403,34 @@ void render(strata::Engine& engine, const World& w, const Camera& cam, bool outs
             const float d = std::sqrt(dx * dx + dz * dz);
             float sx = 0, sy = 0;
             if (d < 4.0f || d > 80.0f || !toScreen(camera, at, width, height, sx, sy)) continue;
+            if (behindBoulder(w, cam.eye, at)) continue;
             const std::string v = i == hill::kSummit ? std::to_string(w.major + 1) + ".0"
                                                      : std::to_string(w.falling ? w.major + 1 : w.major) + "." + std::to_string(i);
             const bool shipped = w.falling || i <= w.best;
             const float a = clampf((80.0f - d) / 20.0f, 0, 1) * 0.9f;
             const float c[4] = {shipped ? gold[0] : ink[0], shipped ? gold[1] : ink[1], shipped ? gold[2] : ink[2], a};
-            if (sx > 420 * gTextScale || sy > static_cast<float>(height) / 2) text(texts, keep, sx - gTextSize, sy, v, c);
+            if (!overHud(sx - gTextSize, sy)) text(texts, keep, sx - gTextSize, sy, v, c);
+        }
+        // The names of the modules in trouble, on the stone where they are.
+        {
+            const Vec3 c = boulderCentre(w);
+            const float R = boulderRadius(w);
+            for (int i = 0; i < kMaxModules; ++i) {
+                const Module& m = w.modules[static_cast<size_t>(i)];
+                if (!m.active || (m.issue == Issue::None && m.health > 0.5f)) continue;
+                const Vec3 n = rolled(w, moduleDirection(i));
+                const Vec3 at = c + n * (R + 0.1f);
+                const Vec3 toEye = cam.eye - at;
+                const float d = length(toEye);
+                if (d > 30.0f || dot(n, toEye) <= 0) continue;  // far, or on the far side
+                float sx = 0, sy = 0;
+                if (!toScreen(camera, at, width, height, sx, sy)) continue;
+                const bridge::Rgb col = m.health <= 0 ? bridge::Rgb{1.0f, 0.3f, 0.25f} : bridge::issueColor(m.issue);
+                const float c4[4] = {col.r, col.g, col.b, clampf((30.0f - d) / 8.0f, 0, 1)};
+                const std::string name = moduleName(i);
+                const float left = sx - gTextSize * 0.5f * static_cast<float>(name.size());
+                if (!overHud(left, sy - gTextSize)) text(texts, keep, left, sy - gTextSize, name, c4);
+            }
         }
         if (o.aim && !outside) text(texts, keep, static_cast<float>(width) / 2 - gTextSize / 2, static_cast<float>(height) / 2 - gTextSize / 2, "+", ink);
         if (o.aim && outside) {
@@ -389,8 +455,9 @@ void render(strata::Engine& engine, const World& w, const Camera& cam, bool outs
     }
     if (o.help) {
         std::vector<std::string> items = {"W A S D walk / push", "Shift hurry", "Mouse look", "E hold: patch",
-                                          "R hold: retire", "Q sit", "V camera", "M sound", "F5 save", "F9 load", "F1 hide help",
-                                          "Esc free mouse"};
+                                          "R hold: retire", "Q sit", "V camera", "M sound"};
+        if (o.saves) items.insert(items.end(), {"F5 save", "F9 load"});
+        items.insert(items.end(), {"F1 hide help", "Esc free mouse"});
         std::vector<std::string> lines(1);
         for (const std::string& item : items) {
             if (!lines.back().empty() && lines.back().size() + 3 + item.size() > columns) lines.emplace_back();

@@ -98,6 +98,8 @@ void Session::noticeChanges() {
         say(std::string(moduleName(b.lastIncident)) + ": " + issueName(b.lastIssue) + ".", 4);
     } else if (b.retired > a.retired) {
         say("Retired. One less thing to keep, and a few users miss it.", 5);
+    } else if (b.boulder.v < -1.0f && a.boulder.v >= -1.0f && !b.falling && !b.pushing) {
+        say("It is rolling back down! It stops at the terrace below.", 5);
     } else if (b.slipping && !a.slipping) {
         say("Too heavy. It slides back.", 4);
     }
@@ -263,6 +265,7 @@ void Session::frame(double dt) {
     o.message = message_;
     o.quote = quote();
     o.aim = !options_.autopilot;
+    o.saves = !options_.slot.empty();
     const Camera cam = !out ? cameraAtEyes(w_) : options_.autopilot ? cameraBehind(w_) : cameraOverShoulder(w_);
     render(engine_, w_, cam, out, o);
 }

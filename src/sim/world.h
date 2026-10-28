@@ -122,6 +122,8 @@ int moduleOnSight(const World& w, Vec3 eye, Vec3 dir, Vec3* hit = nullptr);
 Vec3 eyePosition(const World& w);
 // The module the player is looking at, within reach, or -1.
 int aimedModule(const World& w);
+// How fast a module is rotting now, in health per second.
+float rotRate(const World& w, const Module& m);
 // Seconds of work to patch the module as it is now.
 float patchSeconds(const Module& m);
 // "0.3", or "1.0" once the summit is reached.
