@@ -57,7 +57,8 @@ cmake --build build -j
 ctest --test-dir build           # the rules, the meshes, the saves, the pinned playthrough
 ```
 
-On Windows saves go to `%APPDATA%\Sisyphus\default`. To build only the rules and tests, without the engine, add
+On Windows saves go to `%APPDATA%\Sisyphus\default`, and `tools/play-sisyphus.bat` clones, builds and starts the
+game in one go (installing CMake and the C++ build tools with winget if they are missing). To build only the rules and tests, without the engine, add
 `-DSISYPHUS_WITH_STRATA=OFF`. For the browser build, see [docs/WEB.md](docs/WEB.md).
 
 `./build/sisyphus --headless --frames DIR` plays the autopilot's whole first major version (0.0 to 1.0 at the summit,
