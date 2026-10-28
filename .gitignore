@@ -1,0 +1,7 @@
+build*/
+frames/
+*.log
+Testing/
+web/smoke/node_modules/
+smoke-out/
+web-site/

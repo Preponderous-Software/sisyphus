@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  sim:
+    name: Rules and tests (Linux)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the simulation and tests (no engine)
+        run: |
+          cmake -S . -B build -DSISYPHUS_WITH_STRATA=OFF -DSISYPHUS_WARNINGS_AS_ERRORS=ON
+          cmake --build build -j4
+      - name: Tests
+        run: ctest --test-dir build --output-on-failure
+
+  game-linux:
+    name: Game (Linux, headless playthrough)
+    runs-on: ubuntu-24.04
+    env:
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      GALLIUM_DRIVER: llvmpipe
+      __EGL_VENDOR_LIBRARY_FILENAMES: /usr/share/glvnd/egl_vendor.d/50_mesa.json
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SDL3 build dependencies and Mesa
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            libx11-dev libxext-dev libxcursor-dev libxi-dev libxfixes-dev libxrandr-dev libxss-dev \
+            libegl-dev libgl-dev libegl1 libegl-mesa0 libgl1-mesa-dri
+      - name: Build the game on Strata
+        run: |
+          cmake -S . -B build -DSISYPHUS_WARNINGS_AS_ERRORS=ON -DSISYPHUS_BUILD_TESTS=OFF
+          cmake --build build -j4 --target sisyphus
+      - name: Headless playthrough (pinned fingerprint, screenshots)
+        run: |
+          mkdir -p frames
+          ./build/sisyphus --headless --frames frames --width 960 --height 540
+          test "$(ls frames/*.png | wc -l)" -ge 12
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frames-linux
+          path: frames/
+
+  game-windows:
+    name: Game (Windows, MSVC)
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build -A x64 -DSISYPHUS_WARNINGS_AS_ERRORS=ON
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - name: Tests (the same pinned fingerprint as GCC and Clang)
+        run: ctest --test-dir build -C Release --output-on-failure
