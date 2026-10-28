@@ -341,6 +341,7 @@ void render(strata::Engine& engine, const World& w, const Camera& cam, bool outs
         return row;
     };
 
+    float wordsEnd = 0;  // the bottom of the prompt and the message
     if (w.player.sitting) {
         // Sitting: no HUD, only the view, and the words.
         if (!o.quote.empty()) centred(o.quote, static_cast<float>(height) * 0.25f, ink);
@@ -374,11 +375,17 @@ void render(strata::Engine& engine, const World& w, const Camera& cam, bool outs
             float sx = 0, sy = 0;
             if (toScreen(camera, at, width, height, sx, sy)) text(texts, keep, sx - gTextSize / 2, sy - gTextSize / 2, "+", ink);
         }
-        // From behind him the crosshair sits low on the screen: the words go below it.
-        float py = static_cast<float>(height) * (outside ? 0.68f : 0.5f) + 2 * gLine;
+        // The prompt, then the message, below the crosshair (lower from behind
+        // him, where the crosshair sits low), moved up if they would run off
+        // the bottom of a small window.
         const std::string here = prompt(w);
-        if (!here.empty()) py = centred(here, py, w.slipping ? alarm : ink);
-        if (!o.message.empty()) centred(o.message, std::max(static_cast<float>(height) * (outside ? 0.68f : 0.5f) + 5 * gLine, py + gLine), gold);
+        const size_t lines = (here.empty() ? 0 : wrapped(here, columns).size()) +
+                             (o.message.empty() ? 0 : 1 + wrapped(o.message, columns).size());
+        float py = static_cast<float>(height) * (outside ? 0.6f : 0.5f) + 2 * gLine;
+        py = std::min(py, static_cast<float>(height) - kMargin - gLine * static_cast<float>(lines));
+        if (!here.empty()) py = centred(here, py, w.slipping ? alarm : ink) + gLine;
+        if (!o.message.empty()) py = centred(o.message, py, gold);
+        wordsEnd = py;
     }
     if (o.help) {
         std::vector<std::string> items = {"W A S D walk / push", "Shift hurry", "Mouse look", "E hold: patch",
@@ -390,6 +397,8 @@ void render(strata::Engine& engine, const World& w, const Camera& cam, bool outs
             lines.back() += (lines.back().empty() ? "" : "   ") + item;
         }
         float bottom = static_cast<float>(height) - kMargin - gTextSize;
+        // The controls give way to the words when a small window has no room for both.
+        if (bottom - gLine * static_cast<float>(lines.size() - 1) < wordsEnd) lines.clear();
         for (size_t i = lines.size(); i-- > 0;) {
             const float dim[4] = {ink[0], ink[1], ink[2], 0.8f};
             text(texts, keep, kMargin, bottom, lines[i], dim);
