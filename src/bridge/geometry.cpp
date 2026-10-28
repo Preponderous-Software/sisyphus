@@ -250,6 +250,30 @@ MeshData buildTown() {
     return m;
 }
 
+MeshData buildCairns(const World& w) {
+    MeshData m;
+    for (int k = 0; k < w.cairnCount; ++k) {
+        const Cairn& c = w.cairns[static_cast<size_t>(k)];
+        const Vec3 b = cairnBase(k);
+        const int stones = 3 + c.modules / 8;
+        float y = b.y - 0.1f;
+        for (int i = 0; i < stones; ++i) {
+            const float r = 0.5f - 0.32f * static_cast<float>(i) / static_cast<float>(stones);
+            const float h = 0.22f + 0.08f * hash01(static_cast<uint32_t>(c.major * 16 + i), 41);
+            const float ox = 0.06f * (hash01(static_cast<uint32_t>(c.major * 16 + i), 42) - 0.5f);
+            const float oz = 0.06f * (hash01(static_cast<uint32_t>(c.major * 16 + i), 43) - 0.5f);
+            m.box({b.x + ox - r, y, b.z + oz - r}, {b.x + ox + r, y + h, b.z + oz + r},
+                  scale(kStone, 0.8f + 0.4f * hash01(static_cast<uint32_t>(c.major * 16 + i), 44)));
+            y += h;
+        }
+    }
+    return m;
+}
+
+uint64_t cairnsKey(const World& w) {
+    return w.cairnCount == 0 ? 0 : static_cast<uint64_t>(w.cairnCount) << 32 | static_cast<uint32_t>(w.cairns[static_cast<size_t>(w.cairnCount - 1)].major);
+}
+
 MeshData buildMarkers(int best) {
     MeshData m;
     for (int i = 1; i < H::kSummit; ++i) {

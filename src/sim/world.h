@@ -17,6 +17,10 @@
 // the slow middle way between patching and retiring, costs no users, and
 // can break a test on the way.
 //
+// Each time the boulder rolls back to the trailhead, a cairn is raised there
+// for the major version that just shipped, recording how its climb went.
+// Over a long game they pile up beside the path.
+//
 // Sisyphus tires. Pushing wears him out, the heavier the boulder the faster,
 // and so does working on modules; tired, he pushes and works slowly.
 // Standing still he gets his breath back a little; sitting down to look at
@@ -77,6 +81,17 @@ struct Work {
     bool refactoring = false;  // save format 3
 };
 
+// One major version's climb, raised as a cairn at the trailhead.
+struct Cairn {
+    int32_t major = 0;  // the version shipped: 1 for 1.0
+    int64_t tick = 0;   // when the boulder came back down
+    float users = 0;
+    int32_t modules = 0;
+    // Totals when it was raised; the climb's own are the difference from the cairn before.
+    int32_t patched = 0, retired = 0, refactored = 0, breakdowns = 0;
+};
+constexpr int kMaxCairns = 24;  // the oldest goes when there are more
+
 struct World {
     uint64_t seed = 1;
     uint64_t rng = 0;
@@ -101,6 +116,8 @@ struct World {
     float satSeconds = 0;  // time spent sitting, looking at the valley
     int32_t refactored = 0;  // modules folded into the ones they use (save format 3)
     int32_t refactoredInto = -1;  // the module the newest refactor kept, until the next
+    std::array<Cairn, kMaxCairns> cairns{};  // oldest first (save format 4)
+    int32_t cairnCount = 0;
 };
 
 // One tick's input. `work`, `retire` and `refactor` are held; `sit` toggles.
@@ -158,6 +175,12 @@ bool cascading(const World& w, int i);
 float rotRate(const World& w, int i);
 // Seconds of work to patch the module as it is now.
 float patchSeconds(const Module& m);
+// Where cairn k stands, on the ground at the trailhead.
+Vec3 cairnBase(int k);
+// The cairn the player stands at, or -1.
+int cairnHere(const World& w);
+// Cairn k's climb in words.
+std::string cairnStory(const World& w, int k);
 // Whether module i can be refactored into the module it uses now.
 bool canRefactor(const World& w, int i);
 // "0.3", or "1.0" once the summit is reached.

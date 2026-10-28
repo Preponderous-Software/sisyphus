@@ -150,6 +150,22 @@ void rot(World& w) {
     }
 }
 
+void raiseCairn(World& w) {
+    if (w.cairnCount == kMaxCairns) {
+        for (int k = 1; k < kMaxCairns; ++k) w.cairns[static_cast<size_t>(k - 1)] = w.cairns[static_cast<size_t>(k)];
+        --w.cairnCount;
+    }
+    Cairn& c = w.cairns[static_cast<size_t>(w.cairnCount++)];
+    c.major = w.major;
+    c.tick = w.tick;
+    c.users = w.users;
+    c.modules = activeModules(w);
+    c.patched = w.patched;
+    c.retired = w.retired;
+    c.refactored = w.refactored;
+    c.breakdowns = w.breakdowns;
+}
+
 void moveBoulder(World& w, const Input& in) {
     Boulder& b = w.boulder;
     const float R = boulderRadius(w);
@@ -203,6 +219,7 @@ void moveBoulder(World& w, const Input& in) {
             w.falling = false;
             ++w.major;
             w.best = 0;
+            raiseCairn(w);
         }
     }
     b.roll = wrapAngle(b.roll + (b.s - before) / R);
@@ -516,6 +533,37 @@ float rotRate(const World& w, int i) {
            (cascading(w, i) ? kCascadeRot : 0.0f);
 }
 
+Vec3 cairnBase(int k) {
+    // Beside the path on the trailhead terrace, both sides turn about, in
+    // rows along it; the boulder rests in the middle.
+    const float side = k % 2 == 0 ? 1.0f : -1.0f;
+    const int n = k / 2;
+    const float s = 0.8f + 1.7f * static_cast<float>(n % 6);
+    const float x = side * (hill::kPathHalf - 0.8f - 1.5f * static_cast<float>(n / 6));
+    const float z = hill::zOf(s);
+    return {x, hill::groundHeight(x, z), z};
+}
+
+int cairnHere(const World& w) {
+    for (int k = 0; k < w.cairnCount; ++k) {
+        const Vec3 b = cairnBase(k);
+        const float dx = b.x - w.player.x, dz = b.z - w.player.z;
+        if (dx * dx + dz * dz < 1.6f * 1.6f) return k;
+    }
+    return -1;
+}
+
+std::string cairnStory(const World& w, int k) {
+    const Cairn& c = w.cairns[static_cast<size_t>(k)];
+    const Cairn before = k > 0 ? w.cairns[static_cast<size_t>(k - 1)] : Cairn{};
+    const int64_t minutes = (c.tick - before.tick) / (60 * kTickRate);
+    return "The cairn for " + std::to_string(c.major) + ".0: " + std::to_string(minutes) + " min to the summit and back, " +
+           std::to_string(c.modules) + " modules, " + std::to_string(static_cast<int>(c.users)) + " users.\n" +
+           std::to_string(c.patched - before.patched) + " patched, " + std::to_string(c.retired - before.retired) +
+           " retired, " + std::to_string(c.refactored - before.refactored) + " refactored, " +
+           std::to_string(c.breakdowns - before.breakdowns) + " went down.";
+}
+
 bool canRefactor(const World& w, int i) {
     return w.modules[static_cast<size_t>(i)].active && activeModules(w) > kMinModules && dependency(w, i) >= 0;
 }
@@ -607,6 +655,20 @@ uint64_t fingerprint(const World& w) {
     if (w.player.stamina != 1) f(w.player.stamina);
     if (w.refactored != 0) i(w.refactored);
     if (w.work.refactoring) i(1);
+    if (w.cairnCount != 0) {
+        i(w.cairnCount);
+        for (int k = 0; k < w.cairnCount; ++k) {
+            const Cairn& c = w.cairns[static_cast<size_t>(k)];
+            i(c.major);
+            i(c.tick);
+            f(c.users);
+            i(c.modules);
+            i(c.patched);
+            i(c.retired);
+            i(c.refactored);
+            i(c.breakdowns);
+        }
+    }
     return h;
 }
 
