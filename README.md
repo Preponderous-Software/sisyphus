@@ -23,7 +23,7 @@ older code, faster rot. There is no end. You can always sit down and look at the
 
 | | |
 |---|---|
-| ![At the trailhead, over his shoulder](docs/images/trailhead.jpg) | ![The modules in trouble, named where they are on the stone](docs/images/trouble.jpg) |
+| ![At the trailhead, through his eyes](docs/images/trailhead.jpg) | ![The modules in trouble, named where they are on the stone](docs/images/trouble.jpg) |
 | ![The summit: 1.0 ships](docs/images/summit.jpg) | ![End of life: it rolls back down](docs/images/rolling-back.jpg) |
 | ![From the summit, looking down at all of it](docs/images/summit-view.jpg) | ![Back at the trailhead, sitting](docs/images/sitting.jpg) |
 
@@ -45,7 +45,7 @@ Or play it in a browser at https://sisyphus.play.danielstephenson.dev.
 | Patch the module you look at | hold `E` | hold **Patch** |
 | Retire it (one less thing to keep) | hold `R` | hold **Retire** |
 | Sit and look at the view | `Q` | **Sit** |
-| His eyes, or back over his shoulder (the default) | `V` | **Camera** |
+| From behind him, or back to his eyes (the default) | `V` | **Camera** |
 | Save / load the last save | `F5` / `F9` | **Save** |
 | Controls on screen / free the mouse | `F1` / `Esc` | |
 

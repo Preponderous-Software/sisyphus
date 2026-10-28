@@ -38,7 +38,7 @@ Session::Session(strata::Engine& engine, const SessionOptions& options)
     : engine_(engine), options_(options), w_(newWorld(options.seed)), scene_(engine) {
     if (options_.sound) sound_.start();
     World start = w_;
-    outside_ = true;  // over his shoulder; V for his eyes
+    outside_ = false;  // his eyes; V for behind him
     if (!options_.slot.empty() && !options_.fresh && hasSave(options_.slot)) {
         World loaded;
         const LoadResult r = loadSave(options_.slot, loaded);
@@ -266,7 +266,7 @@ void Session::frame(double dt) {
     o.quote = quote();
     o.aim = !options_.autopilot;
     o.saves = !options_.slot.empty();
-    const Camera cam = !out ? cameraAtEyes(w_) : options_.autopilot ? cameraBehind(w_) : cameraOverShoulder(w_);
+    const Camera cam = !out ? cameraAtEyes(w_) : options_.autopilot ? cameraBehind(w_) : cameraFollow(w_);
     render(engine_, w_, cam, out, o);
 }
 
