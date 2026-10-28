@@ -1,0 +1,80 @@
+{
+  "session": "s01",
+  "goal": "Play as a brand-new player who has never heard of the game. Read the HUD and the first message, work out how to push the boulder and how to patch a module, and get as far up the hill as you can (each terrace is a release: 0.1, 0.2, ...). Note every moment of confusion, and answer the questions at the end.",
+  "build": {"version": "0.1 (in-game release reached; session.json version null)", "commit": "8ce3be2"},
+  "seed": 1,
+  "durationSec": 1635,
+  "outcome": "partial",
+  "findings": [
+    {
+      "severity": "major",
+      "category": "bug",
+      "title": "Cannot push the boulder off the 0.1 terrace: walker slides past it on one side",
+      "detail": "From 0.0 to 0.1, pushing was effortless (W then Shift+W, ~29 s). From the 0.1 terrace on, seven separate attempts from below (third person and first person, plain W and Shift+W, boulder centred on crosshair or on the character, and alternating 'hold w 0.6' with 'look -25 0' to steer into it) each gained at most 1 m (28 -> 27 -> 26 m) before the walker slid off the boulder's right side and kept walking uphill alone ('The boulder: 5-20 m behind you'). The boulder then rolls back. Expected: walking into the boulder from below to catch and push it as it did on the first slope.",
+      "repro": "pt start --profile sisyphus-strata --game-dir <sis-pt> --seed 1; pt hold Shift_L+w 29 (ships 0.1); stop on slope so it rolls back to the 0.1 terrace; walk below it on the path, face it, pt hold Shift_L+w 4 -> walker passes it on the right, 'Next release 0.2' stays ~27 m",
+      "screenshot": "shots/lostcontact.png",
+      "tick": 9825
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "No warning that letting go on the slope rolls the boulder back to the last terrace",
+      "detail": "The opening text says push W and hold E to patch, which invites stopping mid-slope to patch the first issue (search: flaky test) that appears 19 m up. Holding E there rolled the boulder back to the 0.1 terrace, losing ~12 m. Later a patch on the slope was interrupted the same way (router stayed at 78%). The rule 'you can only patch on a terrace' is learned only by losing progress. Expected: a line in the intro or when the first issue appears ('patch it on the next terrace; let go on the slope and it rolls back').",
+      "repro": "pt start --profile sisyphus-strata --game-dir <sis-pt> --seed 1; pt hold w 5; pt hold Shift_L+w 24 (ship 0.1); pt hold Shift_L+w 15 (issue appears); pt hold e 2 -> 'The boulder is rolling back down!'",
+      "screenshot": "shots/rollback.png",
+      "tick": 2860
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Patch/retire prompt does not name the face under the crosshair",
+      "detail": "In first person next to the boulder, the prompt named 'storage' over both a dark-green and a gold face, and named 'auth: healthy (98%) Hold E to patch' while the crosshair was on open ground beside the boulder. The target seems to be picked by proximity, not by the crosshair, so aiming at the floating 'search' label is the only reliable way. Expected: the prompt follows the crosshair (or highlights the targeted module).",
+      "repro": "pt start --profile sisyphus-strata --game-dir <sis-pt> --seed 1; push to 0.1; pt key v; near the boulder pt look 40 0 / -80 0 and read the prompt under the crosshair",
+      "screenshot": "shots/target.png",
+      "tick": 6479
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Hard to tell which way is uphill on the 0.1 terrace; much time lost circling the boulder",
+      "detail": "After the roll-back I spent ~15 minutes trying to get below the boulder. 'The boulder: N m ahead/to your right/behind you' in the HUD is very helpful, but nothing points uphill or along the path, the 'From up here...' / 'Face the boulder...' hints flip as you circle it, and the path is hard to read on the software renderer. Expected: an uphill/path arrow, or the hint saying which side to go to.",
+      "repro": "pt start --profile sisyphus-strata --game-dir <sis-pt> --seed 1; ship 0.1, let it roll back, then try to get below it using screenshots only",
+      "screenshot": "shots/orient.png",
+      "tick": 4452
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Rotting modules on the boulder's underside are out of reach and not all are tinted",
+      "detail": "'search' (flaky test) and 'router' (deprecated API) both sat on the underside; their in-world labels only showed from some angles and the purple glow was the only clue. 'auth' turned a bright yellow-green when rotting, but 'core' (deprecated API, 60%) kept its normal dark blue so it was hard to spot. Rolling it from the uphill side to bring them up is mentioned in the controls notes but not in the game.",
+      "repro": "pt start --profile sisyphus-strata --game-dir <sis-pt> --seed 1; ship 0.1; wait for 'search' issue; try to find it on the boulder",
+      "screenshot": "shots/coreok.png",
+      "tick": 10026
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Good: opening screen, release toast and patch feedback are clear",
+      "detail": "The first screen explains the whole idea in two lines; 'Shipped 0.1. New module: search.' with users 10->50 feels good; patching shows a progress bar and 'auth: healthy (100%)', and 'No open issues. It will not last.' sets the tone. Recorded so it is kept.",
+      "repro": "pt start --profile sisyphus-strata --game-dir <sis-pt> --seed 1; pt shot open; pt hold Shift_L+w 29",
+      "screenshot": "shots/ship01.png",
+      "tick": null
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 1,
+    "deaths": 0,
+    "secondsToObjective": {"Ship 0.1": 185.0, "First successful patch (auth)": 580.0},
+    "highestVersion": 0.1,
+    "modulesPatched": 3,
+    "pushAttemptsFromTerrace": 7,
+    "metresGainedAfter0_1": 1
+  },
+  "fun": 2,
+  "verdict": "The premise lands immediately and the first climb to 0.1 plus the patch feedback are lovely, but after 0.1 I never moved the boulder more than a metre again: the walker slides off it, and stopping on the slope to patch rolls it back without warning, so 30 minutes ended at 0.1. Fix the push contact and tell the player upkeep happens on terraces, and the loop would work. secondsToObjective are wall-clock seconds (no probe)."
+  ,
+  "answers": [
+    {"question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?", "answer": "Maintaining software forever. The boulder is the codebase itself, the coloured patches are its modules (auth, parser, storage, search, core, router, ui). Each terrace is a release: getting there ships a version, brings users and bolts a new module on, which makes the boulder heavier. The rot is the ordinary decay of software: flaky tests, expiring certificates, deprecated APIs, each bleeding health per minute. Letting go makes it roll back, i.e. you lose ground if you stop maintaining; and 'It will not last' says the work never ends."},
+    {"question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?", "answer": "The rot itself felt fair: issues are named, show a rate (-30%/min, -60%/min), and patching takes 1-5 s and works. What felt arbitrary was the reach: rotting modules were often on the underside, and stopping to patch on the slope rolled the boulder back, which I only learned by losing progress. Hardest of all was physically getting below the boulder and keeping it in front of me; after 0.1 I could not push it up again, so I could not tell whether the balance of rot vs. climbing is right."}
+  ]
+}

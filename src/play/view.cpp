@@ -256,6 +256,15 @@ std::string bar(float value, int width) {
     return "[" + std::string(static_cast<size_t>(n), '#') + std::string(static_cast<size_t>(width - n), '.') + "]";
 }
 
+// Which way up the hill is, from where he faces, when it is not ahead.
+std::string uphillWay(const World& w) {
+    float turn = -w.player.yaw;  // uphill is yaw 0
+    while (turn > kPi) turn -= 2 * kPi;
+    while (turn < -kPi) turn += 2 * kPi;
+    if (std::fabs(turn) < 0.6f) return "";
+    return std::fabs(turn) > 2.5f ? " (behind you)" : turn > 0 ? " (to your right)" : " (to your left)";
+}
+
 std::vector<HudLine> hudLines(const World& w) {
     std::vector<HudLine> out;
     out.push_back({"SISYPHUS   version " + versionText(w), true});
@@ -265,7 +274,7 @@ std::vector<HudLine> hudLines(const World& w) {
     out.push_back({"Modules " + std::to_string(activeModules(w)) + "   health " + bar(health(w), 10) + " " + percent(health(w))});
     const float L = load(w);
     out.push_back({"Weight  " + bar(L, 10) + (L >= 1 ? "  too heavy to push uphill" : L >= 0.7f ? "  heavy" : ""), false, L >= 1});
-    if (L >= 0.7f) out.push_back({"  (rot and modules weigh it down: patch, or retire, to lighten it)"});
+    if (L >= 0.7f) out.push_back({"  (rot weighs it down: patch, retire or refactor)"});
     if (w.player.stamina < 0.9f)
         out.push_back({"Stamina " + bar(w.player.stamina, 10) + (tired(w) ? "  tired: sit down (Q) to rest" : ""), false, tired(w)});
     if (w.summitSeconds >= 0) out.push_back({"At the summit: " + versionText(w) + " ships."});
@@ -275,7 +284,7 @@ std::vector<HudLine> hudLines(const World& w) {
         const int next = w.best + 1;
         const float d = hill::terraceStart(next) - w.boulder.s;
         out.push_back({"Next release " + nextVersionText(w) + (next >= hill::kSummit ? " (the summit)" : "") + ": " +
-                       std::to_string(static_cast<int>(std::ceil(d))) + " m uphill"});
+                       std::to_string(static_cast<int>(std::ceil(d))) + " m uphill" + uphillWay(w)});
     }
     // Where the boulder is, once it is out of reach.
     {
@@ -341,7 +350,11 @@ std::string prompt(const World& w) {
         return "";
     }
     const Module& m = w.modules[static_cast<size_t>(i)];
-    std::string s = std::string(moduleName(i)) + ": ";
+    std::string s;
+    // On a slope the boulder rolls back the moment he lets go of it.
+    if (!hill::level(w.boulder.s) && !w.falling && w.summitSeconds < 0 && m.health < 0.98f)
+        s += "On the slope it rolls back if you stop: patch on a terrace\n";
+    s += std::string(moduleName(i)) + ": ";
     if (m.health <= 0) s += "DOWN";
     else if (m.issue != Issue::None) s += std::string(issueName(m.issue)) + ", " + issueLine(m.issue);
     else s += m.health > 0.9f ? "healthy" : "rotting";
@@ -440,6 +453,7 @@ void render(strata::Engine& engine, const World& w, const Camera& cam, bool outs
         }
         const float hudBottom = y;
         auto overHud = [&](float x, float top) { return x < hudRight + gTextSize && top < hudBottom; };
+        const std::string promptText = prompt(w);
         // The release numbers over the terraces ahead.
         for (int i = 1; i < hill::kTerraces; ++i) {
             const float s = hill::terraceStart(i) + hill::kFlat / 2;
@@ -449,6 +463,9 @@ void render(strata::Engine& engine, const World& w, const Camera& cam, bool outs
             float sx = 0, sy = 0;
             if (d < 4.0f || d > 80.0f || !toScreen(camera, at, width, height, sx, sy)) continue;
             if (behindBoulder(w, cam.eye, at)) continue;
+            if (!promptText.empty() && sy > static_cast<float>(height) * 0.45f &&
+                std::fabs(sx - static_cast<float>(width) / 2) < static_cast<float>(width) * 0.4f)
+                continue;  // not over the prompt
             const std::string v = i == hill::kSummit ? std::to_string(w.major + 1) + ".0"
                                                      : std::to_string(w.falling ? w.major + 1 : w.major) + "." + std::to_string(i);
             const bool shipped = w.falling || i <= w.best;

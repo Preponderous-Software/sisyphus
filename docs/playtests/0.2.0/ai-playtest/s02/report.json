@@ -1,0 +1,95 @@
+{
+  "session": "s02",
+  "goal": "Upkeep: push to the second terrace (0.2), then stay there a while and keep the boulder alive: patch modules as issues arrive (hold E), roll the boulder back from above to reach a module underneath, and retire one module (hold R). Say whether you could always tell which module was in trouble and where it was. Then push on as far as your time allows, and answer the questions at the end.",
+  "build": {
+    "version": "0.2 (in-game version reached; build version not shown)",
+    "commit": "8ce3be2"
+  },
+  "seed": 2,
+  "durationSec": 1765,
+  "outcome": "achieved",
+  "findings": [
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "Pushing the boulder up the slope keeps sliding Sisyphus around it instead of pushing",
+      "detail": "Unless the boulder is lined up with the character's body (not the crosshair, which sits to the right in the over-shoulder view), holding W deflects him around the boulder and past it; the 'Next release' distance barely moves (29->28 m) and the boulder ends up 'behind you'. About 12 of my first 17 minutes went on re-finding, circling and re-aligning. Once lined up (boulder centre roughly on the character, slightly right), pushing was smooth at ~1 m/s. Expected either a little auto-centering/magnetism while pushing, or a cue showing the push contact.",
+      "repro": "pt start --profile sisyphus-strata --seed 2; get downhill of the boulder with it ~1 character-width off-centre; pt hold w 5; pt shot",
+      "screenshot": "shots/slide-past.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Stopping to patch on the slope lets the boulder roll back to the terrace below; the hint then talks about level ground",
+      "detail": "At 23 m to 0.1 I stopped to patch router (hold E). The boulder rolled back down past me ('The boulder is rolling back down!'), and while I stood on the slope the hint said 'From up here, walking into it (W) rolls it back (on level ground)', which does not apply on a slope. It also isn't obvious that patching must wait for a terrace. The rollback itself is thematically right. The 'From up here' hint also showed while I was on level ground below the boulder at the trailhead, which confused my sense of up and down.",
+      "repro": "pt start ...; pt hold w 8; pt look 0 40; pt hold e 1.5; pt shot",
+      "screenshot": "shots/rollback-hint.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Modules on top of the boulder can't be targeted from the over-shoulder camera",
+      "detail": "Router (security advisory, red label, -72%/min) sat on top of the boulder. With the default camera, pitching the view moved the camera but the crosshair stayed on the boulder's side, from both the uphill and downhill sides. I had to press V for first person and look up to reach it. Expected the over-shoulder crosshair to reach the top of the boulder, or a hint to switch to V.",
+      "repro": "on the 0.2 terrace with a module issue on top of the boulder: walk up to the boulder; pt look 0 -40; pt shot (crosshair still on a side module); pt key v; pt look 90 -40",
+      "screenshot": "shots/top-reach.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "bug",
+      "title": "Holding R after a retire goes straight on to retiring the next module under the crosshair",
+      "detail": "I held R on router: it retired (Users 100->93, Modules 8->7, 'Retired. One less thing to keep, and a few users miss it.'). The same held R then started 'Retiring [####......]' on storage, a healthy (99%) module that was now under the crosshair. Releasing in time saved it, but a player holding R a bit longer would lose a second module without meaning to. Expected R to need a fresh press after each retire, as a destructive action should.",
+      "repro": "on a terrace, aim at a module; pt hold r 1.5; pt hold r 4; pt shot (Retiring bar on the next module)",
+      "screenshot": "shots/retire-chain.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "Terrace flag label draws over the module prompt in first person",
+      "detail": "In V (first person) the '0.2' flag's label was drawn on top of the module prompt: 'route0.2security advisory, a vulnerability, and it spreads'. Expected the HUD prompt to draw above world labels. Also, two module labels on the boulder (storage/parser) overlapped each other in over-shoulder view (shots/c1.png).",
+      "repro": "on the 0.2 terrace, pt key v, aim at a module with the 0.2 flag behind it",
+      "screenshot": "shots/overlap.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Could not see the patch progress bar in screenshots after a partial hold",
+      "detail": "After a 1-1.5 s hold of E on storage/auth, the next screenshot showed only the static 'Hold E to patch' prompt with no partial bar or kept progress. The bar may only draw while the key is down (the harness releases before the shot), but if partial progress is lost on release, a player who lets go early gets no credit and no sign of it. Patches finished in about 2-5 s of holding. The Retiring bar did show (shots/retire-chain.png).",
+      "repro": "aim at a rotting module; pt hold e 1.5; pt shot",
+      "screenshot": "shots/nobar.png",
+      "tick": null
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 5,
+    "deaths": 0,
+    "secondsToObjective": {
+      "Ship 0.1": 1008,
+      "Ship 0.2 (second terrace)": 1202,
+      "Roll boulder back on terrace to bring router round": 1530,
+      "Patch router on top (security advisory)": 1700,
+      "Retire one module (router)": 1730
+    },
+    "patchesCompleted": 7,
+    "modulesRetired": 1,
+    "versionReached": "0.2",
+    "usersAtEnd": 93,
+    "lowestOverallHealthPct": 85
+  },
+  "fun": 3,
+  "verdict": "The idea comes through clearly: the HUD ('No open issues. It will not last.'), the release flags, users growing per release, glowing module labels coloured by severity and 'Retired... a few users miss it' all make the upkeep metaphor clear and a bit poignant. Most of my time went on the physical controls, not the upkeep: the boulder slides off unless you are lined up exactly, and modules on top need first-person aiming. Upkeep was easy once on a terrace (health never fell below ~85% at 0.2), so the challenge was the camera rather than the rot. secondsToObjective are wall-clock seconds from pt start (no probe).",
+  "answers": [
+    {
+      "question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?",
+      "answer": "Maintaining software that people depend on, and how that work never ends. The boulder is the codebase: the modules (auth, router, storage, parser, ui, core, search, billing) are patches on its surface. Each terrace is a shipped release: it brings more users (10->50->100) and one more module, so more weight. The rot is entropy from outside: dependency drift, deprecated APIs, expiring certificates and security advisories turn up even when you don't touch anything ('No open issues. It will not last.'). Stopping to fix things on the slope lets it roll back, as if maintenance work kept stalling feature progress. Retiring a module lightens the load at a small cost in users."
+    },
+    {
+      "question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?",
+      "answer": "The rot felt fair. Issues come one at a time, the HUD lists them worst first with a %/min rate, and the label of a module with an issue glows on the boulder (red for the security advisory), so I always knew which module was in trouble. Security issues rot about twice as fast as drift, which makes sense. On the 0.2 terrace it was if anything gentle: overall health stayed at 85% or above while I patched seven issues. Where the module was came across less well: the HUD names it but doesn't say which side it's on, and labels on the far side, underneath or on top can't be seen until you walk round. A module on top could only be targeted in first person (V). The hardest part by far was the physical push: keeping the boulder lined up so I didn't slide round it, and keeping track of which way was uphill. Rolling it back from above to turn it worked and the 'Rolling it back to turn it' message helped."
+    }
+  ]
+}
