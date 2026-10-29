@@ -136,6 +136,17 @@ EMSCRIPTEN_KEEPALIVE const char* sisyphus_status() {
     jsonBool(o, "sitting", w.player.sitting);
     jsonBool(o, "pushing", w.pushing);
     jsonBool(o, "muted", s.muted());
+    jsonBool(o, "history", s.history());
+    o += ",\"historyLines\":[";
+    if (s.history()) {
+        bool firstLine = true;
+        for (const std::string& l : play::historyLines(w)) {
+            if (!firstLine) o += ',';
+            firstLine = false;
+            jsonString(o, l);
+        }
+    }
+    o += "]";
     o += ",\"message\":";
     jsonString(o, s.message());
     o += ",\"quote\":";

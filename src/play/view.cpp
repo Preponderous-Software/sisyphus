@@ -342,6 +342,70 @@ std::vector<HudLine> hudLines(const World& w) {
     return out;
 }
 
+namespace {
+std::string column(const std::string& s, size_t width) {
+    return s.size() >= width ? s + " " : std::string(width - s.size(), ' ') + s;
+}
+}  // namespace
+
+std::vector<std::string> historyLines(const World& w) {
+    std::vector<std::string> out;
+    out.push_back("HISTORY   (Tab to close)");
+    out.push_back("");
+    struct Row {
+        std::string version;
+        int64_t minutes;
+        int modules, users, patched, retired, refactored, down, helpers;
+    };
+    // One layout for the header and the rows: the version on the left, the
+    // numbers right-aligned under their names.
+    static const char* const kNames[] = {"min", "modules", "users", "patched", "retired", "refactored", "down", "helpers"};
+    auto line = [](const std::string& first, const std::vector<std::string>& cells) {
+        std::string l = first + std::string(first.size() < 9 ? 9 - first.size() : 1, ' ');
+        for (size_t i = 0; i < cells.size(); ++i) l += column(cells[i], std::string(kNames[i]).size() + 2);
+        return l;
+    };
+    out.push_back(line("version", {kNames, kNames + 8}));
+    std::vector<Row> rows;
+    Cairn before{};
+    for (int k = 0; k < w.cairnCount; ++k) {
+        const Cairn& c = w.cairns[static_cast<size_t>(k)];
+        rows.push_back({std::to_string(c.major) + ".0", (c.tick - before.tick) / (60 * kTickRate), c.modules,
+                        static_cast<int>(c.users), c.patched - before.patched, c.retired - before.retired,
+                        c.refactored - before.refactored, c.breakdowns - before.breakdowns, c.helpers});
+        before = c;
+    }
+    // The climb under way, so far.
+    rows.push_back({"now " + std::to_string(w.falling ? w.major + 1 : w.major) + ".x", (w.tick - before.tick) / (60 * kTickRate),
+                    activeModules(w), static_cast<int>(w.users), w.patched - before.patched, w.retired - before.retired,
+                    w.refactored - before.refactored, w.breakdowns - before.breakdowns, w.helpersThisClimb});
+    for (const Row& r : rows)
+        out.push_back(line(r.version, {std::to_string(r.minutes), std::to_string(r.modules), std::to_string(r.users),
+                                       std::to_string(r.patched), std::to_string(r.retired), std::to_string(r.refactored),
+                                       std::to_string(r.down), std::to_string(r.helpers)}));
+    if (w.cairnCount == 0) {
+        out.push_back("");
+        out.push_back("No climb has finished yet.");
+        out.push_back("Each one that does leaves a cairn at the trailhead.");
+        return out;
+    }
+    // Bars, scaled to the biggest.
+    auto bars = [&](const char* title, auto value) {
+        out.push_back("");
+        out.push_back(title);
+        int most = 1;
+        for (const Row& r : rows) most = std::max(most, value(r));
+        for (const Row& r : rows) {
+            const int n = static_cast<int>(std::lround(30.0 * value(r) / most));
+            out.push_back(r.version + std::string(r.version.size() < 9 ? 9 - r.version.size() : 1, ' ') +
+                          std::string(static_cast<size_t>(n), '#') + " " + std::to_string(value(r)));
+        }
+    };
+    bars("Minutes per climb", [](const Row& r) { return static_cast<int>(r.minutes); });
+    bars("Users at the end of each climb", [](const Row& r) { return r.users; });
+    return out;
+}
+
 std::string prompt(const World& w) {
     if (w.player.sitting) return "";
     if (w.pushing) {
@@ -453,7 +517,26 @@ void render(strata::Engine& engine, const World& w, const Camera& cam, bool outs
     };
 
     float wordsEnd = 0;  // the bottom of the prompt and the message
-    if (w.player.sitting) {
+    if (o.history) {
+        // The history in place of everything else.
+        if (!o.noText) {
+            // Smaller text if the widest line would not fit the window.
+            const std::vector<std::string> lines = historyLines(w);
+            size_t widest = 1;
+            for (const std::string& l : lines) widest = std::max(widest, l.size());
+            const float size = gTextSize, line = gLine;
+            gTextSize = std::min(gTextSize, std::floor((static_cast<float>(width) - 2 * kMargin) / static_cast<float>(widest)));
+            gLine = std::round(gTextSize * 1.25f);
+            float y = kMargin;
+            for (const std::string& l : lines) {
+                const bool head = !l.empty() && (l[0] == 'H' || l[0] == 'M' || l[0] == 'U' || l[0] == 'v');
+                if (!l.empty()) text(texts, keep, kMargin, y, l, head ? gold : ink);
+                y += gLine;
+            }
+            gTextSize = size;
+            gLine = line;
+        }
+    } else if (w.player.sitting) {
         // Sitting: no HUD, only the view, and the words.
         if (!o.quote.empty()) centred(o.quote, static_cast<float>(height) * 0.25f, ink);
     } else {
@@ -543,7 +626,7 @@ void render(strata::Engine& engine, const World& w, const Camera& cam, bool outs
     }
     if (o.help) {
         std::vector<std::string> items = {"W A S D walk / push", "Shift hurry", "Mouse look", "E hold: patch",
-                                          "R hold: retire", "F hold: refactor", "Q sit", "V camera", "M sound"};
+                                          "R hold: retire", "F hold: refactor", "Q sit", "V camera", "Tab history", "M sound"};
         if (o.saves) items.insert(items.end(), {"F5 save", "F9 load"});
         items.insert(items.end(), {"F1 hide help", "Esc free mouse"});
         std::vector<std::string> lines(1);

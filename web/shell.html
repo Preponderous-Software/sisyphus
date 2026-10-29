@@ -38,6 +38,11 @@
   #cross { left: 50%; top: 50%; transform: translate(-50%, -50%); font: 600 22px/1 system-ui, sans-serif; display: none; }
   body.compact #cross { display: block; }
   body.sitting #cross, body.sitting #panel, body.sitting #prompt { display: none !important; }
+  #history { inset: 8px; display: none; overflow: auto; pointer-events: auto; padding: 10px 12px; border-radius: 8px;
+    background: rgba(18, 15, 12, 0.85); font: min(12px, 2.3vw)/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    white-space: pre; }
+  body.compact.history #history { display: block; }
+  body.history #panel, body.history #prompt, body.history #cross, body.history #msg { display: none !important; }
   #prompt { left: 50%; transform: translateX(-50%); top: calc(50% + 18px); width: 92%; text-align: center;
     display: none; font-size: 15px; font-weight: 600; white-space: pre-line; }
   body.compact #prompt { display: block; }
@@ -89,6 +94,7 @@
   <span class="note" id="saveNote" title="Saves stay in this browser on this device">Saves in this browser</span>
   <button id="saveBtn" title="Save now (F5)">Save</button>
   <button id="newBtn" title="Start again at 0.0">New</button>
+  <button data-key="43" title="Every climb so far (Tab)">History</button>
   <button id="soundBtn" title="Sound on or off (M)" aria-pressed="true">Sound: on</button>
   <button id="helpBtn" title="How to play" aria-label="How to play">?</button>
 </div>
@@ -100,6 +106,7 @@
   <div id="prompt" class="overlay"></div>
   <div id="msg" class="overlay"></div>
   <div id="quote" class="overlay"></div>
+  <div id="history" class="overlay"></div>
   <div id="touch" aria-hidden="true">
     <div id="stickBase"></div><div id="stickKnob"></div>
     <div id="stickHint">drag left: walk &middot; drag right: look</div>
@@ -128,14 +135,14 @@
       On a terrace, push from above to roll it back and turn it. <kbd>Shift</kbd>: hurry.</li>
     <li>Hold <kbd>E</kbd> on a module to patch it. Hold <kbd>R</kbd> to retire it: one less thing to keep.
       Hold <kbd>F</kbd> to refactor it into the module it uses: slower, but no users lost.</li>
-    <li><kbd>Q</kbd>: sit and look at the view. <kbd>V</kbd>: see him from behind, or back to his eyes. <kbd>M</kbd>: sound. <kbd>F1</kbd>: the controls on screen.
+    <li><kbd>Q</kbd>: sit and look at the view. <kbd>V</kbd>: see him from behind, or back to his eyes. <kbd>M</kbd>: sound. <kbd>Tab</kbd>: every climb so far. <kbd>F1</kbd>: the controls on screen.
       <kbd>Esc</kbd>: free the mouse.</li>
   </ul>
   <ul class="for-touch">
     <li>Drag on the left half to walk (all the way out to hurry); walk into the boulder from below to push it.
       Drag on the right half to look.</li>
     <li>Hold <b>Patch</b> while looking at a module to patch it; hold <b>Retire</b> to retire it, or <b>Refactor</b> to fold it into the module it uses.
-      <b>Sit</b> looks at the view; <b>Camera</b> switches between his eyes (the default) and a view from behind him. <b>Sound</b> along the top turns the sound on or off.</li>
+      <b>Sit</b> looks at the view; <b>Camera</b> switches between his eyes (the default) and a view from behind him. <b>History</b> along the top shows every climb so far, and <b>Sound</b> turns the sound on or off.</li>
   </ul>
   <p style="color:var(--dim);font-size:13px">The game saves every minute, when you press Save (or <kbd>F5</kbd>), and when
   you leave the page; <kbd>F9</kbd> loads the last save. Saves stay in this browser on this device. Built on the
@@ -233,6 +240,10 @@
     var p = $('prompt'), below = p.offsetHeight ? p.offsetTop + p.offsetHeight + 8 : 0;
     $('msg').style.top = below ? 'max(calc(50% + 70px), ' + below + 'px)' : '';
     $('quote').textContent = s.quote;
+    document.body.classList.toggle('history', !!s.history);
+    var lines = (s.historyLines || []).join('\n');
+    if (touchMode) lines = lines.replace('(Tab to close)', '(History to close)');
+    if (lines !== last.history) { last.history = lines; $('history').textContent = lines; }
     window.sisyphusStatus = s;
   }
 
@@ -261,7 +272,7 @@
   });
   window.addEventListener('keydown', function (e) {
     if (!ready || dialogOpen()) return;
-    if (e.key === 'F1' || e.key === 'F5') e.preventDefault();
+    if (e.key === 'F1' || e.key === 'F5' || e.key === 'Tab') e.preventDefault();  // Tab is the history, not focus
   }, true);
 
   // ---- touch: a stick on the left half, look on the right half

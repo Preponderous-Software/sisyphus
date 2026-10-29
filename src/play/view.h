@@ -53,7 +53,12 @@ struct Overlay {
     std::string quote;           // while sitting: words over the view
     bool aim = true;             // the crosshair (outside him, it marks where he aims)
     bool saves = true;           // the game saves (F5 and F9 do something)
+    bool history = false;        // Tab: every climb so far, in place of the HUD
 };
+
+// The history screen: a row for every cairn, the climb under way, and bars
+// of the minutes and users of each climb.
+std::vector<std::string> historyLines(const World& w);
 
 // Draws one frame (not presented) from `cam`.
 void render(strata::Engine& engine, const World& w, const Camera& cam, bool outside, const Overlay& o);
