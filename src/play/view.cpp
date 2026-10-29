@@ -78,8 +78,43 @@ void setLights(strata::Engine& engine, const World& w, float night) {
     engine.setPointLights(lights.empty() ? nullptr : lights.data(), lights.size());
 }
 
-void drawGlows(strata::Engine& engine, const World& w, float night) {
+void drawGlows(strata::Engine& engine, const World& w, float night, Vec3 eye) {
     std::vector<StrataPoint> pts;
+    // Rain, or snow, falling round the eye: streaks that fall fast, or flakes
+    // that drift down. Where each one is comes from the clock, not the rules.
+    if (w.rain > 0.02f) {
+        const bool snow = snowing(w);
+        const float clock = static_cast<float>(w.tick) / kTickRate;
+        const int n = static_cast<int>(360 * w.rain);
+        for (int i = 0; i < n; ++i) {
+            const auto hash = [i](uint32_t salt) {
+                uint32_t h = static_cast<uint32_t>(i) * 2654435761u ^ salt * 2246822519u;
+                h ^= h >> 15;
+                h *= 2246822519u;
+                h ^= h >> 13;
+                return static_cast<float>(h & 0xffffff) / 16777216.0f;
+            };
+            const float fall = snow ? 1.2f : 9.0f, height = 9.0f;
+            const float y = height - std::fmod(clock * fall * (0.8f + 0.4f * hash(3)) + hash(4) * height, height);
+            const float drift = snow ? 0.4f * std::sin(clock * 0.9f + hash(5) * 6.28f) : 0.0f;
+            // A flake is one point; a raindrop is a short streak of them.
+            const int streak = snow ? 1 : 5;
+            for (int k = 0; k < streak; ++k) {
+                StrataPoint p{};
+                p.position[0] = eye.x + (hash(1) - 0.5f) * 16.0f + drift;
+                p.position[1] = eye.y - 3.0f + y + 0.06f * static_cast<float>(k);
+                p.position[2] = eye.z + (hash(2) - 0.5f) * 16.0f;
+                p.world_diameter = snow ? 0.06f : 0.03f;
+                p.size_pixels = snow ? 2.5f : 2.0f;
+                p.color[0] = snow ? 0.95f : 0.72f;
+                p.color[1] = snow ? 0.96f : 0.78f;
+                p.color[2] = snow ? 1.00f : 0.90f;
+                p.color[3] = (snow ? 0.85f : 0.55f) * w.rain;
+                p.flags = STRATA_POINT_SOFT;
+                pts.push_back(p);
+            }
+        }
+    }
     const Vec3 c = boulderCentre(w);
     const float R = boulderRadius(w);
     const float t = static_cast<float>(w.tick) / kTickRate;
@@ -267,7 +302,8 @@ std::string uphillWay(const World& w) {
 
 std::vector<HudLine> hudLines(const World& w) {
     std::vector<HudLine> out;
-    out.push_back({"SISYPHUS   version " + versionText(w), true});
+    out.push_back({"SISYPHUS   version " + versionText(w) + "   " + seasonName(season(w)), true});
+    if (w.rain > 0.2f) out.push_back({snowing(w) ? "Snow: the path is slick" : "Rain: the path is slick"});
     const int users = static_cast<int>(w.users);
     if (outage(w)) out.push_back({"Users " + std::to_string(users) + "   OUTAGE: users are leaving", false, true});
     else out.push_back({"Users " + std::to_string(users)});
@@ -510,7 +546,7 @@ void render(strata::Engine& engine, const World& w, const Camera& cam, bool outs
     StrataFrameDesc fd{};
     fd.clear_flags = STRATA_CLEAR_COLOR | STRATA_CLEAR_DEPTH | STRATA_CLEAR_SKY;
     engine.beginFrame(fd);
-    drawGlows(engine, w, night);
+    drawGlows(engine, w, night, cam.eye);
 
     std::vector<StrataText> texts;
     std::vector<std::string> keep;

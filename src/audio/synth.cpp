@@ -188,6 +188,7 @@ float Synth::next() {
     glide(now_.crickets, target_.crickets);
     glide(now_.town, target_.town);
     glide(now_.alarm, target_.alarm);
+    glide(now_.rain, target_.rain);
     now_.steps = target_.steps;
     time_ += kDt;
     const float t = static_cast<float>(std::fmod(time_, 1000.0));
@@ -207,6 +208,11 @@ float Synth::next() {
     // Straining: a low breath, in and out.
     const float breath = 0.5f + 0.5f * std::sin(kTwoPi * 0.55f * t);
     s += 0.25f * now_.strain * breath * grindLow_ + 0.03f * now_.strain * std::sin(kTwoPi * 82 * t) * breath;
+
+    // Rain: a soft hiss, the high part of the noise, gently rising and falling.
+    rainHi_ += pole(5000) * (n - rainHi_);
+    rainLo_ += pole(900) * (n - rainLo_);
+    s += 0.06f * now_.rain * (rainHi_ - rainLo_) * (0.85f + 0.15f * std::sin(kTwoPi * 0.2f * t));
 
     // The town: a far murmur.
     townLow_ += pole(260) * (noise() - townLow_);

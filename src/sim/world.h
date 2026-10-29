@@ -17,6 +17,11 @@
 // the slow middle way between patching and retiring, costs no users, and
 // can break a test on the way.
 //
+// The weather turns. Showers come and go: rain makes the path slick, so the
+// boulder is slower to push and quicker to roll back. The seasons turn every
+// three days; in winter the rain falls as snow, and certificates expire
+// twice as often.
+//
 // At the summit there is a choice: let it roll back with every module
 // aboard, or hold R to rewrite it, and start the next major version light,
 // with a few fresh modules and most of the users gone.
@@ -149,6 +154,8 @@ struct World {
     int32_t busFactor = -1;  // the module the last helper knew best, left drifting
     bool rewriteChosen = false;  // at the summit R was held: it starts again light (save format 6)
     float rewriteSeconds = 0;    // how long R has been held at the summit
+    float rain = 0;              // 0 dry .. 1 pouring (save format 7)
+    float rainLeft = 0;          // seconds of the shower left; 0 when dry
 };
 
 // One tick's input. `work`, `retire` and `refactor` are held; `sit` toggles.
@@ -225,6 +232,13 @@ std::string versionText(const World& w);
 std::string nextVersionText(const World& w);
 int terraceOfBoulder(const World& w);
 bool boulderResting(const World& w);
+// The season, from the day: each lasts kSeasonDays days.
+enum class Season { Spring, Summer, Autumn, Winter };
+constexpr int kSeasonDays = 3;
+Season season(const World& w);
+const char* seasonName(Season s);
+// Rain or snow falling now, and whether it is snow.
+inline bool snowing(const World& w) { return season(w) == Season::Winter; }
 // The time of day, 0..1: 0 sunrise, 0.375 noon, 0.75 sunset (the night is
 // short), and the length of a whole day.
 constexpr float kDaySeconds = 720.0f;

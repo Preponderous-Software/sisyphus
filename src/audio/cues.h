@@ -21,6 +21,7 @@ struct Ambience {
     float town = 0;      // near the town, by how many users it has
     float alarm = 0;     // a module is down
     float steps = 0;     // footsteps per second
+    float rain = 0;      // rain falling (snow falls quietly)
 };
 
 // One-off sounds.

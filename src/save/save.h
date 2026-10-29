@@ -30,7 +30,8 @@ namespace sisyphus {
 // 4: the cairns at the trailhead (a cairn for every major version since).
 // 5: helpers: whoever is helping now, and how many helped each climb.
 // 6: the rewrite at the summit: chosen or not, and which climbs ended in one.
-constexpr uint32_t kSaveVersion = 6;
+// 7: the weather: how hard it is raining, and for how much longer.
+constexpr uint32_t kSaveVersion = 7;
 
 // The World as save bytes, and back. decode returns false (with a reason)
 // on anything it does not accept.

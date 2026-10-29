@@ -183,6 +183,17 @@ int runPlaythrough(strata::Engine& engine, const Args& args) {
                        "The platform it runs on reached its end of life.");
         }
     }
+    // The weather: a shower on the hill, and snow in winter (the same moment,
+    // the clock moved on to a winter's day).
+    {
+        World wet = w;
+        wet.rain = 1;
+        wet.rainLeft = 60;
+        shot.shoot(wet, "rain", play::cameraAtEyes(wet), false, true);
+        const int64_t day = static_cast<int64_t>(kDaySeconds * kTickRate);
+        wet.tick = day * kSeasonDays * 3 + w.tick % day;
+        shot.shoot(wet, "snow", play::cameraAtEyes(wet), false, true);
+    }
     // The cairn raised for 1.0, beside the path, telling its climb.
     if (w.cairnCount > 0) {
         World at = w;

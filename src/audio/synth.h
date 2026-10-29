@@ -42,7 +42,7 @@ private:
     std::array<std::vector<float>, static_cast<size_t>(Cue::Count)> cues_;
     std::vector<std::vector<float>> steps_, chirps_;
     std::vector<Playing> playing_;
-    float windLow_ = 0, windSlow_ = 0, grindLow_ = 0, grindRumble_ = 0, townLow_ = 0;
+    float windLow_ = 0, windSlow_ = 0, grindLow_ = 0, grindRumble_ = 0, townLow_ = 0, rainHi_ = 0, rainLo_ = 0;
     double time_ = 0;
     float stepClock_ = 0, chirpClock_ = 0, alarmPhase_ = 0;
     int step_ = 0;

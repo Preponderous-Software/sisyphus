@@ -156,6 +156,10 @@ struct Fields {
             v(w.rewriteChosen);
             v(w.rewriteSeconds);
         }
+        if (version >= 7) {
+            v(w.rain);
+            v(w.rainLeft);
+        }
     }
 };
 
@@ -214,6 +218,7 @@ bool plausible(const World& w, std::string* error) {
     if (!std::isfinite(w.rewriteSeconds) || w.rewriteSeconds < 0 || w.rewriteSeconds > kRewriteSeconds + 1 ||
         (w.rewriteChosen && w.summitSeconds < 0 && !w.falling))
         return fail("an impossible rewrite");
+    if (!(w.rain >= 0 && w.rain <= 1) || !(w.rainLeft >= 0 && w.rainLeft <= 200)) return fail("impossible weather");
     if (h.name >= 0) {
         if (!std::isfinite(h.x) || !std::isfinite(h.z) || !std::isfinite(h.secondsLeft) || !std::isfinite(h.work) ||
             h.secondsLeft < 0 || h.secondsLeft > kHelperStays || h.work < 0 || h.module < -1 || h.module >= kMaxModules ||

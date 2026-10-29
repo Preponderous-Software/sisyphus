@@ -396,6 +396,54 @@ int main() {
         CHECK(w.player.stamina == 1);
         CHECK(!tired(w));
     }
+    // Weather: rain slows the push and speeds the roll back; a shower sets in,
+    // passes and clears; the seasons turn every few days, winter last.
+    {
+        auto pushedFor = [](float rain) {
+            World w = quiet();
+            heal(w);
+            w.best = 1;
+            w.boulder.s = H::terraceStart(1) + H::kFlat + 2.0f;  // on the slope
+            standBelow(w);
+            for (int t = 0; t < 4 * kTickRate; ++t) {
+                heal(w);
+                w.rain = rain;
+                w.rainLeft = rain > 0 ? 100 : 0;
+                tick(w, pushIn());
+            }
+            return w.boulder.s;
+        };
+        const float start = H::terraceStart(1) + H::kFlat + 2.0f;
+        CHECK(pushedFor(1) - start < 0.8f * (pushedFor(0) - start));
+        auto rolledFor = [](float rain) {
+            World w = quiet();
+            heal(w);
+            w.best = 2;
+            w.boulder.s = H::terraceStart(1) + H::kFlat + 20.0f;
+            w.player.x = 6;
+            for (int t = 0; t < 2 * kTickRate; ++t) {
+                w.rain = rain;
+                w.rainLeft = rain > 0 ? 100 : 0;
+                tick(w, Input{});
+            }
+            return w.boulder.v;
+        };
+        CHECK(rolledFor(1) < rolledFor(0) - 0.5f);  // faster down the slope
+        World w = quiet();
+        w.rainLeft = 20;
+        run(w, Input{}, 12);
+        CHECK(w.rain == 1.0f);
+        run(w, Input{}, 9);
+        CHECK(w.rainLeft == 0 && w.rain < 1.0f);
+        run(w, Input{}, 11);
+        CHECK(w.rain == 0.0f);
+        World s = quiet();
+        CHECK(season(s) == Season::Spring);
+        s.tick = static_cast<int64_t>(kDaySeconds * kTickRate) * kSeasonDays * 3;
+        CHECK(season(s) == Season::Winter && snowing(s));
+        s.tick = static_cast<int64_t>(kDaySeconds * kTickRate) * kSeasonDays * 4;
+        CHECK(season(s) == Season::Spring);
+    }
     // The rewrite: holding R at the summit (not retiring a module there)
     // chooses it; the moment at the top lasts while he decides; back at the
     // trailhead it starts again light, and the cairn says so.
