@@ -17,6 +17,10 @@
 // the slow middle way between patching and retiring, costs no users, and
 // can break a test on the way.
 //
+// At the summit there is a choice: let it roll back with every module
+// aboard, or hold R to rewrite it, and start the next major version light,
+// with a few fresh modules and most of the users gone.
+//
 // Each time the boulder rolls back to the trailhead, a cairn is raised there
 // for the major version that just shipped, recording how its climb went.
 // Over a long game they pile up beside the path.
@@ -51,6 +55,8 @@ constexpr float kReach = 3.0f;           // how far away a module can be patched
 constexpr float kSummitPause = 8.0f;     // seconds at the summit before it rolls
 constexpr float kRetireSeconds = 3.0f;   // holding R on a module retires it
 constexpr float kRefactorSeconds = 10.0f; // holding F on a module refactors it into the one it uses
+constexpr float kRewriteSeconds = 3.0f;   // holding R at the summit chooses a rewrite
+constexpr float kRewriteKeeps = 0.4f;     // the users who follow a rewrite
 
 // What has gone wrong with a module, if anything.
 enum class Issue : uint8_t { None, Drift, Flaky, Deprecated, Advisory, Certificate };
@@ -94,6 +100,7 @@ struct Cairn {
     // Totals when it was raised; the climb's own are the difference from the cairn before.
     int32_t patched = 0, retired = 0, refactored = 0, breakdowns = 0;
     int32_t helpers = 0;  // people who came up to help on this climb (save format 5)
+    bool rewrite = false;  // it was rewritten at the summit (save format 6)
 };
 constexpr int kMaxCairns = 24;  // the oldest goes when there are more
 
@@ -140,6 +147,8 @@ struct World {
     Helper helper;
     int32_t helpersThisClimb = 0;
     int32_t busFactor = -1;  // the module the last helper knew best, left drifting
+    bool rewriteChosen = false;  // at the summit R was held: it starts again light (save format 6)
+    float rewriteSeconds = 0;    // how long R has been held at the summit
 };
 
 // One tick's input. `work`, `retire` and `refactor` are held; `sit` toggles.

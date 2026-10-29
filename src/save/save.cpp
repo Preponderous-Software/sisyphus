@@ -137,6 +137,7 @@ struct Fields {
                 v(c.refactored);
                 v(c.breakdowns);
                 if (version >= 5) v(c.helpers);
+                if (version >= 6) v(c.rewrite);
             }
         }
         if (version >= 5) {
@@ -150,6 +151,10 @@ struct Fields {
             for (int32_t& n : h.patches) v(n);
             v(w.helpersThisClimb);
             v(w.busFactor);
+        }
+        if (version >= 6) {
+            v(w.rewriteChosen);
+            v(w.rewriteSeconds);
         }
     }
 };
@@ -206,6 +211,9 @@ bool plausible(const World& w, std::string* error) {
     const Helper& h = w.helper;
     if (h.name < -1 || h.name >= kHelperNames || w.helpersThisClimb < 0 || w.busFactor < -1 || w.busFactor >= kMaxModules)
         return fail("an impossible helper");
+    if (!std::isfinite(w.rewriteSeconds) || w.rewriteSeconds < 0 || w.rewriteSeconds > kRewriteSeconds + 1 ||
+        (w.rewriteChosen && w.summitSeconds < 0 && !w.falling))
+        return fail("an impossible rewrite");
     if (h.name >= 0) {
         if (!std::isfinite(h.x) || !std::isfinite(h.z) || !std::isfinite(h.secondsLeft) || !std::isfinite(h.work) ||
             h.secondsLeft < 0 || h.secondsLeft > kHelperStays || h.work < 0 || h.module < -1 || h.module >= kMaxModules ||

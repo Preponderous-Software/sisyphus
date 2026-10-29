@@ -29,7 +29,8 @@ namespace sisyphus {
 // 3: refactoring: the work in hand, and how many modules have been folded.
 // 4: the cairns at the trailhead (a cairn for every major version since).
 // 5: helpers: whoever is helping now, and how many helped each climb.
-constexpr uint32_t kSaveVersion = 5;
+// 6: the rewrite at the summit: chosen or not, and which climbs ended in one.
+constexpr uint32_t kSaveVersion = 6;
 
 // The World as save bytes, and back. decode returns false (with a reason)
 // on anything it does not accept.

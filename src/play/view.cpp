@@ -370,7 +370,7 @@ std::vector<std::string> historyLines(const World& w) {
     Cairn before{};
     for (int k = 0; k < w.cairnCount; ++k) {
         const Cairn& c = w.cairns[static_cast<size_t>(k)];
-        rows.push_back({std::to_string(c.major) + ".0", (c.tick - before.tick) / (60 * kTickRate), c.modules,
+        rows.push_back({std::to_string(c.major) + ".0" + (c.rewrite ? "*" : ""), (c.tick - before.tick) / (60 * kTickRate), c.modules,
                         static_cast<int>(c.users), c.patched - before.patched, c.retired - before.retired,
                         c.refactored - before.refactored, c.breakdowns - before.breakdowns, c.helpers});
         before = c;
@@ -383,6 +383,11 @@ std::vector<std::string> historyLines(const World& w) {
         out.push_back(line(r.version, {std::to_string(r.minutes), std::to_string(r.modules), std::to_string(r.users),
                                        std::to_string(r.patched), std::to_string(r.retired), std::to_string(r.refactored),
                                        std::to_string(r.down), std::to_string(r.helpers)}));
+    for (int k = 0; k < w.cairnCount; ++k)
+        if (w.cairns[static_cast<size_t>(k)].rewrite) {
+            out.push_back("* rewritten at the summit (modules and users at the end, before the rewrite)");
+            break;
+        }
     if (w.cairnCount == 0) {
         out.push_back("");
         out.push_back("No climb has finished yet.");
@@ -408,6 +413,12 @@ std::vector<std::string> historyLines(const World& w) {
 
 std::string prompt(const World& w) {
     if (w.player.sitting) return "";
+    // The choice at the top.
+    if (w.summitSeconds >= 0) {
+        if (w.rewriteChosen) return "Rewrite chosen: it starts again light at the trailhead, and most users will not follow";
+        if (w.rewriteSeconds > 0) return "Rewriting " + bar(w.rewriteSeconds / kRewriteSeconds, 12);
+        return "It will roll back down with every module aboard.\nOr hold R to rewrite it: start again light, and lose most users";
+    }
     if (w.pushing) {
         if (w.slipping) return "Too heavy: it slides back. Let it settle on a terrace, and patch the rot.";
         if (w.pushingBack) return "Rolling it back to turn it";

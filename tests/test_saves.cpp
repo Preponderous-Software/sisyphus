@@ -58,6 +58,16 @@ int main(int argc, char** argv) {
         CHECK(cb.helper.name == 5 && cb.helper.patches[2] == 3 && fingerprint(cb) == fingerprint(hp));
         hp.helper.name = kHelperNames;
         CHECK(!decodeSave(encodeSave(hp), cb, &why));
+        World rw = c;  // format 6: a rewrite, chosen while rolling back down, and a rewritten climb
+        rw.falling = true;
+        rw.summitSeconds = -1;
+        rw.rewriteChosen = true;
+        rw.rewriteSeconds = kRewriteSeconds;
+        rw.cairns[0].rewrite = true;
+        CHECK(decodeSave(encodeSave(rw), cb, &why));
+        CHECK(cb.rewriteChosen && cb.cairns[0].rewrite && fingerprint(cb) == fingerprint(rw));
+        rw.falling = false;  // chosen, but neither at the top nor rolling: impossible
+        CHECK(!decodeSave(encodeSave(rw), cb, &why));
         odd = c;
         odd.cairns[0].tick = c.tick + 1;  // from the future
         CHECK(!decodeSave(encodeSave(odd), cb, &why));

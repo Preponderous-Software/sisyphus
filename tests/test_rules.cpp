@@ -396,6 +396,54 @@ int main() {
         CHECK(w.player.stamina == 1);
         CHECK(!tired(w));
     }
+    // The rewrite: holding R at the summit (not retiring a module there)
+    // chooses it; the moment at the top lasts while he decides; back at the
+    // trailhead it starts again light, and the cairn says so.
+    {
+        World w = quiet();
+        heal(w);
+        for (int i = kStartModules; i < kStartModules + 6; ++i) {
+            w.modules[static_cast<size_t>(i)].active = true;
+            w.modules[static_cast<size_t>(i)].health = 0.4f;
+        }
+        w.added = kStartModules + 6;
+        w.best = H::kSummit;
+        w.boulder.s = H::terraceStart(H::kSummit) + 2.0f;
+        w.summitSeconds = kSummitPause - 1.0f;  // a second left
+        w.users = 1000;
+        const int before = activeModules(w);
+        Input hold;
+        hold.retire = true;
+        hold.yaw = w.player.yaw;
+        hold.pitch = w.player.pitch;
+        run(w, hold, 2.0f);
+        CHECK(w.summitSeconds >= 0);  // still at the top: deciding
+        CHECK(!w.rewriteChosen);
+        CHECK(activeModules(w) == before);  // R did not retire a module here
+        run(w, hold, 1.2f);
+        CHECK(w.rewriteChosen);
+        for (int t = 0; t < 120 * kTickRate && (w.summitSeconds >= 0 || w.falling); ++t) tick(w, Input{});
+        CHECK(!w.falling && w.major == 1);
+        CHECK(activeModules(w) == kStartModules);
+        CHECK(health(w) > 0.999f && openIssues(w) == 0);  // fresh (rot has had one tick)
+        CHECK(w.users < 1000 * kRewriteKeeps + 1);
+        CHECK(w.cairnCount == 1 && w.cairns[0].rewrite && w.cairns[0].modules == before);
+        CHECK(!w.rewriteChosen && w.rewriteSeconds == 0);
+        CHECK(cairnStory(w, 0).find("rewritten") != std::string::npos);
+    }
+    // Let go at the top, and it rolls with everything aboard.
+    {
+        World w = quiet();
+        heal(w);
+        w.best = H::kSummit;
+        w.boulder.s = H::terraceStart(H::kSummit) + 2.0f;
+        w.summitSeconds = 0;
+        Input hold;
+        hold.retire = true;
+        run(w, hold, 2.0f);
+        run(w, Input{}, kSummitPause);
+        CHECK(w.falling && !w.rewriteChosen);
+    }
     // Helpers: someone comes up, patches what they can reach while the
     // boulder rests, and on leaving the module they knew best drifts.
     {
