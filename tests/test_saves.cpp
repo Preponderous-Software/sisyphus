@@ -47,6 +47,17 @@ int main(int argc, char** argv) {
         World odd = c;
         odd.cairnCount = kMaxCairns + 1;
         CHECK(!decodeSave(encodeSave(odd), cb, &why));
+        World hp = c;  // format 5: a helper
+        hp.helper.name = 5;
+        hp.helper.x = 1;
+        hp.helper.z = c.player.z;
+        hp.helper.secondsLeft = 60;
+        hp.helper.patches[2] = 3;
+        hp.helpersThisClimb = 1;
+        CHECK(decodeSave(encodeSave(hp), cb, &why));
+        CHECK(cb.helper.name == 5 && cb.helper.patches[2] == 3 && fingerprint(cb) == fingerprint(hp));
+        hp.helper.name = kHelperNames;
+        CHECK(!decodeSave(encodeSave(hp), cb, &why));
         odd = c;
         odd.cairns[0].tick = c.tick + 1;  // from the future
         CHECK(!decodeSave(encodeSave(odd), cb, &why));

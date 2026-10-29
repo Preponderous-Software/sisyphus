@@ -153,6 +153,77 @@ void rot(World& w) {
     }
 }
 
+const char* const kHelperNameList[kHelperNames] = {"Ana", "Ben",  "Chen", "Dara", "Eli",  "Fatima", "Gus",  "Hana",
+                                                   "Ivan", "Jo",  "Kofi", "Lena", "Maya", "Noor",   "Omar", "Priya"};
+
+void arrive(World& w) {
+    Helper& h = w.helper;
+    if (h.name >= 0 || randomUnit(w.rng) >= kHelperChance) return;
+    h = Helper{};
+    h.name = randomBelow(w.rng, kHelperNames);
+    h.secondsLeft = kHelperStays;
+    h.x = w.player.x >= 0 ? -2.0f : 2.0f;  // on the other side of the path from him
+    h.z = hill::zOf(hill::kValleyS + 4.0f);  // up from the town
+    ++w.helpersThisClimb;
+}
+
+void help(World& w) {
+    Helper& h = w.helper;
+    if (h.name < 0) return;
+    // Over to the boulder's side, at a walk.
+    const Vec3 to = helperSpot(w);
+    const float dx = to.x - h.x, dz = to.z - h.z;
+    const float d = std::sqrt(dx * dx + dz * dz);
+    const float step = kWalkSpeed * kDt;
+    if (d > step) {
+        h.x += dx / d * step;
+        h.z += dz / d * step;
+    } else {
+        h.x = to.x;
+        h.z = to.z;
+    }
+    h.secondsLeft -= kDt;
+    if (h.secondsLeft <= 0) {
+        // Moving on: what they knew best starts to drift.
+        int best = -1;
+        for (int i = 0; i < kMaxModules; ++i)
+            if (w.modules[static_cast<size_t>(i)].active && h.patches[static_cast<size_t>(i)] > 0 &&
+                (best < 0 || h.patches[static_cast<size_t>(i)] > h.patches[static_cast<size_t>(best)]))
+                best = i;
+        w.busFactor = best;
+        if (best >= 0 && w.modules[static_cast<size_t>(best)].issue == Issue::None) strike(w, best, Issue::Drift);
+        h = Helper{};
+        return;
+    }
+    // Working only beside a boulder at rest, on what they can reach: the
+    // worst module not underneath it.
+    if (d > 0.3f || !(boulderResting(w) || w.summitSeconds >= 0)) {
+        h.module = -1;
+        h.work = 0;
+        return;
+    }
+    int worst = -1;
+    for (int i = 0; i < kMaxModules; ++i) {
+        const Module& m = w.modules[static_cast<size_t>(i)];
+        if (!m.active || m.health >= 0.98f || rolled(w, moduleDirection(i)).y < -0.3f) continue;
+        if (i == w.work.module) continue;  // Sisyphus has that one
+        if (worst < 0 || m.health < w.modules[static_cast<size_t>(worst)].health) worst = i;
+    }
+    if (worst != h.module) {
+        h.module = worst;
+        h.work = 0;
+    }
+    if (worst < 0) return;
+    h.work += kDt;
+    Module& m = w.modules[static_cast<size_t>(worst)];
+    if (h.work < patchSeconds(m) * kHelperSlower) return;
+    m.health = 1;
+    m.issue = Issue::None;
+    ++h.patches[static_cast<size_t>(worst)];
+    h.module = -1;
+    h.work = 0;
+}
+
 void raiseCairn(World& w) {
     if (w.cairnCount == kMaxCairns) {
         for (int k = 1; k < kMaxCairns; ++k) w.cairns[static_cast<size_t>(k - 1)] = w.cairns[static_cast<size_t>(k)];
@@ -167,6 +238,8 @@ void raiseCairn(World& w) {
     c.retired = w.retired;
     c.refactored = w.refactored;
     c.breakdowns = w.breakdowns;
+    c.helpers = w.helpersThisClimb;
+    w.helpersThisClimb = 0;
 }
 
 void moveBoulder(World& w, const Input& in) {
@@ -383,6 +456,7 @@ void tick(World& w, const Input& in) {
     const int t = hill::terraceAt(w.boulder.s);
     if (!w.falling && w.summitSeconds < 0 && t > w.best) {
         release(w, t);
+        arrive(w);
         if (t == hill::kSummit) w.summitSeconds = 0;
     }
     if (w.summitSeconds >= 0) {
@@ -398,6 +472,7 @@ void tick(World& w, const Input& in) {
     movePlayer(w, in);
     doWork(w, in);
     tire(w, in);
+    help(w);
     rot(w);
     if (outage(w)) w.users *= 1.0f - 0.01f * kDt;  // a module is down: users leave
 }
@@ -570,7 +645,17 @@ std::string cairnStory(const World& w, int k) {
            std::to_string(c.modules) + " modules, " + std::to_string(static_cast<int>(c.users)) + " users.\n" +
            std::to_string(c.patched - before.patched) + " patched, " + std::to_string(c.retired - before.retired) +
            " retired, " + std::to_string(c.refactored - before.refactored) + " refactored, " +
-           std::to_string(c.breakdowns - before.breakdowns) + " went down.";
+           std::to_string(c.breakdowns - before.breakdowns) + " went down." +
+           (c.helpers == 0 ? "" : c.helpers == 1 ? " One person came up to help." : " " + std::to_string(c.helpers) + " people came up to help.");
+}
+
+const char* helperName(int i) { return i >= 0 && i < kHelperNames ? kHelperNameList[i] : "?"; }
+
+Vec3 helperSpot(const World& w) {
+    const Vec3 c = boulderCentre(w);
+    const float side = w.helper.x >= 0 ? 1.0f : -1.0f;  // the side they came up on
+    const float x = clampf(side * (boulderRadius(w) + 0.6f), -hill::kWalkHalf, hill::kWalkHalf);
+    return {x, hill::groundHeight(x, c.z), c.z};
 }
 
 bool canRefactor(const World& w, int i) {
@@ -676,8 +761,20 @@ uint64_t fingerprint(const World& w) {
             i(c.retired);
             i(c.refactored);
             i(c.breakdowns);
+            if (c.helpers != 0) i(c.helpers);
         }
     }
+    if (w.helper.name >= 0) {
+        i(w.helper.name);
+        f(w.helper.x);
+        f(w.helper.z);
+        f(w.helper.secondsLeft);
+        i(w.helper.module);
+        f(w.helper.work);
+        for (int32_t n : w.helper.patches) i(n);
+    }
+    if (w.helpersThisClimb != 0) i(w.helpersThisClimb);
+    if (w.busFactor != -1) i(w.busFactor);
     return h;
 }
 

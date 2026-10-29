@@ -136,7 +136,20 @@ struct Fields {
                 v(c.retired);
                 v(c.refactored);
                 v(c.breakdowns);
+                if (version >= 5) v(c.helpers);
             }
+        }
+        if (version >= 5) {
+            Helper& h = w.helper;
+            v(h.name);
+            v(h.x);
+            v(h.z);
+            v(h.secondsLeft);
+            v(h.module);
+            v(h.work);
+            for (int32_t& n : h.patches) v(n);
+            v(w.helpersThisClimb);
+            v(w.busFactor);
         }
     }
 };
@@ -188,6 +201,18 @@ bool plausible(const World& w, std::string* error) {
             c.modules < kMinModules || c.modules > kMaxModules || c.patched < 0 || c.retired < 0 || c.refactored < 0 ||
             c.breakdowns < 0 || (before && (c.tick < before->tick || c.major <= before->major)))
             return fail("a cairn's record is impossible");
+        if (c.helpers < 0) return fail("a cairn's record is impossible");
+    }
+    const Helper& h = w.helper;
+    if (h.name < -1 || h.name >= kHelperNames || w.helpersThisClimb < 0 || w.busFactor < -1 || w.busFactor >= kMaxModules)
+        return fail("an impossible helper");
+    if (h.name >= 0) {
+        if (!std::isfinite(h.x) || !std::isfinite(h.z) || !std::isfinite(h.secondsLeft) || !std::isfinite(h.work) ||
+            h.secondsLeft < 0 || h.secondsLeft > kHelperStays || h.work < 0 || h.module < -1 || h.module >= kMaxModules ||
+            std::fabs(h.x) > hill::kWalkHalf + 1 || hill::sOf(h.z) < hill::kValleyS - 1 || hill::sOf(h.z) > hill::kTopS + 10)
+            return fail("an impossible helper");
+        for (int32_t n : h.patches)
+            if (n < 0) return fail("an impossible helper");
     }
     return true;
 }
