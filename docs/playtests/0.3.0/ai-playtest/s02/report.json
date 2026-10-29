@@ -1,0 +1,111 @@
+{
+  "session": "s02",
+  "goal": "Upkeep with the newer mechanics: push to the second terrace (0.2), then stay there and keep the boulder alive. Patch issues as they come (hold E). When a module goes down, watch what happens to the modules that use it (the prompt says what each module uses, and red lines on the stone show the spread) and decide whether to patch the cause first. Refactor one module into the module it uses (hold F) and retire another (hold R), and say which you would rather do and why. Note when you get tired (the stamina bar) and whether sitting (Q) to rest felt worth it. Then push on as far as your time allows, and answer the questions at the end.",
+  "build": {
+    "version": "0.3 (in-game release reached; build version not shown)",
+    "commit": "88acead"
+  },
+  "seed": 2,
+  "durationSec": 1727,
+  "outcome": "achieved",
+  "findings": [
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Finding the module named in OPEN ISSUES on the boulder is slow and sometimes impossible",
+      "detail": "On the 0.3 terrace storage was the worst issue (41%->37%) and I could not get the crosshair on it in ~3 minutes. From the uphill side, walking into the boulder (W) no longer rolled it (it just stays put, presumably at the terrace edge, with no message), and circling a ball with a fixed centre crosshair kept landing on auth/ui/core. Nothing on the stone or in the HUD points to where a listed module is. On 0.2 finding router also took ~8 look/walk steps. Expected: some pointer (an on-stone highlight for the module under the worst issue, or 'storage: underneath/far side' text) or a reliable way to turn the boulder on a terrace.",
+      "repro": "pt start --profile sisyphus-strata --seed 2; push to 0.3 (Shift+W ~36 s from 0.2); walk to the uphill side; pt hold w 1.5 into the boulder; pt look in steps of 150-300 px; storage never comes under the crosshair",
+      "screenshot": "shots/rb8.png",
+      "tick": 18495
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Stamina bar barely matters and its visibility is unclear",
+      "detail": "The Stamina bar appeared on the 0.1->0.2 slope (~90%), was visible during a 10 s refactor without dropping, then disappeared from the HUD for the whole 36 s Shift+W push from 0.2 to 0.3 (push1-push3) and reappeared at 90% on arrival. I was never tired enough to be slowed or to need rest. Expected: the bar visible whenever it is changing, and pushing/hurrying drawing it down enough to make resting a decision.",
+      "repro": "pt start ... --seed 2; push to 0.2; pt hold Shift_L+w 12 (x3) toward 0.3; screenshot each",
+      "screenshot": "shots/push4.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Sitting (Q) hides the entire HUD, so rest cannot be judged",
+      "detail": "Q shows a lovely still view with 'The boulder is still. For a moment, so are you.', but the HUD (stamina, issues, users) disappears, so I could not see stamina refill or whether modules rotted meanwhile. Getting up also left me facing downhill away from the boulder. Expected: at least a small stamina bar while sitting.",
+      "repro": "pt start ...; reach 0.3; pt key q; pt wait 5; pt shot",
+      "screenshot": "shots/sit1.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "text",
+      "title": "'rotting (NN%)' in a module's prompt is not an open issue, and nothing says so",
+      "detail": "billing showed 'rotting (86%)' and ui 'rotting (75%)' in their prompts while neither appeared under OPEN ISSUES. Meanwhile modules under 'dependency drift' were listed. Patching core (used by several modules) while it was only drifting did nothing for the others' drift. I could not tell whether rotting modules need patching or what puts a module on the issues list.",
+      "repro": "pt start ... --seed 2; reach 0.2; aim at billing (pt look) and compare its prompt with the OPEN ISSUES list",
+      "screenshot": "shots/down1.png",
+      "tick": 13631
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Holding E on a DOWN module for 3 s shows no progress bar at all",
+      "detail": "On parser (DOWN 0%), a 3 s E hold left the prompt unchanged with no bar (pp1); a further 4 s hold completed the patch (pp2). Either down modules take longer with no visible bar, or progress is lost on release silently. Expected: a progress bar from the first frame, as with refactor ('Refactoring it into auth [##...]').",
+      "repro": "pt start ... --seed 2; reach 0.2; let parser go down (~3 game-min); aim at parser; pt hold e 3; pt shot",
+      "screenshot": "shots/pp2.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Red spread lines on the stone were not noticeable",
+      "detail": "When parser went down and storage started rotting faster ('uses parser, down', -45%/min), the HUD made the cascade clear, but I did not notice red lines on the stone from either view; only a few red glints near the bottom edge (fp2). The HUD did the job; the stone did not.",
+      "repro": "pt start ... --seed 2; reach 0.2; leave parser unpatched until DOWN; pt key v; pt shot",
+      "screenshot": "shots/fp2.png",
+      "tick": 14101
+    },
+    {
+      "severity": "minor",
+      "category": "perf",
+      "title": "Stepped headless session runs far slower than real time under load",
+      "detail": "A 15 s 'pt hold w' took about 5 minutes of wall-clock, and 'pt wait 70' about 4 minutes, which limited how much upkeep fit into 45 minutes. Probably machine load from parallel sessions rather than the game.",
+      "repro": "pt start ... --seed 2; time pt hold w 15",
+      "screenshot": "shots/p4.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Good: outage and fixing the cause read clearly",
+      "detail": "When parser went down the HUD turned red ('OUTAGE: users are leaving', users 100->74) and storage was labelled 'uses parser, down' at a faster rot. Patching parser alone cleared storage's issue, the outage, and dropped weight 7->4. That cause-first lesson landed well. Lost users did not return, which made the outage cost felt.",
+      "repro": "as above; aim at parser; pt hold e 5",
+      "screenshot": "shots/down1.png",
+      "tick": 13631
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 5,
+    "deaths": 0,
+    "secondsToObjective": {
+      "Ship 0.2 (wall-clock from start)": 498.0,
+      "Ship 0.3 (wall-clock from start)": 1491.0
+    },
+    "versionReached": "0.3",
+    "usersPeak": 134,
+    "usersLostToOutage": 26,
+    "refactors": 1,
+    "retires": 1,
+    "patches": 6
+  },
+  "fun": 3,
+  "verdict": "The cascade lesson works: letting parser go down turned the HUD red, made storage rot faster, and patching the one cause cleaned everything up, while users lost stayed lost. The main friction is physical: finding a named module on the ball with a centre crosshair is slow, the boulder would not turn on the 0.3 terrace, and stamina/sitting never became a real decision because the bar barely moved and sitting hides the HUD. secondsToObjective is wall-clock (no probe) and inflated by a slow, loaded machine.",
+  "answers": [
+    {
+      "question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?",
+      "answer": "It is about maintaining software forever: the boulder is the codebase (each coloured patch a module), each terrace is a release that brings more users and one more module to carry, and rot is the decay that happens to code you are not touching - dependency drift, deprecated APIs. The work never ends; growth only adds more to keep alive, and the honest moves are patching, merging (refactor) or cutting (retire)."
+    },
+    {
+      "question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?",
+      "answer": "Mostly fair: rates are shown per minute, a down module clearly explains its effect on its users, and fixing the cause cleared the cascade at once. Hardest was physically reaching the module in the issues list on the ball (storage on 0.3 I never reached) and telling 'rotting' in a prompt apart from an open issue. Between refactor and retire I would rather refactor: it cut a module (8->7) without losing users and left the merged module fresh at 100%, whereas retiring search cost 7 users. Stamina never made me tired enough to matter, and sitting hid the HUD so I could not judge if resting was worth it."
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "session": "s03",
+  "goal": "The whole climb: get the boulder to the summit (1.0), resting (sit with Q on a terrace) when you get tired, watch what happens at the summit, and follow it back down to the trailhead. There, find the cairn raised for 1.0 beside the path, stand at it and read it, then sit and look at the view for a while. Note where the climb felt unfair, too slow or too easy, and answer the questions at the end.",
+  "build": {
+    "version": "0.6 reached in game (no build version shown)",
+    "commit": "88acead"
+  },
+  "seed": 3,
+  "durationSec": 2306,
+  "outcome": "partial",
+  "findings": [
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "No way to locate an open module on the boulder up close; hunting faces eats minutes",
+      "detail": "Open issues are listed in the HUD but the boulder only shows module name labels when you stand ~5+ m away; up close (patch range ~3 m) nothing marks the rotting face. Colours repeat across modules (purple was 'router' at 0.2, 'cache' at 0.4) and the dark faces (search, billing, storage) look alike. At 0.2 it took ~5 real minutes of walking round the boulder to find 'search' on its underside; at 0.4 I gave up on billing. Expected: a marker/arrow on the issued face, or the label visible at patch range, or a 'nearest open issue: turn left' hint like the existing 'The boulder: 6 m to your right'.",
+      "repro": "pt start --profile sisyphus-strata --seed 3; pt hold w 45 (ship 0.1, 0.2); on terrace 0.2 try to find 'search' from the HUD issue list",
+      "screenshot": "shots/find_search.png",
+      "tick": 4466
+    },
+    {
+      "severity": "major",
+      "category": "balance",
+      "title": "A module at the boulder's contact point can't be reached and rots to DOWN, triggering an unrecoverable cascade",
+      "detail": "Billing got dependency drift while on the slope (-35%/min). On every terrace afterwards it sat at the bottom of the boulder (orange glow at the ground contact). Pushing doesn't bring it round reliably, and rolling it back from the uphill side needs precise positioning. It went DOWN, users started leaving, search/auth followed, router reached -101%/min, weight maxed and at 5 m below 1.0 the HUD said 'too heavy to push uphill' and the boulder rolled 23 m back to the 0.6 terrace. Once two modules are down the rest rot faster than one person can patch, so it felt unfair rather than a choice.",
+      "repro": "pt start ... --seed 3; push straight up to 0.6 patching only what is visible; leave billing (it appears on the slope from 0.3 to 0.4)",
+      "screenshot": "shots/spiral.png",
+      "tick": 23960
+    },
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "With 5+ open issues the HUD issue list overprints the centre crosshair prompt",
+      "detail": "The issue list grows down into the screen centre where the module prompt and messages are drawn. At 5 issues 'On the slope it rolls back...' is printed over the uploads row; at 8-9 issues the module prompt (name/health/'Hold E to patch') is unreadable, so I could not tell what I was aiming at and patched ui by accident when trying to reach a downed module. This hits exactly when the player most needs to read it.",
+      "repro": "Let issues accumulate past 5 (seed 3, around 0.6) and look at the boulder",
+      "screenshot": "shots/overlap.png",
+      "tick": 20500
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "HUD and big issue list cover the top-left/centre of the view so the boulder is hidden behind text",
+      "detail": "At 640x360 with 9 issues the HUD takes ~70% of the screen height; the boulder on the terrace was behind the text and I had to guess where to aim. A compact mode or collapsing the list to the worst 3 would help.",
+      "repro": "As above, at 0.6 with 9 issues",
+      "screenshot": "shots/r31.png",
+      "tick": 23605
+    },
+    {
+      "severity": "minor",
+      "category": "text",
+      "title": "'Next release ... (behind you/to your right)' line is cut off at the right edge",
+      "detail": "'Next release 1.0 (the summit): 34 m uphill (behind y' and '(to your' are truncated at 640 px width.",
+      "repro": "Reach 0.6, turn so the summit is behind or to the side",
+      "screenshot": "shots/sit2.png",
+      "tick": 17232
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Sitting (Q) hides the whole HUD, so a module can go DOWN unseen while resting",
+      "detail": "Sitting shows a lovely 'The boulder is still. For a moment, so are you.' view, but no stamina or issues. I sat ~16 s at 0.6 with billing at 8% and stood up to an outage. Expected at least a minimal stamina/alert line, or a nudge before a module goes down.",
+      "repro": "On a terrace with an issue below 20%, pt key q; pt wait 16; pt hold s 0.2",
+      "screenshot": "shots/sit1.png",
+      "tick": 17000
+    },
+    {
+      "severity": "minor",
+      "category": "balance",
+      "title": "Push speed drops sharply with weight; last 30 m to 1.0 took over 60 s of pushing",
+      "detail": "Early terraces: ~1 m/s (33 m in ~27 s). At 0.6 with 'heavy' weight: 3 m in 4 s, then 6 m in 25 s, then rollback. The feedback is clear ('rot weighs it down: patch, retire or refactor'), which is good, but combined with the finding problem the slowdown snowballs.",
+      "repro": "seed 3, push from 0.6 toward 1.0 with 4+ issues",
+      "screenshot": "shots/r26.png",
+      "tick": 22000
+    },
+    {
+      "severity": "polish",
+      "category": "perf",
+      "title": "Very slow wall-clock under load: 32 s of game pushing took ~3.5 min real",
+      "detail": "With parallel sessions, pt hold w 32 ran for ~210 s wall-clock. Not a game bug as such, but the climb is long in game seconds and this made the 55 min budget too short to reach 1.0 and the cairn.",
+      "repro": "pt hold w 32 with other sessions running",
+      "screenshot": "shots/r15.png",
+      "tick": null
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 1,
+    "deaths": 0,
+    "secondsToObjective": {
+      "Reach 0.6 (last terrace before summit)": 1623.0
+    },
+    "versionReached": "0.6",
+    "rollbacks": 1,
+    "modulesDownAtStop": 3,
+    "openIssuesAtStop": 8,
+    "summitReached": 0,
+    "cairnRead": 0
+  },
+  "fun": 3,
+  "verdict": "The premise lands immediately: the opening text, 'It will not last.', the sit view and the rolling-back message are evocative, and the early climb (0.0-0.4) feels good. What broke the run was not the push but finding modules: open issues aren't marked on the boulder at patch range, a module at the contact point can't be reached, and once 2+ modules are down the HUD list overprints the crosshair prompt so you can't even read what you're aiming at; I reached 0.6, got to 5 m below the summit, and rolled back. secondsToObjective is wall-clock (no probe), and machine load (32 s game took ~3.5 min real) meant I never reached 1.0 or the cairn.",
+  "answers": [
+    {
+      "question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?",
+      "answer": "Maintaining software forever. The boulder is the codebase (every face a module, labelled ui, core, auth, billing...), each terrace is a shipped release that adds a module and users, and the rot is ordinary decay: dependency drift, deprecated APIs, flaky tests, expiring certificates, security advisories. The weight bar says unmaintained code makes every next release heavier, and the rollback says if you neglect it the project slides back. Sitting on a terrace felt like the moment of rest between releases."
+    },
+    {
+      "question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?",
+      "answer": "The rules felt fair and readable in the HUD (each issue has a rate, the dependency 'uses X' chain explains cascades, 'rot weighs it down' explains the slowdown). What felt arbitrary was where the rot landed: a module on the underside or at the contact point can't be reached, and nothing on the boulder up close tells you which face is the sick one. Hardest by far was finding the module named in the issue list; second was reading the crosshair prompt once the issue list grew into it. I lost the run (rolled back from 5 m below 1.0) to the finding problem, not to the push."
+    }
+  ]
+}

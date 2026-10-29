@@ -1,0 +1,123 @@
+{
+  "session": "s01",
+  "goal": "Play as a brand-new player who has never heard of the game. Read the HUD and the first message, work out how to push the boulder and how to patch a module, and get as far up the hill as you can (each terrace is a release: 0.1, 0.2, ...). Note every moment of confusion, and answer the questions at the end.",
+  "build": {
+    "version": "1.0 (in-game version reached; session.json version null)",
+    "commit": "88acead"
+  },
+  "seed": 1,
+  "durationSec": 2126,
+  "outcome": "achieved",
+  "findings": [
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "Holding W from behind the boulder often slides Sisyphus past it instead of pushing",
+      "detail": "Twice on the 0.2 terrace I lined up behind the boulder (third-person V view, boulder filling the right 2/3 of the screen) and held Shift+W. The first time the boulder did not move and he walked 49 m on up the path; the second time it moved 3 m (33 -> 30 m) and then he walked past it, ending 32 m above. There is no feedback that contact was lost. Expected the push to keep him on the boulder, or a warning like 'you lost the boulder'. Once the boulder was dead-centre on the crosshair, pushing was reliable.",
+      "repro": "pt start --profile sisyphus-strata --seed 1; push to 0.2; walk around to the downhill side so the boulder is slightly right of centre; pt hold Shift_L+w 12; pt shot -> 'The boulder: 32 m behind you'",
+      "screenshot": "shots/slipoff.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "No way to tell where a failing module is on the boulder from a distance or underneath",
+      "detail": "The first issue (search, flaky test) appeared while pushing; on the 0.2 terrace it took several minutes of looking around and walking to find it, because it was underneath the boulder. Only a faint floating label shows from some angles. The hint 'From up here, walking into it rolls it back' helps but a direction cue to the worst issue (like the 'to your left' cue for the next release) would help a lot.",
+      "repro": "pt start ... --seed 1; push to 0.1 and 0.2; try to find 'search' on the boulder",
+      "screenshot": "shots/patched.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "bug",
+      "title": "Rolling the boulder back on a terrace shows 'The boulder is rolling back down!' and the target module slips away mid-patch",
+      "detail": "On the 0.2 terrace I pushed from the uphill side for 1.5 s as the hint suggests. The HUD showed red 'The boulder is rolling back down!' (alarming; it actually stopped at the edge, 32 -> 34 m). While it was still turning I held E on search, but the crosshair drifted to auth, so the patch went to auth instead.",
+      "repro": "on 0.2 terrace, stand uphill of the boulder facing it; pt hold w 1.5; pt hold e 3",
+      "screenshot": "shots/rollback.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "The last metre before each terrace takes extra pushing (stalls at '1 m uphill')",
+      "detail": "At 0.2, 0.3 and 0.6 a long Shift+W push ended on '1 m uphill' and needed another short W press to ship. Not a big deal but it felt like a stall right before the reward.",
+      "repro": "push toward any terrace with pt hold Shift_L+w N; observe 'Next release ...: 1 m uphill'",
+      "screenshot": "shots/ship06.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Mouse-look turn amount felt inconsistent for the same mouse motion",
+      "detail": "pt look 1000 0 turned about 90 degrees once and about 180 degrees another time; pt look 500 0 sometimes about 45, sometimes about 90 (judged by the HUD 'to your left/right/behind you' cues). Made it hard to turn around reliably to find the boulder. It may be the harness's relative motion, not the game.",
+      "repro": "pt look 1000 0; pt step 2; pt shot; repeat and compare the HUD direction cues",
+      "screenshot": "shots/back2.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "Floating module label is drawn under the crosshair prompt text and becomes unreadable",
+      "detail": "On the 0.4 terrace the 'billing' label on the boulder sat in the lower middle of the screen and was overprinted by the prompt '(hold R to retire it, F to refactor...)'.",
+      "repro": "ship 0.4; look slightly down at the boulder's lower half in V view",
+      "screenshot": "shots/overlap.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "Prompt says 'Hold E to patch' on a healthy module; issue reads 'flaky test +' with an unexplained '+'",
+      "detail": "Modules at 94-96% that are labelled 'healthy' still say 'Hold E to patch'. After the summit, parser's issue showed 'flaky test +' and I could not tell what the '+' means.",
+      "repro": "look at any 95% module; and see after2.png",
+      "screenshot": "shots/after2.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "balance",
+      "title": "After the summit, users keep leaving and modules keep rotting while the player can do nothing",
+      "detail": "1.0 shipped and the boulder rolled away ('It rolls. Follow it down.'), but the router outage kept draining users (368 -> 314 in ~16 s) and modules kept rotting. If that is intended (the next climb inherits the mess), the screen should say so; otherwise it feels like a punishment after the payoff.",
+      "repro": "reach 1.0 with a module DOWN; pt wait 10; pt shot",
+      "screenshot": "shots/after2.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Good: the opening message, ship messages and outage warnings are clear",
+      "detail": "The first message ('The boulder is your software. Push it up... Hold E on one to patch it.') explained the loop immediately. 'Shipped 0.x. New module: ...', the red 'OUTAGE: users are leaving', 'uses router, down', 'tired: sit down (Q) to rest' and 'rot weighs it down' all told me exactly what was going on. The summit text 'The platform it runs on reached its end of life' is a great beat.",
+      "repro": "pt start ... --seed 1; play to 1.0",
+      "screenshot": "shots/outage.png",
+      "tick": null
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 7,
+    "deaths": 0,
+    "secondsToObjective": {
+      "0.1": 125.0,
+      "0.2": 425.0,
+      "0.3": 1284.0,
+      "0.4": 1471.0,
+      "0.5": 1664.0,
+      "0.6": 1835.0,
+      "1.0 summit": 1857.0
+    },
+    "highestVersion": "1.0",
+    "modulesPatched": 6,
+    "modulesWentDown": 1,
+    "timesWalkedPastBoulder": 2
+  },
+  "fun": 4,
+  "verdict": "The metaphor lands at once and the HUD messages are excellent: I understood pushing and patching from the first screen and reached 1.0 at the summit. The friction is physical: twice I slid off the boulder and walked dozens of metres past it, and finding a failing module underneath the boulder took minutes, so a direction cue to the worst issue and stickier push contact would help most. secondsToObjective is wall-clock seconds since start (there is no probe), and machine load and my two detours inflate them.",
+  "answers": [
+    {
+      "question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?",
+      "answer": "Maintaining software forever. The boulder is the codebase (its facets are modules like core, auth, router, search, billing), each terrace is a release that brings more users and one more module, so the thing you push gets bigger and heavier. Rot is entropy: flaky tests, expiring certificates, deprecated APIs, dependency drift, security advisories, all things that go wrong in code nobody touches. The summit message about the platform reaching end of life, with the boulder rolling back, says the work is never finished, which is the Sisyphus joke."
+    },
+    {
+      "question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?",
+      "answer": "Mostly fair. The issue list showed the module, the cause, the health % and the decay rate, so I could tell how urgent each one was, and letting router hit 0% had a clear, logical consequence (outage, users leaving, the module that uses it rotting faster). The hardest part was physical, not the rules: finding the rotting module on the boulder (it was often underneath or on the far side, and it rots while you are on the slope where you cannot stop to patch), and keeping contact while pushing. I slid past the boulder twice. The decay after the summit, while I could do nothing, felt less fair."
+    }
+  ]
+}
