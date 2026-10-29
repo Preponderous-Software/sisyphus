@@ -60,9 +60,10 @@ uint64_t cairnsKey(const World& w);
 MeshData buildBoulder(const World& w);
 uint64_t boulderKey(const World& w);
 
-// Sisyphus, seen from outside: standing at the origin facing -z, about 1.8 m
+// Sisyphus (or, in another tunic, whoever is helping), seen from outside:
+// standing at the origin facing -z, about 1.8 m
 // tall; `pushing` leans him into the boulder with his arms out.
-MeshData buildAvatar(bool pushing);
+MeshData buildAvatar(bool pushing, Rgb tunic = {0.62f, 0.57f, 0.47f});
 
 // The colour a module shows: its own hue when fresh, rust as it rots, nearly
 // black once it is down; an issue tints it.

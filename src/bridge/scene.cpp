@@ -48,6 +48,20 @@ void Scene::update(const World& w, bool avatar) {
     const float model[16] = {R, 0, 0, 0, 0, R * co, -R * si, 0, 0, R * si, R * co, 0, c.x, c.y, c.z, 1};
     engine_.setMeshTransform(boulder_, model);
 
+    // Whoever is helping: the same figure in a blue tunic, facing the boulder.
+    if (w.helper.name < 0) {
+        remove(helper_);
+    } else {
+        if (!helper_) helper_ = upload(buildAvatar(false, {0.25f, 0.38f, 0.58f}));
+        const Helper& h = w.helper;
+        float fx = c.x - h.x, fz = c.z - h.z;
+        const float d = std::sqrt(fx * fx + fz * fz);
+        const float yaw = d > 1e-3f ? detAtan2(fx, -fz) : 0.0f;
+        const float hc = detCos(yaw), hs = detSin(yaw);
+        const float hm[16] = {hc, 0, hs, 0, 0, 1, 0, 0, -hs, 0, hc, 0, h.x, hill::groundHeight(h.x, h.z), h.z, 1};
+        engine_.setMeshTransform(helper_, hm);
+    }
+
     if (!avatar) {
         remove(avatar_);
         return;
@@ -80,6 +94,7 @@ Scene::~Scene() {
         remove(cairns_);
         remove(boulder_);
         remove(avatar_);
+        remove(helper_);
         engine_.setTerrain(nullptr);
     } catch (const strata::Error&) {
         // The engine is going away with us; nothing to tidy.

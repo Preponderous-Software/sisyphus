@@ -87,6 +87,12 @@ void Session::noticeChanges() {
     } else if (!b.falling && a.falling) {
         say("Back at the trailhead. " + std::to_string(b.major) + ".x starts here, with all the old code aboard.\n"
             "Q to sit a while, if you like.", 10);
+    } else if (a.helper.name < 0 && b.helper.name >= 0) {
+        say(std::string(helperName(b.helper.name)) + " came up from the town to help for a while.", 6);
+    } else if (a.helper.name >= 0 && b.helper.name < 0) {
+        say(std::string(helperName(a.helper.name)) + " moved on." +
+                (b.busFactor >= 0 ? std::string(" Nobody else knew how ") + moduleName(b.busFactor) + " worked." : ""),
+            7);
     } else if (b.breakdowns > a.breakdowns) {
         for (int i = 0; i < kMaxModules; ++i)
             if (b.modules[static_cast<size_t>(i)].active && b.modules[static_cast<size_t>(i)].health <= 0 &&

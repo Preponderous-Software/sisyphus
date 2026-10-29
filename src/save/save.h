@@ -28,7 +28,8 @@ namespace sisyphus {
 // 2: Sisyphus's stamina (a format-1 save loads rested).
 // 3: refactoring: the work in hand, and how many modules have been folded.
 // 4: the cairns at the trailhead (a cairn for every major version since).
-constexpr uint32_t kSaveVersion = 4;
+// 5: helpers: whoever is helping now, and how many helped each climb.
+constexpr uint32_t kSaveVersion = 5;
 
 // The World as save bytes, and back. decode returns false (with a reason)
 // on anything it does not accept.

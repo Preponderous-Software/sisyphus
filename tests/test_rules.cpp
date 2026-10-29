@@ -342,6 +342,7 @@ int main() {
         CHECK(activeModules(w) == modules);
         // ... and a cairn for 1.0 stands at the trailhead, telling its climb.
         CHECK(w.cairnCount == 1);
+        CHECK(w.cairns[0].helpers >= 0 && w.helpersThisClimb == 0);
         CHECK(w.cairns[0].major == 1 && w.cairns[0].modules == modules && w.cairns[0].tick == w.tick);
         CHECK(cairnStory(w, 0).find("The cairn for 1.0") == 0);
         const Vec3 b = cairnBase(0);
@@ -394,6 +395,34 @@ int main() {
         run(w, Input{}, 21);
         CHECK(w.player.stamina == 1);
         CHECK(!tired(w));
+    }
+    // Helpers: someone comes up, patches what they can reach while the
+    // boulder rests, and on leaving the module they knew best drifts.
+    {
+        World w = quiet();
+        heal(w);
+        w.helper.name = 3;
+        w.helper.secondsLeft = 40;
+        w.helper.x = -2;
+        w.helper.z = hill::zOf(hill::kValleyS + 4.0f);
+        w.player.x = 6;  // well clear of them
+        int target = -1;
+        for (int i = 0; i < kStartModules; ++i)
+            if (rolled(w, moduleDirection(i)).y > 0.2f) target = i;
+        CHECK(target >= 0);
+        w.modules[static_cast<size_t>(target)].health = 0.5f;
+        for (int t = 0; t < 39 * kTickRate; ++t) {
+            for (int i = 0; i < kMaxModules; ++i)
+                if (i != target) w.modules[static_cast<size_t>(i)].health = 1;
+            tick(w, Input{});
+        }
+        CHECK(w.helper.name == 3);
+        CHECK(w.modules[static_cast<size_t>(target)].health > 0.95f);  // patched (and aged a little since)
+        CHECK(w.helper.patches[static_cast<size_t>(target)] >= 1);
+        run(w, Input{}, 2);
+        CHECK(w.helper.name == -1);  // moved on
+        CHECK(w.busFactor == target);
+        CHECK(w.modules[static_cast<size_t>(target)].issue == Issue::Drift);
     }
     // Dependencies: every module but the oldest uses an older one, and a
     // module that is down makes the ones that use it rot fast.

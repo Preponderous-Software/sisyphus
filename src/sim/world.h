@@ -21,6 +21,10 @@
 // for the major version that just shipped, recording how its climb went.
 // Over a long game they pile up beside the path.
 //
+// Now and then, at a release, someone comes up from the town to help for a
+// while: they patch what they can reach while the boulder rests, then move
+// on, and the module they knew best starts to drift (the bus factor).
+//
 // Sisyphus tires. Pushing wears him out, the heavier the boulder the faster,
 // and so does working on modules; tired, he pushes and works slowly.
 // Standing still he gets his breath back a little; sitting down to look at
@@ -89,8 +93,23 @@ struct Cairn {
     int32_t modules = 0;
     // Totals when it was raised; the climb's own are the difference from the cairn before.
     int32_t patched = 0, retired = 0, refactored = 0, breakdowns = 0;
+    int32_t helpers = 0;  // people who came up to help on this climb (save format 5)
 };
 constexpr int kMaxCairns = 24;  // the oldest goes when there are more
+
+// Someone helping for a while (save format 5).
+constexpr float kHelperStays = 150.0f;     // seconds
+constexpr float kHelperSlower = 1.5f;      // they patch this much slower than Sisyphus
+constexpr float kHelperChance = 0.35f;     // at each release, when nobody is helping
+constexpr int kHelperNames = 16;
+struct Helper {
+    int32_t name = -1;  // into the names (helperName); -1: nobody is helping
+    float x = 0, z = 0;
+    float secondsLeft = 0;
+    int32_t module = -1;  // what they are working on
+    float work = 0;
+    std::array<int32_t, kMaxModules> patches{};  // what they patched, to know what they knew best
+};
 
 struct World {
     uint64_t seed = 1;
@@ -118,6 +137,9 @@ struct World {
     int32_t refactoredInto = -1;  // the module the newest refactor kept, until the next
     std::array<Cairn, kMaxCairns> cairns{};  // oldest first (save format 4)
     int32_t cairnCount = 0;
+    Helper helper;
+    int32_t helpersThisClimb = 0;
+    int32_t busFactor = -1;  // the module the last helper knew best, left drifting
 };
 
 // One tick's input. `work`, `retire` and `refactor` are held; `sit` toggles.
@@ -175,6 +197,11 @@ bool cascading(const World& w, int i);
 float rotRate(const World& w, int i);
 // Seconds of work to patch the module as it is now.
 float patchSeconds(const Module& m);
+// A helper's name.
+const char* helperName(int i);
+// Where the helper is going: beside the boulder, on the side of the path
+// they came up (the side away from Sisyphus when they arrived).
+Vec3 helperSpot(const World& w);
 // Where cairn k stands, on the ground at the trailhead.
 Vec3 cairnBase(int k);
 // The cairn the player stands at, or -1.

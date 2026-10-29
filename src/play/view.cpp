@@ -300,6 +300,19 @@ std::vector<HudLine> hudLines(const World& w) {
             out.push_back({"The boulder: " + std::to_string(static_cast<int>(d)) + " m " + where});
         }
     }
+    // Whoever is helping.
+    if (w.helper.name >= 0) {
+        const Helper& h = w.helper;
+        const int left = static_cast<int>(std::ceil(h.secondsLeft));
+        const std::string clock = std::to_string(left / 60) + ":" + (left % 60 < 10 ? "0" : "") + std::to_string(left % 60);
+        const Vec3 to = helperSpot(w);
+        const float dx = to.x - h.x, dz = to.z - h.z;
+        const std::string doing = dx * dx + dz * dz > 0.1f        ? "on the way up"
+                                  : h.module >= 0                 ? std::string("patching ") + moduleName(h.module)
+                                  : boulderResting(w)             ? "nothing they can reach"
+                                                                  : "waiting for it to settle";
+        out.push_back({std::string(helperName(h.name)) + " is helping: " + doing + ", " + clock + " left"});
+    }
     out.push_back({""});
     // The open issues, worst first.
     std::vector<int> open;

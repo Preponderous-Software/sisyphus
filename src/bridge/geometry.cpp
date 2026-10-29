@@ -350,9 +350,9 @@ MeshData buildBoulder(const World& w) {
     return m;
 }
 
-MeshData buildAvatar(bool pushing) {
+MeshData buildAvatar(bool pushing, Rgb tunic) {
     MeshData m;
-    constexpr Rgb kSkin{0.42f, 0.25f, 0.15f}, kTunic{0.62f, 0.57f, 0.47f}, kBelt{0.18f, 0.10f, 0.05f}, kHair{0.06f, 0.05f, 0.04f};
+    constexpr Rgb kSkin{0.42f, 0.25f, 0.15f}, kBelt{0.18f, 0.10f, 0.05f}, kHair{0.06f, 0.05f, 0.04f};
     // Legs, a little apart; the back leg braced when pushing.
     const float stride = pushing ? 0.35f : 0.0f;
     m.box({-0.22f, 0, -0.08f - stride}, {-0.05f, 0.85f, 0.10f - stride}, kSkin);
@@ -367,7 +367,7 @@ MeshData buildAvatar(bool pushing) {
         const Vec3 ez = tipped({lo.x, lo.y, hi.z}, hip, lean) - o;
         m.orientedBox(o, ex, ey, ez, c);
     };
-    part({-0.26f, 0.80f, -0.14f}, {0.26f, 1.42f, 0.14f}, kTunic);
+    part({-0.26f, 0.80f, -0.14f}, {0.26f, 1.42f, 0.14f}, tunic);
     part({-0.27f, 0.84f, -0.15f}, {0.27f, 0.92f, 0.15f}, kBelt);
     part({-0.11f, 1.45f, -0.12f}, {0.11f, 1.72f, 0.11f}, kSkin);
     part({-0.12f, 1.66f, -0.11f}, {0.12f, 1.78f, 0.13f}, kHair);
