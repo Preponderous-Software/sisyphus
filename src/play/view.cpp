@@ -134,7 +134,8 @@ void drawGlows(strata::Engine& engine, const World& w, float night, Vec3 eye) {
         p.color[0] = col.r;
         p.color[1] = col.g;
         p.color[2] = col.b;
-        p.color[3] = (0.55f + 0.3f * night) * beat + 0.25f;
+        // Brighter at night, but never past 1: Strata refuses the frame.
+        p.color[3] = std::min(1.0f, (0.55f + 0.3f * night) * beat + 0.25f);
         p.flags = STRATA_POINT_SOFT;
         pts.push_back(p);
     }
