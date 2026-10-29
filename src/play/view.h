@@ -35,6 +35,7 @@ struct HudLine {
     std::string text;
     bool heading = false;
     bool alarm = false;
+    bool optional = false;  // dropped first when the HUD is short of room
 };
 
 // The HUD's left column: the version, the users, the codebase's health and
@@ -43,6 +44,9 @@ std::vector<HudLine> hudLines(const World& w);
 // The line under the crosshair: the module looked at and what holding E (or
 // R) would do to it, or what pushing is doing; empty if nothing.
 std::string prompt(const World& w);
+// Where module i is on the stone, as he sees it ("facing you", "far side",
+// "left", "right", "on top", "under: roll it").
+std::string whereOn(const World& w, int i);
 // "[#####.....]" for a value in 0..1.
 std::string bar(float value, int width);
 
