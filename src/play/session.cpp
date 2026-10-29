@@ -107,7 +107,7 @@ void Session::noticeChanges() {
         for (int i = 0; i < kMaxModules; ++i)
             if (b.modules[static_cast<size_t>(i)].active && b.modules[static_cast<size_t>(i)].health <= 0 &&
                 a.modules[static_cast<size_t>(i)].health > 0) {
-                say(std::string(moduleName(i)) + " is down. Users are leaving.", 6);
+                say(std::string(moduleName(i)) + " is down (" + whereOn(b, i) + "). Users are leaving.", 6);
                 break;
             }
     } else if (b.incidents > a.incidents && b.lastIncident >= 0) {

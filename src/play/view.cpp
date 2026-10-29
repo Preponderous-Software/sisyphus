@@ -296,7 +296,7 @@ std::string bar(float value, int width) {
 std::string whereOn(const World& w, int i) {
     const Vec3 n = rolled(w, moduleDirection(i));
     if (n.y > 0.7f) return "on top";
-    if (n.y < -0.55f) return "underneath (roll it)";
+    if (n.y < -0.55f) return "under: roll it";
     const Vec3 c = boulderCentre(w);
     float tx = w.player.x - c.x, tz = w.player.z - c.z;
     const float tl = std::sqrt(tx * tx + tz * tz);
@@ -308,7 +308,7 @@ std::string whereOn(const World& w, int i) {
     if (facing > 0.5f) return "facing you";
     if (facing < -0.5f) return "far side";
     // Seen from him, looking at the boulder (along -t): his right is (-tz, tx).
-    return n.x * -tz + n.z * tx > 0 ? "on your right" : "on your left";
+    return n.x * -tz + n.z * tx > 0 ? "right" : "left";
 }
 
 // Which way up the hill is, from where he faces, when it is not ahead.
@@ -323,16 +323,22 @@ std::string uphillWay(const World& w) {
 std::vector<HudLine> hudLines(const World& w) {
     std::vector<HudLine> out;
     out.push_back({"SISYPHUS   version " + versionText(w) + "   " + seasonName(season(w)), true});
-    if (w.rain > 0.2f) out.push_back({snowing(w) ? "Snow: the path is slick" : "Rain: the path is slick"});
+    if (w.rain > 0.2f) out.push_back({snowing(w) ? "Snow: the path is slick" : "Rain: the path is slick", false, false, true});
     const int users = static_cast<int>(w.users);
-    if (outage(w)) out.push_back({"Users " + std::to_string(users) + "   OUTAGE: users are leaving", false, true});
+    if (outage(w)) {
+        int down = -1;
+        for (int i = 0; i < kMaxModules && down < 0; ++i)
+            if (w.modules[static_cast<size_t>(i)].active && w.modules[static_cast<size_t>(i)].health <= 0) down = i;
+        out.push_back({"Users " + std::to_string(users) + "   OUTAGE: " + moduleName(down) + " is down (" + whereOn(w, down) + ")",
+                       false, true});
+    }
     else out.push_back({"Users " + std::to_string(users)});
     out.push_back({"Modules " + std::to_string(activeModules(w)) + "   health " + bar(health(w), 10) + " " + percent(health(w))});
     const float L = load(w);
     out.push_back({"Weight  " + bar(L, 10) + (L >= 1 ? "  too heavy to push uphill" : L >= 0.7f ? "  heavy" : ""), false, L >= 1});
-    if (L >= 0.7f) out.push_back({"  (rot weighs it down: patch, retire or refactor)"});
+    if (L >= 0.7f) out.push_back({"  (rot weighs it down: patch, retire or refactor)", false, false, true});
     if (w.player.stamina < 0.9f)
-        out.push_back({"Stamina " + bar(w.player.stamina, 10) + (tired(w) ? "  tired: sit down (Q) to rest" : ""), false, tired(w)});
+        out.push_back({"Stamina " + bar(w.player.stamina, 10) + (tired(w) ? "  tired: rest (Q) on a terrace" : ""), false, tired(w), !tired(w)});
     if (w.summitSeconds >= 0) out.push_back({"At the summit: " + versionText(w) + " ships."});
     else if (w.falling) out.push_back({"It rolls. Follow it down."});
     else if (w.boulder.v < -0.5f && !w.pushing && !hill::level(w.boulder.s))
@@ -368,9 +374,9 @@ std::vector<HudLine> hudLines(const World& w) {
                                   : h.module >= 0                 ? std::string("patching ") + moduleName(h.module)
                                   : boulderResting(w)             ? "nothing they can reach"
                                                                   : "waiting for it to settle";
-        out.push_back({std::string(helperName(h.name)) + " is helping: " + doing + ", " + clock + " left"});
+        out.push_back({std::string(helperName(h.name)) + " is helping: " + doing + ", " + clock + " left", false, false, true});
     }
-    out.push_back({""});
+    out.push_back({"", false, false, true});
     // The open issues, worst first.
     std::vector<int> open;
     for (int i = 0; i < kMaxModules; ++i) {
@@ -386,14 +392,15 @@ std::vector<HudLine> hudLines(const World& w) {
     for (size_t k = 0; k < shown; ++k) {
         const int i = open[k];
         const Module& m = w.modules[static_cast<size_t>(i)];
+        static const char* const kShort[kIssueKinds] = {"", "drift", "flaky test", "deprecated", "advisory", "certificate"};
         const std::string what = m.health <= 0               ? "DOWN"
-                                 : m.issue != Issue::None      ? issueName(m.issue)
-                                 : cascading(w, i)             ? std::string("uses ") + moduleName(dependency(w, i)) + ", down"
+                                 : m.issue != Issue::None      ? kShort[static_cast<int>(m.issue)]
+                                 : cascading(w, i)             ? std::string("uses ") + moduleName(dependency(w, i))
                                                                : "rotting";
         // How fast it is going: percent a minute.
         const int perMinute = static_cast<int>(std::lround(rotRate(w, i) * 6000.0f));
         const std::string pace = m.health <= 0 ? "" : "  -" + std::to_string(perMinute) + "%/min";
-        out.push_back({padded(moduleName(i), 13) + padded(what, 20) + padded(percent(m.health), 5) + padded(pace, 12) + whereOn(w, i),
+        out.push_back({padded(moduleName(i), 13) + padded(what, 12) + padded(percent(m.health), 5) + padded(pace, 11) + whereOn(w, i),
                        false, m.health <= 0});
     }
     if (open.size() > shown) out.push_back({"... and " + std::to_string(open.size() - shown) + " more"});
@@ -446,6 +453,7 @@ std::vector<std::string> historyLines(const World& w) {
             out.push_back("* rewritten at the summit (modules and users at the end, before the rewrite)");
             break;
         }
+    out.push_back("(min: minutes of the climb, from the trailhead to the summit and back down)");
     if (w.cairnCount == 0) {
         out.push_back("");
         out.push_back("No climb has finished yet.");
@@ -486,7 +494,8 @@ std::string prompt(const World& w) {
             return "Rolling it back to turn it";
         }
         if (load(w) >= 1) return "Too heavy to push uphill; on level ground it only inches round";
-        if (tired(w)) return "Tired: he pushes slowly. Sit down (Q) to rest";
+        if (tired(w)) return hill::level(w.boulder.s) ? "Tired: he pushes slowly. Sit down (Q) to rest"
+                                                      : "Tired: he pushes slowly. Push on to the terrace to rest: sit here and it rolls back";
         return "";
     }
     if (w.blocked) return "Not lined up to push: put the boulder in the middle of your view, and walk into it";
@@ -622,10 +631,18 @@ void render(strata::Engine& engine, const World& w, const Camera& cam, bool outs
                     break;
                 }
         }
+        // ... and so does the boulder rolling away down a slope.
+        if (w.boulder.v < -0.5f && !w.falling && !hill::level(w.boulder.s))
+            centred("The boulder is rolling back down!", kMargin + gLine, alarm);
     } else {
         float y = kMargin;
         float hudRight = 0;  // the HUD's block, which labels keep out of
-        const std::vector<HudLine> hud = hudLines(w);
+        std::vector<HudLine> hud = hudLines(w);
+        // Short of room above the prompt: drop the optional lines first, so
+        // the open issues always show.
+        const auto rows = static_cast<size_t>(std::max(4.0f, (static_cast<float>(height) * 0.5f - gLine - y) / gLine));
+        for (size_t k = hud.size(); k-- > 0 && hud.size() > rows;)
+            if (hud[k].optional) hud.erase(hud.begin() + static_cast<long>(k));
         // The HUD stops above the prompt under the crosshair: a long list of
         // issues ends in "... and N more" rather than printing over it.
         const float hudLimit = static_cast<float>(height) * 0.5f - gLine;

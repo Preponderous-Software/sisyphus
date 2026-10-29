@@ -1,0 +1,79 @@
+{
+  "session": "s03",
+  "goal": "Legacy or rewrite: get the boulder to the summit (1.0). During the pause at the summit, hold R to choose a rewrite, follow it back down, and see what you start 1.x with. Read the cairn for 1.0 at the trailhead and open the history (Tab). Then climb on and say whether the rewrite felt worth what it cost, and when you would choose it. Answer the questions at the end.",
+  "build": {"version": "0.5 (in-game version reached)", "commit": "6954b5d"},
+  "seed": 3,
+  "durationSec": 1720,
+  "outcome": "partial",
+  "findings": [
+    {
+      "severity": "major",
+      "category": "perf",
+      "title": "Stepped headless session runs ~6-7x slower than game time, making the 1.0 goal unreachable in a 55-min budget",
+      "detail": "pt hold w 20 took 142 s of wall clock (21:15:40 -> 21:18:02); hold Shift_L+w 50 took 286 s. One release (~33 m terrace) costs 2-5 wall minutes, so ten releases plus the summit pause and descent cannot fit in 55 minutes. I reached 0.5 in ~29 min and never saw the summit, the rewrite, the 1.0 cairn or 1.x. Likely machine contention from parallel sessions, but the goal as scoped is not reachable at this speed.",
+      "repro": "pt start --profile sisyphus-strata --seed 3; date; pt hold w 20; date",
+      "screenshot": "shots/p2.png",
+      "tick": null
+    },
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "HUD open-issues list collapses to '... and N more lines' with zero rows shown once other HUD lines appear",
+      "detail": "When a contributor line ('Gus is helping...'), rain, stamina or outage lines are present, the OPEN ISSUES block shows no issue rows at all, only '... and 4/6/10 more lines'. Hiding help with F1 frees screen space but does not bring the rows back. Only when I was close to the boulder with fewer status lines did one row ('billing deprecated API 5%') appear. Expected: at least the worst issue (especially the module that is DOWN) always visible.",
+      "repro": "pt start ... --seed 3; pt hold w 30; pt hold Shift_L+w 25 (ship 0.3 with Gus helping); pt shot; pt key F1; pt shot",
+      "screenshot": "shots/f1_still_hidden.png",
+      "tick": null
+    },
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "No way to find the module that is down on the boulder during an outage",
+      "detail": "'OUTAGE: router is down. Users are leaving.' but the issues list was collapsed and the boulder carries no marker for the down module; looking around the boulder at 3 m only ever showed 'search'. I could not locate router to patch it, so users kept bleeding (239 -> 193). Expected: the down module highlighted on the boulder or a direction hint like the 'Next 0.6 (to your left)' hint.",
+      "repro": "Push with Shift_L+w without patching until ~0.5; outage appears; walk to the boulder and look around it",
+      "screenshot": "shots/find_router.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Boulder slid back ~15 m while sitting to rest, with no message",
+      "detail": "Tired at 'Next 0.6: 13 m', I pressed Q and rested ~14 s. On standing, 'Next 0.6: 28 m uphill (behind you)' and 'The boulder: 11 m ahead' downhill; it had rolled back to the 0.5 terrace. Rolling back is plausible design, but nothing on screen said it slipped, and the sit view faces downhill so I did not see it go. A 'the boulder slips back to 0.5' line would help.",
+      "repro": "Push to within ~13 m of a terrace while tired; pt key q; pt wait 14; pt hold w 0.5; pt shot",
+      "screenshot": "shots/rolled_back.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "Open-issue row runs off the right edge at 640 px",
+      "detail": "Row reads 'search  dependency drift  100%  -35%/min  on' and later '... -36%/min  fa' - the final column is cut off.",
+      "repro": "pt start ... --seed 3; pt hold w 30; pt shot",
+      "screenshot": "shots/issue_row_cut.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Floating module labels overlap the terrace sign",
+      "detail": "From a few metres away, 'auth', 'mailer', 'ui' labels stack on top of each other and over the '0.4' terrace sign text, hard to read.",
+      "repro": "Stand ~10 m from the boulder near a terrace sign and look at it",
+      "screenshot": "shots/rolled_back.png",
+      "tick": null
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 1,
+    "deaths": 0,
+    "secondsToObjective": {"open history (Tab)": 1500.0},
+    "versionReached": 0.5,
+    "modulesPatched": 2,
+    "peakUsers": 310,
+    "usersAtStop": 193
+  },
+  "fun": 3,
+  "verdict": "The metaphor lands immediately: the first screen, the shipping messages ('Gus moved on. Nobody else knew how search worked.') and the sitting view of the town's windows are lovely, and pushing without upkeep produced a clear, earned collapse (outage, heavy, tired) by 0.5. But the HUD hides the open-issues list behind '... and N more lines' exactly when it matters, and I could not find the down module on the boulder, so upkeep turned into guesswork. I did not reach 1.0 (the session ran ~6x slower than game time), so I cannot judge the rewrite; times are wall-clock since the game has no probe.",
+  "answers": [
+    {"question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?", "answer": "Maintaining software is endless: the boulder is the codebase you keep pushing, each terrace is a release that grows users but also adds another module you must keep alive, and the rot is dependency drift, deprecated APIs and knowledge loss (a contributor leaves and 'nobody else knew how search worked'). The weight growing with rot is technical debt making every release harder."},
+    {"question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?", "answer": "The rot itself felt fair and legible per module (percent and -%/min, 'uses X' dependencies), and ignoring it had clear consequences. What felt unfair was not the rot but finding it: the issues list collapsed to '... and N more lines', and during the router outage I could not find which facet of the boulder was router. Hardest was turning around the boulder and lining up a specific module under the crosshair. I never reached the summit, so I could not judge the rewrite trade-off."}
+  ]
+}

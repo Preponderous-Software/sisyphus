@@ -189,7 +189,7 @@ float load(const World& w);
 // How much of his strength Sisyphus has: 1 while he has some stamina left,
 // down to kSpentStrength when it is gone. Pushing and working go at this rate.
 constexpr float kTired = 0.4f;  // below this stamina he is tired
-constexpr float kSpentStrength = 0.55f;
+constexpr float kSpentStrength = 0.7f;
 float strength(const World& w);
 inline bool tired(const World& w) { return w.player.stamina < kTired; }
 // The module's centre on the unrotated boulder (a unit vector), and where it

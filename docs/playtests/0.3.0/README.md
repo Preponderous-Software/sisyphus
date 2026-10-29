@@ -10,7 +10,7 @@ kept for the new player; the other two were rewritten to exercise what 0.2.0 add
 | Session | Goal | Reached | Fun |
 | --- | --- | --- | --- |
 | s01 | a brand-new player: work it out from the screen and climb | 1.0, the summit | 4/5 |
-| s02 | upkeep with dependencies, refactoring, retiring and stamina | 0.3 (the goal) | not given |
+| s02 | upkeep with dependencies, refactoring, retiring and stamina | 0.3 (the goal) | 3/5 |
 | s03 | the whole climb, resting when tired, then read the cairn for 1.0 | 0.6, 5 m short of the summit | 3/5 |
 
 The new player reached the summit, which no session had before ([run 2](../0.2.0/README.md): 0.1, 0.2 and 0.5). The new

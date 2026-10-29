@@ -515,7 +515,14 @@ int main() {
         CHECK(w.helper.name == 3);
         CHECK(w.modules[static_cast<size_t>(target)].health > 0.95f);  // patched (and aged a little since)
         CHECK(w.helper.patches[static_cast<size_t>(target)] >= 1);
-        run(w, Input{}, 2);
+        // Their 40 s count only beside the boulder, not the walk up from the
+        // valley: they are still there now, and move on a little later.
+        int64_t waited = 0;
+        while (w.helper.name != -1 && waited < 120 * kTickRate) {
+            tick(w, Input{});
+            ++waited;
+        }
+        CHECK(waited > kTickRate);
         CHECK(w.helper.name == -1);  // moved on
         CHECK(w.busFactor == target);
         CHECK(w.modules[static_cast<size_t>(target)].issue == Issue::Drift);

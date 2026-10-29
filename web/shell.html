@@ -206,7 +206,7 @@
     return text.replace(/Hold E to patch/g, 'Hold Patch').replace(/hold R to retire it/g, 'hold Retire to retire it')
                .replace(/\(W, into it\)/g, '(walk into it)').replace(/Hold E on one/g, 'Hold Patch on one')
                .replace(/Q to sit/g, 'Sit').replace(/, F to refactor it into/g, ', Refactor to fold it into')
-               .replace(/sit down \(Q\)/gi, function (m) { return m.charAt(0) + 'it down (Sit)'; });
+               .replace(/\(Q\)/g, '(Sit)');
   }
 
   // ---- the page's view of the game

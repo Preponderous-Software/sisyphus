@@ -1,0 +1,101 @@
+{
+  "session": "s01",
+  "goal": "Play as a brand-new player who has never heard of the game. Read the HUD and the first message, work out how to push the boulder and how to patch a module, and get as far up the hill as you can (each terrace is a release: 0.1, 0.2, ...). Note every moment of confusion, and answer the questions at the end.",
+  "build": {
+    "version": "0.6 (in-game release reached); session.json version null",
+    "commit": "6954b5d"
+  },
+  "seed": 1,
+  "durationSec": 1940,
+  "outcome": "partial",
+  "findings": [
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "Open-issues panel shows no issue rows, only '... and N more lines', from about 0.3 onward",
+      "detail": "From the slope after 0.3 the HUD showed 'OPEN ISSUES 2' and then only '... and 2 more lines', never the rows. It stayed that way on terraces and with F1 (help hidden). At 0.5, when the 'Rain: the path is slick' line was added, even the 'OPEN ISSUES' heading vanished. It looks like the panel has a fixed line budget that the rows above it (stamina, rain, weight hint, outage) use up. The result is that the player cannot see which module is failing. I expected at least the worst issue to always be listed.",
+      "repro": "pt start --profile sisyphus-strata --seed 1; pt hold w 30 (0.1); pt hold w 30 (0.2); patch auth; pt hold w 32 (0.3); pt hold w 18; pt shot",
+      "screenshot": "shots/issues_hidden.png",
+      "tick": null
+    },
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "During an OUTAGE the down module is not named in the HUD and is hard to find on the boulder",
+      "detail": "Between 0.6 and 1.0 the HUD turned red with 'OUTAGE: users are leaving', and users fell from 400 to 146. Only the sit (Q) screen named the module ('OUTAGE: router is down'). Back on the terrace I walked around the boulder for about 3 minutes. The only clue was a pink/red glow on its top, beyond patch reach, and no crosshair prompt ever said router. I expected a pointer or label for the down module, or a way to reach it.",
+      "repro": "continue from 0.6 without patching unseen issues; pt hold w 22 x3; pt key q; pt wait 6; walk to the boulder and look for router",
+      "screenshot": "shots/outage.png",
+      "tick": null
+    },
+    {
+      "severity": "major",
+      "category": "balance",
+      "title": "Death spiral on the 0.6 -> 1.0 slope: heavy + tired pushes ~3 m per 25 s and resting drops the boulder",
+      "detail": "Rot sets the weight to 'heavy' and stamina drains to 2/10, so pushing slows to about 0.1 m/s. Sitting to rest (the game's own advice: 'Sit down (Q) to rest') rolls the boulder back to the previous terrace and loses about 22 m. Because the issues were invisible (see above), I had no way to lighten the boulder before the climb. The trap is never explained in advance.",
+      "repro": "reach 0.6 with ~70% health; pt hold w 22; pt hold w 25; pt key q",
+      "screenshot": "shots/sit1.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "text",
+      "title": "Issue row overflows the window and has no space between name and percent",
+      "detail": "The first issue row read 'auth   expiring certificate84%   -60%/min  fa'. The issue text runs into the percentage, and the last column ('fa'/'on', probably the side of the boulder it is on) is clipped at x=640. That last column is exactly the information needed to find the module.",
+      "repro": "pt start ... --seed 1; push to ~15 m below 0.2; pt shot",
+      "screenshot": "shots/issuecut.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Patching bar looks full before the patch completes",
+      "detail": "After a 2 s hold of E on auth (67%) the prompt showed 'Patching [#############]', a full-looking bar, but the module was not fixed. It needed another ~3 s hold. I expected the bar to fill in step with the real progress.",
+      "repro": "on a terrace face a module with an issue; pt hold e 2; pt shot; pt hold e 3",
+      "screenshot": "shots/e3.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Controls bar disappears without being asked while pushing",
+      "detail": "The W A S D / E / R / F help bar at the bottom vanished at times (for example when the issue and slope hints appeared) without F1 being pressed, then came back on terraces.",
+      "repro": "push from 0.1 toward 0.2 and watch the bottom of the screen",
+      "screenshot": "shots/issuecut.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Good: the intro text and first release teach pushing and patching well",
+      "detail": "'The boulder is your software. Push it up to the next terrace to ship a release (W, into it)...' made the first 0.1 obvious (~30 s). The 'Shipped 0.1. New module: search.' toast and the crosshair prompt 'router: nearly new (97%), uses auth / Hold E to patch' are clear. The sit line 'The boulder is still. For a moment, so are you.' is lovely.",
+      "repro": "pt start ...; pt shot; pt hold w 30",
+      "screenshot": "shots/shipped01.png",
+      "tick": null
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 6,
+    "deaths": 0,
+    "secondsToObjective": {
+      "ship 0.1": 30.0,
+      "ship 0.2": 450.0,
+      "ship 0.6": 1420.0
+    },
+    "highestVersion": 0.6,
+    "peakUsers": 400,
+    "usersAtStop": 146,
+    "modulesPatched": 4
+  },
+  "fun": 3,
+  "verdict": "The opening is strong: the metaphor lands and 0.1 to 0.4 teach push and patch cleanly. From about 0.3 on, though, the open-issues list collapses to '... and N more lines', so the core upkeep loop goes blind exactly when rot starts to matter. That led straight into an unexplained outage and a heavy, tired stall below the summit. secondsToObjective is wall-clock time on a slow shared software renderer (no probe), so it is not game time.",
+  "answers": [
+    {
+      "question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?",
+      "answer": "It is about maintaining software. The boulder is the codebase you keep pushing uphill. Each terrace is a shipped release that brings more users and one more module, so the boulder gets bigger and heavier. The rot is bit-rot and maintenance debt: expiring certificates, dependency drift, modules that age and fail and drag down the modules that use them. The rolling back (which I only saw partly, when I sat to rest) is the futility of upkeep: stop working and the thing slides back."
+    },
+    {
+      "question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?",
+      "answer": "Early on it felt fair. The one auth issue was named with a rate (-60%/min), I found it by looking around the boulder, and holding E fixed it. From about 0.3 on it felt arbitrary, but only because I could not see it: the issues panel showed only '... and N more lines', so I did not know which modules were rotting or where they were. Then an outage hit and users left. The hardest things were finding a given module on the boulder (issue modules are often on top or underneath, out of reach, and rolling the boulder to reach them is not obvious) and knowing when it was safe to rest, since sitting on the slope lost the climb."
+    }
+  ]
+}

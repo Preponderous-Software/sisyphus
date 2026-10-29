@@ -203,7 +203,9 @@ void help(World& w) {
         h.x = to.x;
         h.z = to.z;
     }
-    h.secondsLeft -= kDt;
+    // Their time counts only beside the boulder, not on the walk up from
+    // the town or while catching up with it.
+    if (d < 2.0f) h.secondsLeft -= kDt;
     if (h.secondsLeft <= 0) {
         // Moving on: what they knew best starts to drift.
         int best = -1;

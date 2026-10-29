@@ -1,0 +1,114 @@
+{
+  "session": "s02",
+  "goal": "The long haul: climb as far as you can, keeping the boulder alive. If a contributor comes up from the town to help, watch what they do, and what happens when they move on. If it rains or snows, say how it changed the climb. Open the history (Tab) now and then and say whether it helps you understand how your climbs are going. Answer the questions at the end.",
+  "build": {
+    "version": "0.6",
+    "commit": "6954b5d"
+  },
+  "seed": 4,
+  "durationSec": 2002,
+  "outcome": "partial",
+  "findings": [
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "OPEN ISSUES list shows zero rows ('... and N more lines') once a contributor line is in the HUD",
+      "detail": "From 0.5 on, with 'Lena is helping' (and sometimes Stamina) in the HUD, the issue list collapsed to 'OPEN ISSUES 3' followed by '... and 3 more lines' with no issue rows at all; at one point even the header was gone ('... and 4 more lines'). F1 did not free space. The player sees a count but not which module is sick or how fast it rots, which is exactly what the HUD promises (worst first). Expected at least the worst issue row to always be shown.",
+      "repro": "pt start --profile sisyphus-strata --seed 4; push to 0.5 (about 6 minutes of Shift+W) while a contributor is on the way; pt shot",
+      "screenshot": "shots/issues_hidden.png",
+      "tick": 13431
+    },
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "Sick modules on the underside of the boulder are effectively unreachable/unfindable; billing rotted to down",
+      "detail": "billing (deprecated API, -39%/min) sat on the contact patch under the boulder. The floating grey 'billing' label was visible only in V (third-person) view, at ground level. Rolling it back from the uphill side and pushing a little uphill moved it ~1 m at a time and never brought billing into crosshair reach on a terrace; I only got the crosshair on it once, mid-slope at 23%, where stopping rolls the boulder back. It went down: 'billing is down. Users are leaving', OUTAGE, users 400 -> 340 in under a minute. Expected a clearer way to turn the boulder (or a prompt saying which way to roll it) when an issue is on the underside.",
+      "repro": "pt start ... --seed 4; climb to 0.4; billing gets 'deprecated API'; try to bring it into reach with V view + rolling from the uphill side",
+      "screenshot": "shots/stuck_push.png",
+      "tick": 18615
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Finding the module named in an issue takes minutes of circling; label only legible in V view",
+      "detail": "At 0.1 storage got 'flaky test' (-30%/min). In first person the crosshair prompt names only the module under it and nothing points to the sick one; I circled the boulder for several game minutes before the V view showed a floating purple 'storage' label. Once aimed, E for 4 s patched it 89% -> 100% cleanly. Expected a direction hint (like 'The boulder: 6 m to your left') for the worst issue.",
+      "repro": "pt start ... --seed 4; pt hold Shift_L+w 28 (ships 0.1); try to find 'storage' from first person",
+      "screenshot": "shots/patched.png",
+      "tick": 2765
+    },
+    {
+      "severity": "minor",
+      "category": "balance",
+      "title": "Contributor's help timer runs during the walk up from town; most of it is spent travelling",
+      "detail": "Noor appeared at 0.1 with '2:30 left' and was still 'on the way up' at 1:44; she patched once (health 93->96%) at 0.3 after I stopped and sat, then said 'nothing they can reach', then left. Lena at 0.5: still 'on the way up, 0:37 left' after ~2 minutes. Each contributor gave maybe 30-60 s of useful help. Also they only patch when the boulder is settled ('waiting for it to settle') and only what they can reach. Expected the timer to start on arrival, or a faster walk.",
+      "repro": "pt start ... --seed 4; ship 0.1; watch the HUD 'Noor is helping:' line while pushing",
+      "screenshot": "shots/lena_late.png",
+      "tick": 19520
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Pushing from below for 16 s did nothing after an outage, no feedback why",
+      "detail": "After billing went down (weight bar jumped to 7/10) I held Shift+W into the boulder from below on the 0.6 terrace for 16 s: he did not move and the boulder stayed at '33 m'. Strafing a little then let me walk past it ('The boulder: 10 m behind you'). Either I was against it off-centre or it was too heavy; the screen gave no hint (no 'too heavy', no stamina drop). The third-person camera also places the boulder off to one side, which makes alignment hard to judge.",
+      "repro": "on the 0.6 terrace with an outage: pt hold Shift_L+w 16; pt shot",
+      "screenshot": "shots/stuck_push.png",
+      "tick": 18615
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "Issue rows and contributor line clipped at the right edge at 640x360",
+      "detail": "'storage  flaky test  95%  -30%/min  fa...' - the last column is cut off; 'Noor is helping: waiting for it to settle, 0:12 left' loses its last letters.",
+      "repro": "pt start ... --seed 4; ship 0.1; pt shot",
+      "screenshot": "shots/issue_cutoff.png",
+      "tick": 1700
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "History (Tab) has little to say during the first climb; 'min' column unexplained",
+      "detail": "Tab shows one 'now 0.x' row (min 5, modules 12, users 341, patched 4, retired 0, refactored 0, down 1, helpers 2) and 'No climb has finished yet. Each one that does leaves a cairn at the trailhead.' Clear and honest, but within one climb it did not help me judge how I was doing; 'min' presumably means minutes.",
+      "repro": "pt key Tab at any point in the first climb",
+      "screenshot": "shots/tab_history.png",
+      "tick": 19500
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Good: contributor leaving is a sharp, readable bus-factor moment",
+      "detail": "'Noor moved on. Nobody else knew how core worked.' and core immediately got 'dependency drift' (-36%/min). Also the sitting view line 'Below, the town's windows. Somebody is using what you keep.' landed well. Keep these.",
+      "repro": "pt start ... --seed 4; ship 0.1; wait for Noor's timer to end (~0.4)",
+      "screenshot": "shots/noor_left.png",
+      "tick": 10754
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 6,
+    "deaths": 0,
+    "secondsToObjective": {
+      "ship 0.1": 210,
+      "ship 0.3": 600,
+      "ship 0.5": 1395,
+      "ship 0.6": 1740
+    },
+    "versionReached": "0.6",
+    "modulesPatchedByMe": 4,
+    "modulesDown": 1,
+    "contributorsSeen": 2,
+    "peakUsers": 400,
+    "usersAtEnd": 340,
+    "rainOrSnowSeen": 0
+  },
+  "fun": 3,
+  "verdict": "The premise reads instantly and the writing is strong (the contributor leaving with 'nobody else knew how core worked' is the best moment), and climbing to 0.6 in spring felt steady. But at 640x360 the HUD's issue list collapses to '... and N more lines' exactly when issues pile up, and modules on the underside of the boulder are so hard to locate and turn into reach that billing died while I knew its name; contributors spend most of their help timer walking up from town. secondsToObjective is wall-clock seconds (no probe); I saw no rain or snow (still spring at 0.6) and never reached the summit, so no cairn or rewrite.",
+  "answers": [
+    {
+      "question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?",
+      "answer": "Maintaining software forever. The boulder is the codebase (each coloured patch a module that uses another), each terrace is a release that adds a module and brings more users, and the rot is entropy: flaky tests, deprecated APIs, dependency drift. Volunteers come up from the town, help briefly, and leave, taking knowledge with them. The town below is the users who depend on it. The point seems to be that upkeep never ends and the summit only sends it back down (I did not reach it)."
+    },
+    {
+      "question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?",
+      "answer": "The rot itself felt fair: rates are shown per minute, the prompt says what uses what, and a contributor leaving causing drift felt earned. What felt arbitrary was reach: a sick module sitting under the boulder could not be found or rotated into reach in time, and once the HUD had a contributor line the issue list showed no rows at all. Hardest was finding which patch of the boulder is the sick module and turning the boulder so it faces me on a terrace."
+    }
+  ]
+}
