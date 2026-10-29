@@ -1,6 +1,7 @@
 // sisyphus: the game on the Strata engine.
 //
 //   sisyphus [--slot DIR] [--new] [--seed N] [--width W --height H]
+//   sisyphus --from DIR [--width W --height H]
 //   sisyphus --autopilot [--speed N] [--width W --height H]
 //   sisyphus --headless [--frames DIR] [--width W --height H]
 //   sisyphus --version
@@ -14,6 +15,10 @@
 // The game continues from its save in DIR (by default %APPDATA%\Sisyphus\default
 // on Windows, ~/.local/share/sisyphus/default elsewhere), saves every minute
 // and on quit, and keeps the save before last; --new starts over.
+//
+// --from plays on from the save in DIR (a slot directory) and never saves,
+// so a playtest or a recording can begin mid-game without touching anyone's
+// save.
 //
 // --autopilot lets the autopilot play (at N times speed), watched from
 // behind. --headless runs the autopilot's playthrough (from the trailhead to
@@ -45,6 +50,7 @@ struct Args {
     bool autopilot = false;
     int speed = 1;
     std::string slot;
+    std::string from;
     bool fresh = false;
     std::string framesDir;
     int width = 1280, height = 720;
@@ -64,6 +70,7 @@ bool parseArgs(int argc, char** argv, Args& a) {
         else if (s == "--headless") a.headless = true;
         else if (s == "--autopilot") a.autopilot = true;
         else if (s == "--slot") a.slot = next("--slot");
+        else if (s == "--from") a.from = next("--from");
         else if (s == "--new") a.fresh = true;
         else if (s == "--speed") a.speed = std::atoi(next("--speed"));
         else if (s == "--frames") a.framesDir = next("--frames");
@@ -87,6 +94,7 @@ bool parseArgs(int argc, char** argv, Args& a) {
 
 void usage() {
     std::puts("usage: sisyphus [--slot DIR] [--new] [--seed N] [--width W --height H]\n"
+              "       sisyphus --from DIR [--width W --height H]\n"
               "       sisyphus --autopilot [--speed N] [--width W --height H]\n"
               "       sisyphus --headless [--frames DIR] [--width W --height H]\n"
               "       sisyphus --version");
@@ -265,7 +273,8 @@ int runGame(strata::Engine& engine, const Args& args) {
     // Watching the autopilot never touches the player's save, and neither does
     // a test harness driving the game (Strata's STRATA_DRIVE).
     const bool driven = engine.driven();
-    if (!args.autopilot && !driven) o.slot = args.slot.empty() ? defaultSlot() : args.slot;
+    if (!args.autopilot && !driven && args.from.empty()) o.slot = args.slot.empty() ? defaultSlot() : args.slot;
+    o.from = args.from;
     o.fresh = args.fresh;
     // A driven run is silent: its clock may be stepped, and synthesized sound
     // would drift against it.
