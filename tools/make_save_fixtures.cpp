@@ -9,6 +9,7 @@
 // Format 4 (0.2.0), with stamina and cairns:
 //   v4-after-summit.save  back at the trailhead after 1.0, its cairn raised
 //   v4-second-climb.save  on the way up again, after the tenth release
+// Format 7 (0.3.0), with helpers, rewrites and weather: the same two, as v7-.
 #include <cinttypes>
 #include <cstdio>
 #include <filesystem>
