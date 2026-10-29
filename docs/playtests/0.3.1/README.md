@@ -1,4 +1,4 @@
-# Playtests for 0.4.0
+# Playtests for 0.3.1
 
 ## AI playtest, run 4 (2026-10-28)
 
