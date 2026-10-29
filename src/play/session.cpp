@@ -72,7 +72,10 @@ std::string Session::quote() const {
     // Counted over all the time he has sat: each sitting goes on from the
     // words the last one reached.
     const int k = static_cast<int>(w_.satSeconds / kQuoteSeconds);
-    return kQuotes[k < kQuoteCount ? k : kQuoteCount - 1];
+    std::string q = kQuotes[k < kQuoteCount ? k : kQuoteCount - 1];
+    // Resting shows: his stamina coming back.
+    if (w_.player.stamina < 1) q += "\n\nResting: stamina " + std::to_string(static_cast<int>(w_.player.stamina * 100)) + "%";
+    return q;
 }
 
 void Session::noticeChanges() {

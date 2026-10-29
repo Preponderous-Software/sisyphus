@@ -520,6 +520,26 @@ int main() {
         CHECK(w.busFactor == target);
         CHECK(w.modules[static_cast<size_t>(target)].issue == Issue::Drift);
     }
+    // Walking straight into it without being lined up to push, he stops
+    // against it instead of sliding off round it (a playtest walked on up the
+    // path past it), and is told why.
+    {
+        World w = quiet();
+        heal(w);
+        w.best = 1;
+        w.boulder.s = H::terraceStart(1) + 4.0f;
+        const float R = boulderRadius(w), bz = H::zOf(w.boulder.s);
+        w.player.x = R + 1.0f;
+        w.player.z = bz;
+        Input in;
+        in.forward = 1;
+        in.yaw = -kPi / 2;  // facing -x, at its side
+        run(w, in, 3);
+        CHECK(w.blocked);
+        CHECK(w.player.x > R);  // still on that side
+        CHECK(std::fabs(w.player.z - bz) < 0.3f);
+        CHECK(w.boulder.s == H::terraceStart(1) + 4.0f);
+    }
     // Dependencies: every module but the oldest uses an older one, and a
     // module that is down makes the ones that use it rot fast.
     {

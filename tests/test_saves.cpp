@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
         CHECK(rb.refactored == 4 && rb.refactoredInto == 2 && fingerprint(rb) == fingerprint(r));
     }
     {
-        World c = played(400);  // format 4: the cairns
+        World c = played(700);  // format 4: the cairns
         CHECK(c.cairnCount >= 1);
         World cb;
         CHECK(decodeSave(encodeSave(c), cb, &why));

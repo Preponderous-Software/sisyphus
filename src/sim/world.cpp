@@ -348,6 +348,7 @@ void moveBoulder(World& w, const Input& in) {
 
 void movePlayer(World& w, const Input& in) {
     Player& p = w.player;
+    w.blocked = false;
     if (p.sitting) return;
     float f = in.forward, s = in.strafe;
     const float len2 = f * f + s * s;
@@ -378,6 +379,22 @@ void movePlayer(World& w, const Input& in) {
             rx = 0;
             rz = 1;
             d = 1;
+        }
+        // Walking straight into it without pushing (not lined up), he stops
+        // against it rather than sliding off round its side and on up the
+        // path; walking past it at a slant still slides round.
+        const float mx = x - p.x, mz = z - p.z, ml = std::sqrt(mx * mx + mz * mz);
+        const float into = ml > 1e-5f ? -(mx * rx + mz * rz) / (ml * d) : 0.0f;
+        w.blocked = !w.pushing && !w.falling && into > 0.7f;
+        if (w.blocked) {
+            rx = p.x;
+            rz = p.z - bz;
+            d = std::sqrt(rx * rx + rz * rz);
+            if (d < 1e-4f) {
+                rx = 0;
+                rz = 1;
+                d = 1;
+            }
         }
         x = rx / d * clear;
         z = bz + rz / d * clear;
@@ -530,8 +547,10 @@ void tick(World& w, const Input& in) {
     tire(w, in);
     weather(w);
     help(w);
-    rot(w);
-    if (outage(w)) w.users *= 1.0f - 0.01f * kDt;  // a module is down: users leave
+    // While it rolls back down after the summit there is nothing he can do:
+    // time out from rot until it comes to rest.
+    if (!w.falling) rot(w);
+    if (outage(w) && !w.falling) w.users *= 1.0f - 0.01f * kDt;  // a module is down: users leave
 }
 
 // ---- queries

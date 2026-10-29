@@ -140,6 +140,7 @@ struct World {
     bool pushing = false;      // this tick, Sisyphus pushed
     bool pushingBack = false;  // ... from the uphill side, rolling it back (level ground only)
     bool slipping = false;     // pushed, but too heavy: it slides back
+    bool blocked = false;      // this tick, walked into it without being lined up to push (shown, never saved)
     Work work;
     int32_t incidents = 0, patched = 0, retired = 0, breakdowns = 0;
     int32_t lastIncident = -1;  // the module the newest incident hit

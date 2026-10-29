@@ -291,6 +291,26 @@ std::string bar(float value, int width) {
     return "[" + std::string(static_cast<size_t>(n), '#') + std::string(static_cast<size_t>(width - n), '.') + "]";
 }
 
+// Where module i is on the stone, as he sees it: on top, underneath, the
+// side facing him, the far side, or to his left or right.
+std::string whereOn(const World& w, int i) {
+    const Vec3 n = rolled(w, moduleDirection(i));
+    if (n.y > 0.7f) return "on top";
+    if (n.y < -0.55f) return "underneath (roll it)";
+    const Vec3 c = boulderCentre(w);
+    float tx = w.player.x - c.x, tz = w.player.z - c.z;
+    const float tl = std::sqrt(tx * tx + tz * tz);
+    if (tl < 1e-3f) return "";
+    tx /= tl;
+    tz /= tl;
+    const float nl = std::sqrt(n.x * n.x + n.z * n.z);
+    const float facing = (n.x * tx + n.z * tz) / (nl > 1e-3f ? nl : 1.0f);
+    if (facing > 0.5f) return "facing you";
+    if (facing < -0.5f) return "far side";
+    // Seen from him, looking at the boulder (along -t): his right is (-tz, tx).
+    return n.x * -tz + n.z * tx > 0 ? "on your right" : "on your left";
+}
+
 // Which way up the hill is, from where he faces, when it is not ahead.
 std::string uphillWay(const World& w) {
     float turn = -w.player.yaw;  // uphill is yaw 0
@@ -315,12 +335,13 @@ std::vector<HudLine> hudLines(const World& w) {
         out.push_back({"Stamina " + bar(w.player.stamina, 10) + (tired(w) ? "  tired: sit down (Q) to rest" : ""), false, tired(w)});
     if (w.summitSeconds >= 0) out.push_back({"At the summit: " + versionText(w) + " ships."});
     else if (w.falling) out.push_back({"It rolls. Follow it down."});
-    else if (w.boulder.v < -0.5f && !w.pushing) out.push_back({"The boulder is rolling back down!", false, true});
+    else if (w.boulder.v < -0.5f && !w.pushing && !hill::level(w.boulder.s))
+        out.push_back({"The boulder is rolling back down!", false, true});
     else {
         const int next = w.best + 1;
         const float d = hill::terraceStart(next) - w.boulder.s;
-        out.push_back({"Next release " + nextVersionText(w) + (next >= hill::kSummit ? " (the summit)" : "") + ": " +
-                       std::to_string(static_cast<int>(std::ceil(d))) + " m uphill" + uphillWay(w)});
+        out.push_back({"Next " + nextVersionText(w) + (next >= hill::kSummit ? " (the summit)" : "") + ": " +
+                       (d < 1 ? std::string("under 1") : std::to_string(static_cast<int>(std::ceil(d)))) + " m uphill" + uphillWay(w)});
     }
     // Where the boulder is, once it is out of reach.
     {
@@ -372,7 +393,8 @@ std::vector<HudLine> hudLines(const World& w) {
         // How fast it is going: percent a minute.
         const int perMinute = static_cast<int>(std::lround(rotRate(w, i) * 6000.0f));
         const std::string pace = m.health <= 0 ? "" : "  -" + std::to_string(perMinute) + "%/min";
-        out.push_back({padded(moduleName(i), 14) + padded(what, 21) + padded(percent(m.health), 5) + pace, false, m.health <= 0});
+        out.push_back({padded(moduleName(i), 13) + padded(what, 20) + padded(percent(m.health), 5) + padded(pace, 12) + whereOn(w, i),
+                       false, m.health <= 0});
     }
     if (open.size() > shown) out.push_back({"... and " + std::to_string(open.size() - shown) + " more"});
     return out;
@@ -457,11 +479,17 @@ std::string prompt(const World& w) {
     }
     if (w.pushing) {
         if (w.slipping) return "Too heavy: it slides back. Let it settle on a terrace, and patch the rot.";
-        if (w.pushingBack) return "Rolling it back to turn it";
+        if (w.pushingBack) {
+            const int t = hill::terraceAt(w.boulder.s);
+            const float edge = t >= 0 ? hill::terraceStart(t) + 0.3f : hill::kRestS;
+            if (w.boulder.s <= edge + 0.05f) return "At the terrace's edge: it rolls back no further. Push it on from below.";
+            return "Rolling it back to turn it";
+        }
         if (load(w) >= 1) return "Too heavy to push uphill; on level ground it only inches round";
         if (tired(w)) return "Tired: he pushes slowly. Sit down (Q) to rest";
         return "";
     }
+    if (w.blocked) return "Not lined up to push: put the boulder in the middle of your view, and walk into it";
     const int i = aimedModule(w);
     if (i < 0 && cairnHere(w) >= 0) return cairnStory(w, cairnHere(w));
     if (i < 0) {
@@ -481,7 +509,7 @@ std::string prompt(const World& w) {
     s += std::string(moduleName(i)) + ": ";
     if (m.health <= 0) s += "DOWN";
     else if (m.issue != Issue::None) s += std::string(issueName(m.issue)) + ", " + issueLine(m.issue);
-    else s += m.health > 0.9f ? "healthy" : "rotting";
+    else s += m.health >= 0.98f ? "healthy" : m.health > 0.9f ? "nearly new" : "aging, no issue yet";
     s += " (" + percent(m.health) + ")";
     const int dep = dependency(w, i);
     if (dep >= 0) s += cascading(w, i) ? std::string(", and ") + moduleName(dep) + ", which it uses, is DOWN"
@@ -586,10 +614,30 @@ void render(strata::Engine& engine, const World& w, const Camera& cam, bool outs
     } else if (w.player.sitting) {
         // Sitting: no HUD, only the view, and the words.
         if (!o.quote.empty()) centred(o.quote, static_cast<float>(height) * 0.25f, ink);
+        // ... except that an outage still shows: nothing goes down unseen.
+        if (outage(w)) {
+            for (int i = 0; i < kMaxModules; ++i)
+                if (w.modules[static_cast<size_t>(i)].active && w.modules[static_cast<size_t>(i)].health <= 0) {
+                    centred(std::string("OUTAGE: ") + moduleName(i) + " is down", kMargin, alarm);
+                    break;
+                }
+        }
     } else {
         float y = kMargin;
         float hudRight = 0;  // the HUD's block, which labels keep out of
-        for (const HudLine& l : hudLines(w)) {
+        const std::vector<HudLine> hud = hudLines(w);
+        // The HUD stops above the prompt under the crosshair: a long list of
+        // issues ends in "... and N more" rather than printing over it.
+        const float hudLimit = static_cast<float>(height) * 0.5f - gLine;
+        for (size_t li = 0; li < hud.size(); ++li) {
+            const HudLine& l = hud[li];
+            if (y + 2 * gLine > hudLimit && li + 1 < hud.size()) {
+                const std::string more = "... and " + std::to_string(hud.size() - li) + " more lines";
+                text(texts, keep, kMargin, y, more, ink);
+                hudRight = std::max(hudRight, kMargin + gTextSize * static_cast<float>(more.size()));
+                y += gLine;
+                break;
+            }
             if (!l.text.empty()) text(texts, keep, kMargin, y, l.text, l.alarm ? alarm : l.heading ? gold : ink);
             hudRight = std::max(hudRight, kMargin + gTextSize * static_cast<float>(l.text.size()));
             y += gLine;
