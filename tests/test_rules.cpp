@@ -408,7 +408,7 @@ int main() {
             for (int t = 0; t < 4 * kTickRate; ++t) {
                 heal(w);
                 w.rain = rain;
-                w.rainLeft = rain > 0 ? 100 : 0;
+                w.rainLeft = rain > 0 ? 100.0f : 0.0f;
                 tick(w, pushIn());
             }
             return w.boulder.s;
@@ -423,7 +423,7 @@ int main() {
             w.player.x = 6;
             for (int t = 0; t < 2 * kTickRate; ++t) {
                 w.rain = rain;
-                w.rainLeft = rain > 0 ? 100 : 0;
+                w.rainLeft = rain > 0 ? 100.0f : 0.0f;
                 tick(w, Input{});
             }
             return w.boulder.v;
