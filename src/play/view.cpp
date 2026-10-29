@@ -78,7 +78,9 @@ void setLights(strata::Engine& engine, const World& w, float night) {
     engine.setPointLights(lights.empty() ? nullptr : lights.data(), lights.size());
 }
 
-void drawGlows(strata::Engine& engine, const World& w, float night, Vec3 eye) {
+}  // namespace
+
+std::vector<StrataPoint> glowPoints(const World& w, float night, Vec3 eye) {
     std::vector<StrataPoint> pts;
     // Rain, or snow, falling round the eye: streaks that fall fast, or flakes
     // that drift down. Where each one is comes from the clock, not the rules.
@@ -185,6 +187,24 @@ void drawGlows(strata::Engine& engine, const World& w, float night, Vec3 eye) {
         p.flags = STRATA_POINT_SOFT;
         pts.push_back(p);
     }
+    return pts;
+}
+
+std::string badPoint(const std::vector<StrataPoint>& pts) {
+    for (size_t i = 0; i < pts.size(); ++i) {
+        const float* c = pts[i].color;
+        for (int k = 0; k < 4; ++k)
+            if (!std::isfinite(c[k]) || c[k] < 0)
+                return "point " + std::to_string(i) + ": colour " + std::to_string(k) + " is " + std::to_string(c[k]);
+        if (c[3] > 1) return "point " + std::to_string(i) + ": alpha " + std::to_string(c[3]) + " is above 1";
+    }
+    return "";
+}
+
+namespace {
+
+void drawGlows(strata::Engine& engine, const World& w, float night, Vec3 eye) {
+    const std::vector<StrataPoint> pts = glowPoints(w, night, eye);
     if (!pts.empty()) engine.submitPoints(pts.data(), pts.size());
 }
 
