@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
     fs::remove_all(slot);
 
     // Saves written by released builds still load, exactly: the fixtures were
-    // written by 0.1.0 and 0.2.0 (tools/make_save_fixtures.cpp; tests/fixtures/README.md).
+    // written by 0.1.0, 0.2.0 and 0.3.0 (tools/make_save_fixtures.cpp; tests/fixtures/README.md).
     // A fixture is never edited; a new save format gets fixtures of its own.
     struct Fixture {
         const char* name;
@@ -161,6 +161,8 @@ int main(int argc, char** argv) {
         {"v1-after-summit.save", 0xb0a2e0bdfaae817full, "1.0", 13, 0},
         {"v4-after-summit.save", 0xa3efaf36e40ffa97ull, "1.0", 13, 1},
         {"v4-second-climb.save", 0x63e8b136888800c6ull, "1.3", 16, 1},
+        {"v7-after-summit.save", 0xd84c7b4cb80b963bull, "1.0", 13, 1},
+        {"v7-second-climb.save", 0xcacdbd88b81446d3ull, "1.3", 16, 1},
     };
     for (const Fixture& f : fixtures) {
         std::ifstream in(fs::path(SISYPHUS_FIXTURES) / f.name, std::ios::binary);
