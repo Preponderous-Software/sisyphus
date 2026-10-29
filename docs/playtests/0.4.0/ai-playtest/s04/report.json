@@ -1,0 +1,118 @@
+{
+  "session": "s04",
+  "goal": "Play as a brand-new player who has never heard of the game. Read the HUD and the first message, work out how to push the boulder and how to patch a module, and get as far up the hill as you can (each terrace is a release: 0.1, 0.2, ...). Note every moment of confusion, and answer the questions at the end.",
+  "build": {
+    "version": "0.0 (in-game version shown); session.json version null",
+    "commit": "8ef2a7f"
+  },
+  "seed": 1,
+  "durationSec": 1572,
+  "outcome": "partial",
+  "findings": [
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "Pushing up the first slope: boulder repeatedly slides off the push and rolls back to the trailhead",
+      "detail": "Five-plus attempts, in first person and in V (behind) view, lined up with the boulder centred. After 2-14 s of holding W the boulder drifts sideways (usually left), contact breaks, and it rolls all the way back past Sisyphus to the trailhead. HUD then says 'The boulder: 40 m behind you'. There is no on-screen cue for contact or push direction, so I couldn't see it slipping until it was gone. Best progress in 26 minutes was 12 m of the 33 m to 0.1; I never shipped 0.1. I expected small steering errors to be forgivable, or a cue (an arrow, a contact indicator, camera assist) to show where the push is going.",
+      "repro": "pt start --profile sisyphus-strata --game-dir <sis-pt> --seed 1; pt hold w 5; pt hold Shift_L+w 10; pt hold w 14; pt shot x  -> 'The boulder: 40 m behind you'",
+      "screenshot": "shots/lost_boulder.png",
+      "tick": null
+    },
+    {
+      "severity": "major",
+      "category": "balance",
+      "title": "Rot outpaces a new player at version 0.0: weight death-spiral to 'too heavy to push uphill' and 0 users before the first release",
+      "detail": "While I was still learning to push, modules rotted at -30 to -45%/min. Two modules went DOWN, users fell 10 -> 0, and weight maxed at 'too heavy to push uphill'. Even at 'heavy', the boulder moved about 1 m and then 'It is rolling back down!' showed while W was still held. A module I patched to 100% had a new issue ('dependency drift', -35%/min) about 20 s later. 4 open issues at 0.0 felt arbitrary rather than a fair challenge. I expected the first climb to 0.1 to be a gentle tutorial with slow rot.",
+      "repro": "pt start ... --seed 1; spend ~10 min failing to push (see first finding); observe HUD Users/Weight/Open issues",
+      "screenshot": "shots/n6.png",
+      "tick": null
+    },
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "Module position words (on top / far side / left / right / facing you) don't help find the module to aim at",
+      "detail": "The positions are relative to the player and change as you walk. 'on top' storage turned out to be patchable from the uphill side at chest height. Core was 'facing you' at 18% and falling, but every aim I tried found only ui. In first person the modules have no name labels and look alike, and at night they're nearly invisible. Finding the broken module took longer than walking up the hill. I expected the crosshair to snap or highlight toward the worst issue, or labels in first person.",
+      "repro": "pt start ... --seed 1; let core rot; stand at boulder in first person where HUD says 'core ... facing you'; pt look in various directions; prompt keeps saying 'ui: aging ...'",
+      "screenshot": "shots/t5.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "bug",
+      "title": "Holding E sometimes does nothing on a module whose prompt says 'Hold E to patch' (no bar, no reason)",
+      "detail": "Crosshair on router (prompt 'router: flaky test ... Hold E to patch'), first and third person, right against the boulder at night. pt hold e 5/6/8 showed no progress bar mid-hold, and router kept falling 47% -> 35%. Other keys (F1, V, W) worked. Later, patching worked fine on other modules. Possibly out of range, but nothing on screen says 'too far' or 'can't patch'.",
+      "repro": "after the boulder has rolled back to the trailhead at night, stand on its uphill side, aim at router, (pt hold e 8 &); sleep 4; pt shot mid",
+      "screenshot": "shots/k9.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "perf",
+      "title": "pt hold w 3.2 timed out ('no answer to event within 60s'), and W seemed to stay held for a minute",
+      "detail": "After the hold timed out, Sisyphus had walked 44 m past the boulder into the town and night had fallen. Health fell 69% -> 52% during it. The game runs about 6-13 fps on the software renderer (clock was 'free', not stepped as the brief said), and small pt look moves (<100 px) often seemed not to turn the view.",
+      "repro": "pt hold w 3.2 under load; pt status shows frame ~3254 after 9 min",
+      "screenshot": "shots/stuck_key.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Nights are nearly pitch black in first person; boulder and modules are invisible up close",
+      "detail": "Up against the boulder at night the screen is almost solid black. I can't tell where the crosshair is or which module it's on, and the prompt falls back to 'Face the boulder and walk into it'. The day/night cycle is only a few minutes long, so this comes up a lot.",
+      "repro": "play until night; walk into the boulder in first person; pt shot",
+      "screenshot": "shots/night_dark.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "At the trailhead the boulder can't be rolled downhill to turn it, so the guidance to roll it on level ground doesn't work there",
+      "detail": "The prompt 'From up here, walking into it (W) rolls it back (on level ground)' appears at the trailhead, but pushing from the uphill side didn't move it ('Next 0.1' stayed 27 m and storage stayed 'on top'). As a new player I read this as the way to bring the top module round, and it didn't work.",
+      "repro": "with the boulder at the trailhead, stand on its uphill side facing down; pt hold w 4; HUD unchanged",
+      "screenshot": "shots/l2.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "Prompt says 'aging, no issue yet (5%)' while the HUD lists the same module as 'rotting 5%'",
+      "detail": "Router at 5% was in the HUD's open issues as 'rotting', but the crosshair prompt said 'aging, no issue yet'. Also, right after a patch a module shows as an open issue at 98% while the prompt says 'Nothing to patch'.",
+      "repro": "let router rot to ~5% with no named issue; aim at it",
+      "screenshot": "shots/r8.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Positive: patching, rot flavour text, sit and history all read well",
+      "detail": "The intro text explains the premise in one go. Patching gives instant, satisfying feedback (43% -> 99%). Rot reasons ('deprecated API, a call it makes is going away', 'a dependency fell three majors behind') are funny and true. Q sit ('The boulder is still. For a moment, so are you.') is a lovely beat. Tab history is clear.",
+      "repro": "pt key q; pt key Tab",
+      "screenshot": "shots/sit.png",
+      "tick": null
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 0,
+    "deaths": 0,
+    "secondsToObjective": {
+      "first successful patch (wall-clock)": 300.0
+    },
+    "highestVersionReached": 0.0,
+    "bestMetresClimbed": 12,
+    "modulesPatched": 8,
+    "usersAtEnd": 0,
+    "timesBoulderRolledBackToTrailhead": 6
+  },
+  "fun": 2,
+  "verdict": "The premise and writing land right away: boulder = software, rot = upkeep, and patching feels good. But I never shipped 0.1 in 26 minutes, because the push is too easy to lose (the boulder slides off sideways and rolls back with no warning) while rot at version 0.0 runs at 30-45%/min and sends weight and users into a death spiral. Finding the module the HUD names ('facing you', 'on top') was the hardest part. Make the first climb a forgiving tutorial (slow rot, sticky push, highlight the worst module) before the treadmill starts. secondsToObjective is wall-clock (no probe).",
+  "answers": [
+    {
+      "question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?",
+      "answer": "It's about maintaining software forever. The boulder is the codebase. Each terrace is a release that adds a module, which makes the next climb harder. Rot is software entropy: deprecated APIs, flaky tests, dependency drift. It makes the boulder heavier until you can't make progress, and users leave when something is down. Module dependencies ('uses core', 'uses auth') stand for how one broken piece drags down the ones that use it. The intro line 'It will not last' and the sit message make it feel like a gentle joke about never being done."
+    },
+    {
+      "question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?",
+      "answer": "Arbitrary, at least at version 0.0. Rot started before I'd learned to push, ran at 30-45% a minute, and a module I'd just patched got a new issue within seconds, so I never reached the first terrace. The idea was clear and the reasons for each issue were readable, but the hardest thing was finding the module the HUD named. 'On top', 'far side', 'facing you' are relative to where you stand, and in first person and at night the modules are unlabelled and look alike. Keeping the push on line, without the boulder slipping sideways and rolling back, was the other big difficulty."
+    }
+  ]
+}

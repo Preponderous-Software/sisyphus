@@ -1,0 +1,109 @@
+{
+  "session": "s01",
+  "goal": "You start near the top of the hill (version 0.6), with the boulder resting on the terrace below the summit. Push it up to the summit and ship 1.0. While the summit pause lasts, the game offers a choice: let it roll back down with every module aboard, or hold R to rewrite it. Work out the choice from the screen, choose the rewrite, follow it down, and play on from the trailhead. Then open the History screen (Tab) and judge whether the rewrite was clear and felt like a real decision. Note every moment of confusion.",
+  "build": {
+    "version": "0.6 (in-game version label; build version null)",
+    "commit": "8ef2a7f"
+  },
+  "seed": 1,
+  "durationSec": 1375,
+  "outcome": "blocked",
+  "findings": [
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "Boulder silently slips away mid-push on the final slope; the player keeps walking uphill without it",
+      "detail": "From the 0.6 save I held W for 5 s, then 15 s (HUD: 36 -> 30 -> 14 m to the summit). After another 12 s of W the HUD said 'Next 1.0: 28 m uphill' and 'The boulder: 38 m behind you'. The boulder had rolled all the way back to the 0.6 terrace while I walked on. Nothing on screen marked the moment I lost contact: no message, no sound cue (the session is silent), no camera cue. I expected a clear 'it is slipping' warning, or the push to stop when I drift off the boulder.",
+      "repro": "pt start --profile sisyphus-strata ... --seed 1 --from saves/summit; pt hold w 5; pt hold w 15; pt hold w 12; pt shot",
+      "screenshot": "shots/lost_boulder.png",
+      "tick": null
+    },
+    {
+      "severity": "major",
+      "category": "balance",
+      "title": "One lost push spirals into total collapse within ~3 minutes; Weight then stays maxed and the climb is unrecoverable",
+      "detail": "After the slip, walking back down and lining up again took about 3 minutes. In that time router, storage and cache went DOWN, users fell 400 -> 124, and Weight went to max ('too heavy to push uphill'; on pushing: 'Too heavy. It slides back.'). After that I patched ui, storage and cache to 97-99% and retired ui, search, router and uploads (12 -> 8 modules), and Weight never moved off max. Users went to 0 and health to 0%. The screen never explains what Weight is made of or what lowers it, so I had no way to get the boulder to 1.0 and never saw the summit or the rewrite choice. (The session ran with clock=free, not stepped as the brief says, which made this worse for a screenshot-driven player.)",
+      "repro": "after the slip above: walk back to the boulder on the 0.6 terrace (about 3 min of turning and walking); pt hold e 15 on modules; pt hold r 15 on DOWN modules; pt hold w 6 from below",
+      "screenshot": "shots/push_heavy2.png",
+      "tick": null
+    },
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "Patch/retire holds of 3-8 s show nothing at all, and progress is lost on release; it took ~12-15 s",
+      "detail": "With the prompt 'Hold E to patch' on screen I held E for 5, 8, 6, 4 and 3 s (and R and F for 5 s): no visible change and no bar in any screenshot after release, so I concluded E was broken (see e_noop). Holding for 12-15 s did patch (ui 5% -> 99%, storage 0% -> 99%, cache 0% -> 97%), and 15 s of R did retire. The brief and the game imply 1-5 s. At the ~7 fps the software renderer gave, the real time needed is much longer, and because a short hold leaves no partial progress, the player cannot tell 'nearly done' from 'not working'.",
+      "repro": "aim at a damaged module within reach; pt hold e 5; pt shot (no change); pt hold e 15; pt shot (patched)",
+      "screenshot": "shots/e_noop.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Open-issues list shows only 2 lines plus '... and 5 more lines'; I could not see the other DOWN modules or where they were",
+      "detail": "With 8-10 open issues the HUD lists only the worst two (often both DOWN) and hides the rest. The order also reshuffles. Locations ('under: roll', 'far side', 'left', 'facing you') are relative to where you stand and change as you move. Planning which module to reach next was guesswork.",
+      "repro": "let several modules rot; read the HUD",
+      "screenshot": "shots/hud_list.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "'From up here, walking into it rolls it back' appears while facing uphill beside the boulder",
+      "detail": "Several times, with the HUD saying '28 m uphill' straight ahead (I was facing up the hill), the prompt said I was above the boulder and that W would roll it back. Uphill and downhill around the boulder on a terrace were hard to read from first person, and worse at night and in rain.",
+      "repro": "stand beside the boulder on the 0.6 terrace facing up the hill",
+      "screenshot": "shots/v2.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Module labels on the boulder show for only a few modules; 'core: facing you' could not be found",
+      "detail": "The HUD said core and auth were 'facing you', but only some modules carry a floating label, and at night most of the boulder is dark red dots. I swept the crosshair and only ever found auth and mailer, never core.",
+      "repro": "stand next to the boulder with core 'facing you'; sweep pt look in small steps",
+      "screenshot": "shots/zero_users.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Zero users and 0% health has no consequence or message",
+      "detail": "Users reached 0 and health 0% with every module DOWN. No message, no fail state, no hint. The game just carries on, with the boulder stuck and too heavy. I expected either a hint toward the way out (rewrite? retire?) or an explicit end of this climb.",
+      "repro": "let all modules go down",
+      "screenshot": "shots/dead.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Sitting (Q) turns the view to face downhill, which reorients the player",
+      "detail": "After sitting and standing again, the summit was 'behind you' and I had to find the boulder again. Thematically nice (you look at the view), but costly when time matters.",
+      "repro": "pt key q; pt wait 3; pt key w; pt shot",
+      "screenshot": "shots/stand.png",
+      "tick": null
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 0,
+    "deaths": 0,
+    "secondsToObjective": {},
+    "usersStart": 400,
+    "usersEnd": 0,
+    "modulesStart": 12,
+    "modulesEnd": 8,
+    "patchesByMe": 3,
+    "retiresByMe": 4,
+    "summitReached": 0
+  },
+  "fun": 2,
+  "verdict": "I never reached the summit, so I could not judge the rewrite choice. One silent slip of the boulder on the last slope set off a collapse I could not recover from: Weight stuck at max no matter what I patched or retired, and the screen never said what drives it. The theme comes through (the 'Kofi moved on. Nobody else knew how search worked.' line is great, and so is 'The boulder is still. For a moment, so are you.'), but feedback on long holds, on losing contact with the boulder and on Weight is missing. The session ran with a free clock rather than stepped, so there are no wall-clock objective times.",
+  "answers": [
+    {
+      "question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?",
+      "answer": "Maintaining software is an endless, Sisyphean push. The boulder is the codebase, carrying every module. The terraces are releases (0.1 ... 1.0), resting points where you can stop and do upkeep. Rot is dependency drift, security advisories and bit-rot that build up whenever nobody tends a module. Users leave when modules go down. Contributors like Kofi help for a while and then leave, taking their knowledge with them ('Nobody else knew how search worked')."
+    },
+    {
+      "question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?",
+      "answer": "It felt unfair in this session. Rot is fast (-36 to -73%/min, and much faster once a dependency is down), and my one mistake, losing the boulder on the slope, cascaded into everything being down within minutes. Hardest of all: knowing whether a held E/R was working (no visible progress after a short hold; it needed about 15 s), finding a module the HUD calls 'far side' or 'facing you' on a dark boulder with few labels, telling uphill from downhill around the boulder on a terrace, and understanding Weight, which stayed at max whatever I did, so 'too heavy to push' was a dead end I could not read my way out of."
+    }
+  ]
+}
