@@ -39,7 +39,7 @@ its climb went. Over a long game they pile up. There is no end. You can always s
 ## Download
 
 Windows and Linux builds are on the [releases page](https://github.com/Preponderous-Software/sisyphus/releases)
-(0.2.0 is a pre-release). Unzip and run `sisyphus.exe`, or `./sisyphus` on Linux; each needs an OpenGL 4.5 driver.
+(0.3.0 is a pre-release). Unzip and run `sisyphus.exe`, or `./sisyphus` on Linux; each needs an OpenGL 4.5 driver.
 Or play it in a browser at https://sisyphus.play.danielstephenson.dev.
 
 ## Playing
