@@ -239,7 +239,29 @@ void raiseCairn(World& w) {
     c.refactored = w.refactored;
     c.breakdowns = w.breakdowns;
     c.helpers = w.helpersThisClimb;
+    c.rewrite = w.rewriteChosen;
     w.helpersThisClimb = 0;
+}
+
+// Starting again light: the oldest few modules, written fresh; the rest gone,
+// and most of the users with them.
+void rewrite(World& w) {
+    int kept = 0;
+    for (Module& m : w.modules) {
+        if (!m.active) continue;
+        if (kept < kStartModules) {
+            ++kept;
+            m.health = 1;
+            m.issue = Issue::None;
+            m.born = w.releases;
+        } else {
+            m = Module{};
+        }
+    }
+    w.users *= kRewriteKeeps;
+    w.work = Work{};
+    w.rewriteChosen = false;
+    w.rewriteSeconds = 0;
 }
 
 void moveBoulder(World& w, const Input& in) {
@@ -296,6 +318,7 @@ void moveBoulder(World& w, const Input& in) {
             ++w.major;
             w.best = 0;
             raiseCairn(w);
+            if (w.rewriteChosen) rewrite(w);
         }
     }
     b.roll = wrapAngle(b.roll + (b.s - before) / R);
@@ -345,7 +368,10 @@ void movePlayer(World& w, const Input& in) {
     p.z = z;
 }
 
-void doWork(World& w, const Input& in) {
+void doWork(World& w, const Input& in_) {
+    // At the summit R is the rewrite, not retiring a module.
+    Input in = in_;
+    if (w.summitSeconds >= 0) in.retire = false;
     const bool wants = (in.work || in.retire || in.refactor) && !w.player.sitting && !w.pushing;
     Work& k = w.work;
     if (!wants) {  // letting go starts the work over
@@ -461,7 +487,15 @@ void tick(World& w, const Input& in) {
     }
     if (w.summitSeconds >= 0) {
         w.summitSeconds += kDt;
-        if (w.summitSeconds >= kSummitPause) {
+        // Holding R at the top chooses a rewrite; the moment lasts while he decides.
+        const bool deciding = in.retire && !p.sitting && !w.rewriteChosen;
+        if (deciding) {
+            w.rewriteSeconds += kDt;
+            if (w.rewriteSeconds >= kRewriteSeconds) w.rewriteChosen = true;
+        } else if (!w.rewriteChosen) {
+            w.rewriteSeconds = 0;
+        }
+        if (w.summitSeconds >= kSummitPause && !(deciding && w.rewriteSeconds > 0)) {
             // The platform it runs on reaches its end of life.
             w.summitSeconds = -1;
             w.falling = true;
@@ -646,7 +680,8 @@ std::string cairnStory(const World& w, int k) {
            std::to_string(c.patched - before.patched) + " patched, " + std::to_string(c.retired - before.retired) +
            " retired, " + std::to_string(c.refactored - before.refactored) + " refactored, " +
            std::to_string(c.breakdowns - before.breakdowns) + " went down." +
-           (c.helpers == 0 ? "" : c.helpers == 1 ? " One person came up to help." : " " + std::to_string(c.helpers) + " people came up to help.");
+           (c.helpers == 0 ? "" : c.helpers == 1 ? " One person came up to help." : " " + std::to_string(c.helpers) + " people came up to help.") +
+           (c.rewrite ? " Then it was rewritten from scratch." : "");
 }
 
 const char* helperName(int i) { return i >= 0 && i < kHelperNames ? kHelperNameList[i] : "?"; }
@@ -762,6 +797,7 @@ uint64_t fingerprint(const World& w) {
             i(c.refactored);
             i(c.breakdowns);
             if (c.helpers != 0) i(c.helpers);
+            if (c.rewrite) i(1);
         }
     }
     if (w.helper.name >= 0) {
@@ -775,6 +811,8 @@ uint64_t fingerprint(const World& w) {
     }
     if (w.helpersThisClimb != 0) i(w.helpersThisClimb);
     if (w.busFactor != -1) i(w.busFactor);
+    if (w.rewriteChosen) i(2);
+    if (w.rewriteSeconds != 0) f(w.rewriteSeconds);
     return h;
 }
 

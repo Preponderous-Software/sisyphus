@@ -85,6 +85,12 @@ void Session::noticeChanges() {
         say(s, 7);
     } else if (b.falling && !a.falling) {
         say("The platform it runs on reached its end of life.\nThe boulder rolls. Every module goes with it.", 9);
+    } else if (!b.falling && a.falling && a.rewriteChosen) {
+        say("Rewritten. " + std::to_string(activeModules(b)) + " fresh modules, and most of the users did not follow.\n" +
+                std::to_string(b.major) + ".x starts here, light.",
+            10);
+    } else if (b.rewriteChosen && !a.rewriteChosen) {
+        say("A rewrite. It will start again light at the trailhead.", 6);
     } else if (!b.falling && a.falling) {
         say("Back at the trailhead. " + std::to_string(b.major) + ".x starts here, with all the old code aboard.\n"
             "Q to sit a while, if you like.", 10);
@@ -265,8 +271,9 @@ void Session::step() {
     in.yaw = yaw_;
     in.pitch = pitch_;
     const int32_t cut = w_.retired + w_.refactored;
+    const bool chose = w_.rewriteChosen;
     tick(w_, in);
-    if (w_.retired + w_.refactored != cut) letGo_ = true;
+    if (w_.retired + w_.refactored != cut || (w_.rewriteChosen && !chose)) letGo_ = true;
 }
 
 void Session::frame(double dt) {

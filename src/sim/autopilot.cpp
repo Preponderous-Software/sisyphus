@@ -185,6 +185,14 @@ Input Autopilot::next(const World& w) {
     // About to push on from a terrace half spent: rest first.
     if (push && boulderResting(w) && p.stamina < kRestBeforePush) return sitDown();
 
+    // At the summit there is nothing to push, and R would be a rewrite,
+    // which the autopilot never chooses: it waits.
+    if (w.summitSeconds >= 0 && !patch) {
+        doing_ = "at the summit";
+        Input still;
+        still.yaw = p.yaw;
+        return still;
+    }
     if (!push && !patch && !turn && !resting) {
         // Slipping back to the terrace below: wait beside it.
         doing_ = "letting it settle";
