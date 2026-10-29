@@ -50,6 +50,7 @@ Or play it in a browser at https://sisyphus.play.danielstephenson.dev.
 | Retire it (one less thing to keep) | hold `R` | hold **Retire** |
 | Refactor it into the module it uses | hold `F` | hold **Refactor** |
 | Sit and look at the view | `Q` | **Sit** |
+| Every climb so far | `Tab` | **History** |
 | From behind him, or back to his eyes (the default) | `V` | **Camera** |
 | Save / load the last save | `F5` / `F9` | **Save** |
 | Controls on screen / free the mouse | `F1` / `Esc` | |

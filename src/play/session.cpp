@@ -12,6 +12,7 @@ namespace {
 
 // SDL scancodes.
 constexpr int kM = 16;
+constexpr int kTab = 43;
 constexpr int kW = 26, kA = 4, kS = 22, kD = 7, kE = 8, kF = 9, kR = 21, kQ = 20, kV = 25, kLShift = 225, kRShift = 229,
               kEscape = 41, kF1 = 58, kF5 = 62, kF9 = 66;
 constexpr float kLookPerPixel = 0.0025f;
@@ -201,6 +202,7 @@ void Session::onKeyDown(int scancode, bool repeat) {
         else save("Saved.");
     } else if (scancode == kF9) load();
     else if (scancode == kV) outside_ = !outside_;
+    else if (scancode == kTab) history_ = !history_;
     else if (scancode == kM) setMuted(!sound_.muted());
     else if (scancode == kQ && !options_.autopilot) {
         sitOnce_ = true;
@@ -294,6 +296,7 @@ void Session::frame(double dt) {
     o.quote = quote();
     o.aim = !options_.autopilot;
     o.saves = !options_.slot.empty();
+    o.history = history_;
     const Camera cam = !out ? cameraAtEyes(w_) : options_.autopilot ? cameraBehind(w_) : cameraFollow(w_);
     render(engine_, w_, cam, out, o);
 }

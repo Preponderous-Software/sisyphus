@@ -61,6 +61,7 @@ public:
     bool captured() const { return captured_; }
     bool help() const { return help_; }
     bool outside() const { return outside_; }
+    bool history() const { return history_; }
     const std::string& message() const { return message_; }
     // While sitting: the words over the view.
     std::string quote() const;
@@ -88,6 +89,7 @@ private:
     float yaw_ = 0, pitch_ = 0;
     float stickForward_ = 0, stickStrafe_ = 0;
     float steps_ = 0;  // footsteps a second, from the last ticks
+    bool history_ = false;  // Tab: the history screen
     bool letGo_ = false;  // a retire or refactor finished: R and F wait to be let go
     bool heldWork_ = false, heldRetire_ = false, heldRefactor_ = false;
     bool sitOnce_ = false;

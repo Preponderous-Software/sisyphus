@@ -111,7 +111,7 @@ struct Shooter {
     int count = 0;
 
     void shoot(const World& w, const char* name, const play::Camera& cam, bool outside, bool hud, const std::string& message = "",
-               const std::string& quote = "") {
+               const std::string& quote = "", bool history = false) {
         std::printf("  shot %-22s v%-4s s=%6.1f modules %2d health %3.0f%%\n", name, versionText(w).c_str(), w.boulder.s,
                     activeModules(w), health(w) * 100);
         if (dir.empty()) return;
@@ -121,6 +121,7 @@ struct Shooter {
         o.noText = !hud && quote.empty();
         o.message = message;
         o.quote = quote;
+        o.history = history;
         play::render(engine, w, cam, outside, o);
         engine.present();
         char file[160];
@@ -191,6 +192,7 @@ int runPlaythrough(strata::Engine& engine, const Args& args) {
         at.player.yaw = 1.2f;
         at.player.pitch = -0.45f;
         shot.shoot(at, "cairn", play::cameraAtEyes(at), false, true);
+        shot.shoot(at, "history", play::cameraAtEyes(at), false, true, "", "", true);
     }
     // Back at the trailhead: sit, and look at the town.
     World sit = w;
