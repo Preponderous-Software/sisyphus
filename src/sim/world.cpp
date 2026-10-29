@@ -1,5 +1,6 @@
 #include "sim/world.h"
 
+#include <algorithm>
 #include <cstring>
 
 #include "sim/hill.h"
@@ -32,6 +33,11 @@ constexpr float kSpreadBelow = 0.5f;    // an advisory spreads once its module i
 constexpr float kSpreadRate = 1.0f / 10.0f;
 constexpr float kCascadeRot = 1.0f / 150.0f;  // using a module that is down
 constexpr float kRefactorBreaks = 0.25f;      // the chance a refactor breaks a test
+// Showers: they start this often when it is dry, last a minute or two, and
+// take ten seconds to set in and to clear.
+constexpr float kShowerRate = 1.0f / 400.0f;
+constexpr float kShowerMin = 60.0f, kShowerSpread = 90.0f, kRainFade = 10.0f;
+constexpr float kRainSlows = 0.3f, kRainSpeedsRoll = 0.4f;
 // Stamina, per second: pushing a light boulder takes it from full to spent
 // in about six minutes, a heavy one in under four; working, in ten.
 constexpr float kPushTire = 1.0f / 240.0f;  // times (0.4 + 0.6 * load)
@@ -73,14 +79,29 @@ void release(World& w, int terrace) {
 }
 
 Issue pickIssue(World& w) {
+    // In winter certificates expire twice as often.
+    int weight[kIssueKinds];
+    for (int k = 0; k < kIssueKinds; ++k) weight[k] = kIssueWeight[k];
+    if (season(w) == Season::Winter) weight[static_cast<int>(Issue::Certificate)] *= 2;
     int total = 0;
-    for (int k : kIssueWeight) total += k;
+    for (int k : weight) total += k;
     int r = randomBelow(w.rng, total);
     for (int k = 1; k < kIssueKinds; ++k) {
-        if (r < kIssueWeight[k]) return static_cast<Issue>(k);
-        r -= kIssueWeight[k];
+        if (r < weight[k]) return static_cast<Issue>(k);
+        r -= weight[k];
     }
     return Issue::Drift;
+}
+
+void weather(World& w) {
+    if (w.rainLeft > 0) {
+        w.rainLeft = std::max(0.0f, w.rainLeft - kDt);
+        w.rain = std::min(1.0f, w.rain + kDt / kRainFade);
+    } else if (w.rain > 0) {
+        w.rain = std::max(0.0f, w.rain - kDt / kRainFade);
+    } else if (randomUnit(w.rng) < kShowerRate * kDt) {
+        w.rainLeft = kShowerMin + kShowerSpread * randomUnit(w.rng);
+    }
 }
 
 void strike(World& w, int i, Issue issue) {
@@ -278,7 +299,7 @@ void moveBoulder(World& w, const Input& in) {
         const float L = load(w);
         float target;
         const float f = in.forward < 1 ? in.forward : 1;
-        if (L < 1) target = kPushSpeed * (flat ? kFlatEase : 1.0f) * (1 - L) * f * strength(w);
+        if (L < 1) target = kPushSpeed * (flat ? kFlatEase : 1.0f) * (1 - L) * f * strength(w) * (1 - kRainSlows * w.rain);
         else target = flat ? 0 : -kSlideBack;
         if (flat && target < kInch * f) target = kInch * f;
         if (w.pushingBack) target = -target;
@@ -289,8 +310,9 @@ void moveBoulder(World& w, const Input& in) {
         b.v *= 0.8f;
         if (b.v > -0.02f && b.v < 0.02f) b.v = 0;
     } else {
-        b.v -= kRollAccel * kDt;
-        if (b.v < -kMaxRoll) b.v = -kMaxRoll;
+        // A slick path lets it go faster.
+        b.v -= kRollAccel * (1 + kRainSpeedsRoll * w.rain) * kDt;
+        if (b.v < -kMaxRoll * (1 + kRainSpeedsRoll * w.rain)) b.v = -kMaxRoll * (1 + kRainSpeedsRoll * w.rain);
     }
     const float before = b.s;
     b.s += b.v * kDt;
@@ -506,6 +528,7 @@ void tick(World& w, const Input& in) {
     movePlayer(w, in);
     doWork(w, in);
     tire(w, in);
+    weather(w);
     help(w);
     rot(w);
     if (outage(w)) w.users *= 1.0f - 0.01f * kDt;  // a module is down: users leave
@@ -715,6 +738,20 @@ int terraceOfBoulder(const World& w) { return hill::terraceAt(w.boulder.s); }
 
 bool boulderResting(const World& w) { return !w.falling && w.boulder.v == 0 && hill::level(w.boulder.s); }
 
+Season season(const World& w) {
+    const int64_t day = w.tick / static_cast<int64_t>(kDaySeconds * kTickRate);
+    return static_cast<Season>((day / kSeasonDays) % 4);
+}
+
+const char* seasonName(Season s) {
+    switch (s) {
+        case Season::Spring: return "spring";
+        case Season::Summer: return "summer";
+        case Season::Autumn: return "autumn";
+        default: return "winter";
+    }
+}
+
 float timeOfDay(const World& w) {
     // The first morning starts a little after sunrise.
     const float t = static_cast<float>(w.tick % static_cast<int64_t>(kDaySeconds * kTickRate)) / (kDaySeconds * kTickRate);
@@ -813,6 +850,8 @@ uint64_t fingerprint(const World& w) {
     if (w.busFactor != -1) i(w.busFactor);
     if (w.rewriteChosen) i(2);
     if (w.rewriteSeconds != 0) f(w.rewriteSeconds);
+    if (w.rain != 0) f(w.rain);
+    if (w.rainLeft != 0) f(w.rainLeft);
     return h;
 }
 

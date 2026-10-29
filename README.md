@@ -15,7 +15,9 @@ So you stop on a terrace and walk round the stone, patching. A module stuck unde
 the boulder to bring it round. A module not worth keeping can be retired, and some users miss it. Or it can be refactored into the
 module it uses: slower work, no users lost, the code that is left is new, though now and then it breaks a test. Then
 you push on. Pushing wears you out,
-the heavier the boulder the faster, and tired you push and patch slowly: sit down on a terrace and rest. Now and then, at a release, someone comes up from the town to help: they
+the heavier the boulder the faster, and tired you push and patch slowly: sit down on a terrace and rest. Showers come and go: rain makes the path slick, so the boulder is slower to push and
+quicker to roll back, and the seasons turn every few days (in winter it snows, and certificates expire twice as often).
+Now and then, at a release, someone comes up from the town to help: they
 patch what they can reach while the boulder rests, then move on, and the module they knew best starts to drift.
 
 At the summit the next major version ships. Then the platform under it reaches its end of life, and the boulder rolls

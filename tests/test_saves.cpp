@@ -68,6 +68,13 @@ int main(int argc, char** argv) {
         CHECK(cb.rewriteChosen && cb.cairns[0].rewrite && fingerprint(cb) == fingerprint(rw));
         rw.falling = false;  // chosen, but neither at the top nor rolling: impossible
         CHECK(!decodeSave(encodeSave(rw), cb, &why));
+        World wet = c;  // format 7: a shower
+        wet.rain = 0.6f;
+        wet.rainLeft = 45;
+        CHECK(decodeSave(encodeSave(wet), cb, &why));
+        CHECK(cb.rain == 0.6f && cb.rainLeft == 45 && fingerprint(cb) == fingerprint(wet));
+        wet.rain = 1.5f;
+        CHECK(!decodeSave(encodeSave(wet), cb, &why));
         odd = c;
         odd.cairns[0].tick = c.tick + 1;  // from the future
         CHECK(!decodeSave(encodeSave(odd), cb, &why));

@@ -34,6 +34,6 @@ bool playthroughDone(const World& w);
 
 // The world's fingerprint at the end of the playthrough from seed 1. Any
 // change to the rules or the autopilot moves it: update it in the same change.
-constexpr uint64_t kPlaythroughFingerprint = 0x01ebcfd568c044c2ull;
+constexpr uint64_t kPlaythroughFingerprint = 0x383b3f8316cc7bb3ull;
 
 }  // namespace sisyphus

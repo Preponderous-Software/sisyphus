@@ -24,6 +24,7 @@ Ambience ambience(const World& w, Vec3 listener, float stepsPerSecond, float sun
     a.town = clamp01(1.0f - (s + 30.0f) / 50.0f) * clamp01(w.users / 300.0f);
     a.alarm = outage(w) ? 1.0f : 0.0f;
     a.steps = w.player.sitting ? 0 : stepsPerSecond;
+    a.rain = snowing(w) ? 0.0f : w.rain;
     return a;
 }
 
