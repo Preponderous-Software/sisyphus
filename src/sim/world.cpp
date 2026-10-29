@@ -415,10 +415,10 @@ void doWork(World& w, const Input& in_) {
     if (w.summitSeconds >= 0) in.retire = false;
     const bool wants = (in.work || in.retire || in.refactor) && !w.player.sitting && !w.pushing;
     Work& k = w.work;
-    if (!wants) {  // letting go starts the work over
-        k = Work{};
-        return;
-    }
+    // Letting go pauses the work: holding on again on the same module goes on
+    // from where it stopped. Work on another module, or of another kind,
+    // starts over.
+    if (!wants) return;
     const int i = aimedModule(w);
     if (i < 0) return;
     // R wins over F, and F over E.

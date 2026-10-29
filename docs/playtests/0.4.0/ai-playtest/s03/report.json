@@ -1,0 +1,146 @@
+{
+  "session": "s03",
+  "goal": "You start early in a game (version 0.2), just as someone from the town has come up to help. Work out from the screen what the helper does and how long they stay, keep climbing and patching while they help, and watch what happens when they move on. Then open the History screen (Tab) and judge whether it tells the story of your climb. Note every moment of confusion.",
+  "build": {
+    "version": "0.2 (in-game save version); build version null",
+    "commit": "8ef2a7f"
+  },
+  "seed": 1,
+  "durationSec": 1482,
+  "outcome": "partial",
+  "findings": [
+    {
+      "severity": "major",
+      "category": "balance",
+      "title": "After the helper leaves, solo upkeep collapses into an unrecoverable death spiral with no fail state",
+      "detail": "With Kofi helping, issues cleared ('No open issues. It will not last.'). About 2.5 min after he left, outages cascaded (auth -> router -> storage -> search -> core). Within ~12 real minutes users went 100 -> 0, health 92% -> 1-13%, weight hit 'too heavy to push uphill', 6-8 open issues, several marked 'under: roll it' that cannot be rolled into reach because it is too heavy. The game just keeps going at 0 users with no ending, no prompt and no hint (e.g. 'retire something') of how to dig out. Retiring (R) did work and is the only lever I found, but nothing pointed me to it.",
+      "repro": "pt start --profile sisyphus-strata ... --seed 1 --from saves/helper; play normally for ~20 min (push, patch what is reachable)",
+      "screenshot": "shots/spiral.png",
+      "tick": null
+    },
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "Boulder slips off the push and rolls back with no feedback; twice lost all progress on the first slope",
+      "detail": "Holding W from directly below (no direction hint after 'Next 0.3', i.e. facing uphill): progress 36 -> 19 m, then the boulder drifted sideways, I kept walking up the grass and it rolled back to the bottom. Second attempt 28 -> 23 m, same result. No 'it slipped' message, no stamina bar visible during the push; the only cue was 'Next' jumping back and a new 'The boulder: 19 m behind you' line. Expected the push to keep the boulder centred or warn when contact is lost.",
+      "repro": "get below the boulder facing uphill; pt hold w 8 (twice); pt shot",
+      "screenshot": "shots/slid-off.png",
+      "tick": null
+    },
+    {
+      "severity": "major",
+      "category": "bug",
+      "title": "Holding F (refactor) does nothing, with no progress bar or reason",
+      "detail": "On 'router: DOWN (0%), uses auth' with the prompt 'F to refactor it into auth', held F for 5 s, then 8 s; then again for 6 s once router was healthy (99%). Nothing changed, no bar, no message. E (patch) and R (retire) on the same boulder worked fine. Either refactor is blocked by a condition (auth was flaky at the time?) that the prompt does not explain, or it is broken.",
+      "repro": "aim at router (prompt offers F to refactor into auth); pt hold f 8; pt shot",
+      "screenshot": "shots/refactor-nothing.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Helper status line disappears from the HUD when several issues are open, so the helper seems to have left",
+      "detail": "Start: 'Kofi is helping: on the way up, 2:30 left'. With 3 open issues the Kofi line vanished entirely (shots d1/d2) and I thought he had gone; a minute later it came back as 'Kofi is helping: patching ui, 2:16 left'. Also 'on the way up, 2:30 left' did not count down while he walked up, and his leaving had no message at all - the line just was not there any more.",
+      "repro": "start from saves/helper; look around the boulder for ~30 s while issues accumulate; pt shot",
+      "screenshot": "shots/kofi-back.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "History (Tab) is a stats row, not the story of the climb; helper is not named",
+      "detail": "History shows one row: 'now 0.x 19 min, 7 modules, 0 users, patched 11, retired 1, refactored 0, down 13, helpers 1' plus 'No climb has finished yet.' It does not say Kofi came, how long he stayed or what he patched (patched 11 seems to merge his and mine), nor when outages hit or users left. Version shows 'now 0.x' rather than 0.2 -> 0.3. Text is drawn straight over the 3D scene with no backing panel.",
+      "repro": "after a few minutes of play, pt key Tab; pt shot",
+      "screenshot": "shots/hist-numbers.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "text",
+      "title": "Issue row direction word reads as part of the rate ('-60%/min left')",
+      "detail": "'auth  certificate 66%  -60%/min left' reads as 'time left'. 'left' is actually where the module is on the boulder (later 'far side', 'facing you', 'under: roll'). The directions are also relative in a way I misread repeatedly: strafing the way I thought 'left' meant moved it to 'far side'.",
+      "repro": "pt start ...; pt shot start",
+      "screenshot": "shots/hint-text.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Modules on the boulder's rim or underside are very hard to put the crosshair on",
+      "detail": "The red dot trail and the floating module label often sit at the silhouette edge or under the boulder; aiming at them gives a different module's prompt or 'From up here, walking into it rolls it back'. It took 5-8 look/strafe attempts per module. Mouse-look yaw also felt inconsistent (sometimes 200 px turned a few degrees, sometimes much more).",
+      "repro": "with an issue marked 'right' or 'under: roll', try to target it with pt look / pt hold a|d",
+      "screenshot": "shots/stuck-heavy.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "No stamina bar while pushing; can't tell exhausted from too heavy from not touching",
+      "detail": "The HUD shows a Stamina bar at start, but it was gone during pushes. Holding W into the boulder moved it 0-1 m over 8 s with weight full but before the explicit 'too heavy to push uphill' text appeared, so I couldn't tell why.",
+      "repro": "with weight near full, pt hold w 8 from below; pt shot",
+      "screenshot": "shots/stuck-heavy.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Night is near-black on the software renderer",
+      "detail": "About 8 minutes in, night fell and the hill and boulder became almost black; only module glows remained, making orientation very hard.",
+      "repro": "play ~8 min real time; pt shot",
+      "screenshot": "shots/night-dark.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "HUD helper line overflows the right edge",
+      "detail": "'Kofi is helping: waiting for it to settle, 1:06 left' is clipped at 640 px.",
+      "repro": "push the boulder while the helper is present; pt shot",
+      "screenshot": "shots/hud-overflow.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "Issue table columns collide",
+      "detail": "'search  uses storage86%' - the problem text runs into the percent column. Floating world labels also overlap ('billingsearch').",
+      "repro": "let a module become 'uses storage' while storage is down; pt shot",
+      "screenshot": "shots/col-overlap.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Terrace signposts '0.1'/'0.2' read like cairns",
+      "detail": "Floating orange '0.1' and '0.2' labels near the town looked like the cairns the help text mentions; walking down showed they are terrace signposts. Combined with History saying 'No climb has finished yet', this was briefly confusing.",
+      "repro": "walk downhill from the start toward the town; pt shot",
+      "screenshot": "shots/signposts.png",
+      "tick": null
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 2,
+    "deaths": 0,
+    "secondsToObjective": {
+      "Helper identified and observed until leaving": 160.0,
+      "History screen opened": 660.0
+    },
+    "helperSecondsShownOnHud": 150,
+    "metresClimbedBest": 17,
+    "usersAtEnd": 0,
+    "modulesPatchedByMe": 9,
+    "modulesRetired": 1
+  },
+  "fun": 2,
+  "verdict": "The helper moment works at first glance: Kofi visibly walks up, the HUD names what he is patching and counts down, and 'No open issues. It will not last.' is a great line - but his departure is silent and his HUD line already vanishes whenever issues pile up. After he left, a lone player could not keep up: the boulder slipped off pushes twice, F/refactor did nothing, and rot cascaded to 0 users and 'too heavy to push' with no fail state or way out signposted; History is a single stats row that does not tell that story. secondsToObjective is wall-clock (no probe); the clock was 'free', not stepped.",
+  "answers": [
+    {
+      "question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?",
+      "answer": "Maintaining software forever. The boulder is the codebase (its faces are modules that depend on one another), each terrace is the next release (0.3 was 36 m up), and the rot is bit-rot: expiring certificates, deprecated APIs, dependency drift, flaky tests. Users leave when something is down. The helper is an outside contributor who shows up, fixes things for a couple of minutes and leaves. The Camus quote when you sit makes the point: the work never ends."
+    },
+    {
+      "question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?",
+      "answer": "The cause and effect was fair and readable: a module going down made its users rot faster, and the HUD said which one and where it was. The pace did not feel fair alone, though. Once the helper left, one person could not keep 8 modules patched and push at the same time, and it cascaded to zero users. The hardest things were reaching modules on the far side or underneath (the crosshair targeting and the relative 'left/right/far side' words), keeping the boulder in front of me while pushing, and knowing why F/refactor did nothing. I could not tell whether there was any way back from 'too heavy to push uphill' other than retiring modules."
+    }
+  ]
+}

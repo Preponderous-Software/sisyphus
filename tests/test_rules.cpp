@@ -123,7 +123,8 @@ int main() {
         }
         CHECK(w.best == 2);
     }
-    // Letting go of E starts the work over.
+    // Letting go of E pauses the work; holding it again goes on from there, and
+    // work of another kind starts over.
     {
         World w = quiet();
         int target = -1;
@@ -138,8 +139,17 @@ int main() {
             run(w, in, 1);
             CHECK(w.work.module == target && w.work.seconds > 0.9f);
             in.work = false;
+            const float done = w.work.seconds;
+            run(w, in, 1);
+            CHECK(w.work.module == target && w.work.seconds == done);
+            in.work = true;
             tick(w, in);
-            CHECK(w.work.module == -1 && w.work.seconds == 0);
+            CHECK(w.work.module == target && w.work.seconds > done);
+            in.work = false;
+            in.retire = true;
+            tick(w, in);
+            CHECK(w.work.module == target && w.work.retiring && w.work.seconds < 0.1f);
+            in.retire = false;
             // And a module as good as new has nothing to patch.
             w.modules[static_cast<size_t>(target)].health = 1;
             in.work = true;

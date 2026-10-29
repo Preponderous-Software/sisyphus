@@ -1,0 +1,146 @@
+{
+  "session": "s02",
+  "goal": "You start in a shower late in the afternoon (version 1.1, two open issues, a helper on the way). Keep the software alive and climb while the path is slick, through the rain and on into nightfall. Judge whether the weather is clear (what the slick path does to pushing and rolling) and whether the hill, the modules and the issues stay readable at dusk and at night. Note every moment of confusion and anything hard to see.",
+  "build": {"version": "1.1 (in-game software version; game build version not shown)", "commit": "8ef2a7f"},
+  "seed": 2,
+  "durationSec": 1388,
+  "outcome": "partial",
+  "findings": [
+    {
+      "severity": "major",
+      "category": "balance",
+      "title": "Opening state of wet-dusk save loses core almost immediately: worst issue is 'on top' and out of reach",
+      "detail": "On load the worst issue is 'core drift 21% -37%/min on top'. From below the boulder you cannot aim at the top (looking straight up only hits billing), and pushing uphill rolls it to the far side. Core went DOWN within ~30 s of loading. The session also ran with clock 'free' (session.json), not stepped as the brief says, so it rots in real time while a player is still reading the HUD. Nothing on screen says how to reach an 'on top' module.",
+      "repro": "pt start --profile sisyphus-strata ... --seed 2 --from saves/wet-dusk; pt shot start; pt look 0 -350; pt shot up2",
+      "screenshot": "shots/core_on_top.png",
+      "tick": null
+    },
+    {
+      "severity": "major",
+      "category": "balance",
+      "title": "Death spiral after one slip: weight bar full ('too heavy to push uphill') and retiring modules does not lighten it",
+      "detail": "After the boulder slipped and a few modules went down, Weight went to [##########] 'too heavy to push uphill'. Retiring uploads (14 -> 13 modules), and later a DOWN module (13 -> 12), left the bar full. With DOWN modules under the boulder or on top and the boulder unpushable, I found no way back. Users dropped from 570 to 1 in about 15 minutes. The HUD never says what makes the boulder heavy or what would lighten it.",
+      "repro": "continue from slipped state; aim at a module; pt hold r 7; observe Weight bar unchanged",
+      "screenshot": "shots/weight_full.png",
+      "tick": null
+    },
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "Slick path: the boulder slips away with no warning or visible cue",
+      "detail": "While I held W into the boulder at 24 m, it slid past me and ended up 10 m downhill ('The boulder: 10 m behind you', Next 1.2 back to 27 m). Earlier, letting go mid-slope at 30 m did NOT roll it back, and once 'It is rolling back down!' showed with no movement. The rain is the only stated cause ('Rain: the path is slick'), but there is no slip animation, sound cue or meter, so the slipperiness feels random rather than readable. Pushing was also very slow: about 2-3 m per 6-8 s of holding W.",
+      "repro": "from below the boulder facing uphill: pt hold w 6; pt hold w 8; pt hold w 4; pt shot",
+      "screenshot": "shots/slipped.png",
+      "tick": null
+    },
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "At dusk/night the modules on the boulder are invisible; only the crosshair prompt identifies them",
+      "detail": "Up close at dusk the boulder is near-black polygons. The HUD said 'storage ... facing you', but nothing on the surface showed where storage was, so I had to sweep the crosshair blind. Only rotting/DOWN modules glow (purple/orange/red), and some show floating name labels. At full night the boulder is a black silhouette with red glows. The HUD text itself stays readable at night.",
+      "repro": "load wet-dusk; walk to the boulder; pt shot; pt look small steps",
+      "screenshot": "shots/night_modules.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Controls help bar covers the glow of rotting modules at the boulder's base",
+      "detail": "The purple glow of the rotting storage module was right behind the F1 controls bar (on by default after load). I found it only after hiding help with F1 and looking down.",
+      "repro": "stand 1-2 m from boulder; pt shot (help visible); pt key F1; pt look 0 120; pt shot",
+      "screenshot": "shots/help_hides_glow.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Crosshair prompt names a module but holding E sometimes does nothing, with no feedback",
+      "detail": "With the prompt reading 'core: dependency drift ... Hold E to patch', I held E for 8 s, 10 s and 6 s. No progress bar or message appeared, and core kept falling (63% -> 58%). After a tiny re-aim the same hold patched core to 99%. The prompt probably lags the real ray hit at the low frame rate, but the player gets no sign of why E is ignored.",
+      "repro": "aim near the core glow at the bottom edge of boulder; pt hold e 8; pt shot",
+      "screenshot": "shots/patch_no_effect.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "'facing you' modules can sit on the silhouette edge where the crosshair can barely hit them",
+      "detail": "HUD said 'ui DOWN facing you', but its red glow showed only as sparkles along the left silhouette edge. Several look moves kept the crosshair on 'search'. Mouse look also moved unevenly per pixel at this frame rate (80 px barely moved, 200 px overshot).",
+      "repro": "pt look -80 -10; pt look -200 -30; pt look 110 0; pt shot",
+      "screenshot": "shots/cant_aim_ui.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Behind-view camera (V) clips inside the boulder when it is behind Sisyphus",
+      "detail": "With the boulder right behind the player, the V camera sits inside it: the whole screen is dark-blue polygons and you cannot tell where you are or which way you face.",
+      "repro": "stand with the boulder at your back; pt key v; pt shot",
+      "screenshot": "shots/cam_in_boulder.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "F (refactor) held 7 s does nothing and gives no message",
+      "detail": "Aimed at uploads ('F to refactor it into router') and held F for 7 s. No progress bar, no message, module count unchanged. R on the same aim worked immediately ('Retired. One less thing to keep...').",
+      "repro": "aim at uploads; pt hold f 7; pt shot",
+      "screenshot": "shots/weight_full.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "text",
+      "title": "Issue placement hint cut off at the right edge of the HUD",
+      "detail": "Lines like 'i18n drift 91% -36%/min under: roll' run off the 640 px window, so the 'roll it' hint is truncated. Only 2 issues are listed, then '... and N more lines', and I found no way to see the rest.",
+      "repro": "get an issue that is under the boulder; pt shot",
+      "screenshot": "shots/cutoff_under.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "Floating module labels overlap the crosshair prompt text",
+      "detail": "The 'router' label on the boulder is drawn over the prompt text ('i18n: nearly new (97%)'), garbling both.",
+      "repro": "aim just above a labelled module; pt shot",
+      "screenshot": "shots/label_overlap.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "balance",
+      "title": "Shower and dusk are very short: rain gone in ~2 min, full day-night cycle in ~10-15 min",
+      "detail": "'Rain: the path is slick' was gone from the HUD about 2 minutes after loading. The sky went dark dusk -> bright midday -> dusk -> night in about 20 real minutes. The 'wet dusk' set-up barely lasts long enough to judge the weather.",
+      "repro": "load wet-dusk; pt wait / play ~20 min; compare shots",
+      "screenshot": "shots/sky_day.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "No end beat when users hit the floor: users stuck at 1, game just idles",
+      "detail": "With 12 issues open and users at 1, nothing happens: no failure moment, no prompt to roll it back or rewrite. Users never reached 0.",
+      "repro": "let all modules go down; pt wait 90; pt shot",
+      "screenshot": "shots/night_end.png",
+      "tick": null
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 0,
+    "deaths": 0,
+    "secondsToObjective": {},
+    "usersStart": 570,
+    "usersEnd": 1,
+    "metresClimbed": 9,
+    "modulesPatchedByMe": 7,
+    "modulesRetired": 2,
+    "boulderSlips": 1,
+    "helperAppearances": 1
+  },
+  "fun": 2,
+  "verdict": "The theme lands. The helper Noor clearing every issue and then leaving ('Nobody else knew how core worked'), the sit view of the town, and 'the rot is the weather' are strong. But from the wet-dusk save the run spirals: the worst issue starts on top of the boulder out of reach, the slick path makes the boulder slip with no warning, and a full weight bar that retiring does not lighten left me no way back (570 users -> 1, no 1.2 release). At dusk and at night the modules are invisible except for glows, which the help bar covers. Times are wall-clock (no probe) and the session ran at a free clock under heavy machine load (~20 fps)."
+,
+  "answers": [
+    {"question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?", "answer": "Maintaining software as an endless Sisyphean chore. The boulder is your codebase: every module is a patch of its surface, and it gets heavier as you add features or let things go bad. The terraces are releases, resting places where your progress is safe. The rot is the bit rot / dependency drift / expiring certificates that happen to working software anyway; as the sit-screen text says, it is 'the weather', not a failure. Users leave when things are down, and helpers (contributors) come and go."},
+    {"question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?", "answer": "The rot rates are shown and readable (e.g. -37%/min), and patching a module you can reach is quick and satisfying, so the core loop feels fair. What felt arbitrary was where things are: issues 'on top' or 'under' the boulder that you cannot reach without rolling it, rolling that overshoots, and a slick path that makes the boulder slip with no warning. Hardest of all were finding which part of the dark boulder a HUD line meant at dusk and night, and understanding why the boulder stayed 'too heavy' after I retired modules. Once it was too heavy I could not tell what would get me out."}
+  ]
+}

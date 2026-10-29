@@ -115,6 +115,8 @@ void Session::noticeChanges() {
                 say(std::string(moduleName(i)) + " is down (" + whereOn(b, i) + "). Users are leaving.", 6);
                 break;
             }
+    } else if (b.users < 1 && a.users >= 1) {
+        say("Every user has left. It still runs, for nobody.\nShip a release and some will come.", 7);
     } else if (b.incidents > a.incidents && b.lastIncident >= 0) {
         say(std::string(moduleName(b.lastIncident)) + ": " + issueName(b.lastIssue) + ".", 4);
     } else if (b.retired > a.retired) {

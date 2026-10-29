@@ -357,6 +357,13 @@ std::vector<HudLine> hudLines(const World& w) {
     out.push_back({"Modules " + std::to_string(activeModules(w)) + "   health " + bar(health(w), 10) + " " + percent(health(w))});
     const float L = load(w);
     out.push_back({"Weight  " + bar(L, 10) + (L >= 1 ? "  too heavy to push uphill" : L >= 0.7f ? "  heavy" : ""), false, L >= 1});
+    // What it is made of, once it starts to tell: rot, and above all what is down.
+    if (L >= 0.7f) {
+        const int down = brokenModules(w);
+        out.push_back({down > 0 ? "  Down modules weigh most: patch or retire"
+                                : "  Rot weighs: patch the oldest",
+                       false, false});
+    }
     if (L >= 0.7f) out.push_back({"  (rot weighs it down: patch, retire or refactor)", false, false, true});
     if (w.player.stamina < 0.9f)
         out.push_back({"Stamina " + bar(w.player.stamina, 10) + (tired(w) ? "  tired: rest (Q) on a terrace" : ""), false, tired(w), !tired(w)});
@@ -395,7 +402,7 @@ std::vector<HudLine> hudLines(const World& w) {
                                   : h.module >= 0                 ? std::string("patching ") + moduleName(h.module)
                                   : boulderResting(w)             ? "nothing they can reach"
                                                                   : "waiting for it to settle";
-        out.push_back({std::string(helperName(h.name)) + " is helping: " + doing + ", " + clock + " left", false, false, true});
+        out.push_back({std::string(helperName(h.name)) + " is helping: " + doing + ", " + clock + " left", false, false, false});
     }
     out.push_back({"", false, false, true});
     // The open issues, worst first.
@@ -526,9 +533,13 @@ std::string prompt(const World& w) {
         // Close to it but not pushing: say how.
         const Vec3 c = boulderCentre(w);
         const float dx = c.x - w.player.x, dz = c.z - w.player.z;
-        if (std::sqrt(dx * dx + dz * dz) < boulderRadius(w) + 2.5f && !w.falling && w.summitSeconds < 0)
+        const float d = std::sqrt(dx * dx + dz * dz);
+        if (d < boulderRadius(w) + 2.5f && !w.falling && w.summitSeconds < 0)
             return dz < 0 ? "Face the boulder and walk into it (W) to push it up the hill"
                           : "From up here, walking into it (W) rolls it back (on level ground)";
+        // Walked on up without it: it slipped away, or was let go.
+        if (dz > 0 && d > boulderRadius(w) + 4.0f && !w.falling && w.summitSeconds < 0)
+            return "The boulder is behind you, down the hill: go back down to it";
         return "";
     }
     const Module& m = w.modules[static_cast<size_t>(i)];
@@ -539,17 +550,18 @@ std::string prompt(const World& w) {
     s += std::string(moduleName(i)) + ": ";
     if (m.health <= 0) s += "DOWN";
     else if (m.issue != Issue::None) s += std::string(issueName(m.issue)) + ", " + issueLine(m.issue);
-    else s += m.health >= 0.98f ? "healthy" : m.health > 0.9f ? "nearly new" : "aging, no issue yet";
+    else s += m.health >= 0.98f ? "healthy" : m.health > 0.9f ? "nearly new" : "rotting, no issue yet";
     s += " (" + percent(m.health) + ")";
     const int dep = dependency(w, i);
     if (dep >= 0) s += cascading(w, i) ? std::string(", and ") + moduleName(dep) + ", which it uses, is DOWN"
                                        : std::string(", uses ") + moduleName(dep);
     s += "\n";
     const bool working = w.work.module == i;
-    if (working && w.work.retiring) return s + "Retiring " + bar(w.work.seconds / kRetireSeconds, 12);
+    // The work goes on from where it stopped when the key is held again.
+    if (working && w.work.retiring) return s + "Retiring (hold R) " + bar(w.work.seconds / kRetireSeconds, 12);
     if (working && w.work.refactoring)
-        return s + "Refactoring it into " + moduleName(dep) + " " + bar(w.work.seconds / kRefactorSeconds, 12);
-    if (working) s += "Patching " + bar(w.work.seconds / patchSeconds(m), 12);
+        return s + "Refactoring it into " + moduleName(dep) + " (hold F) " + bar(w.work.seconds / kRefactorSeconds, 12);
+    if (working) s += "Patching (hold E) " + bar(w.work.seconds / patchSeconds(m), 12);
     else if (m.health >= 0.98f) s += "Nothing to patch";
     else s += "Hold E to patch";
     if (activeModules(w) > kMinModules) {
