@@ -60,6 +60,14 @@ struct Overlay {
     bool history = false;        // Tab: every climb so far, in place of the HUD
 };
 
+// The points drawn round the boulder and the eye: rain or snow, the glow of
+// modules in trouble, the links from a module down, and the town's lit
+// windows. `night` is 0 by day, 1 at full night.
+std::vector<StrataPoint> glowPoints(const World& w, float night, Vec3 eye);
+// Why Strata would refuse one of these points (a colour not finite, below 0,
+// or an alpha above 1), or empty if it would draw them all.
+std::string badPoint(const std::vector<StrataPoint>& pts);
+
 // The history screen: a row for every cairn, the climb under way, and bars
 // of the minutes and users of each climb.
 std::vector<std::string> historyLines(const World& w);

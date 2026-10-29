@@ -130,6 +130,16 @@ struct Shooter {
     }
 };
 
+// Why Strata would refuse this frame's points by day or at full night (it
+// throws, and the game stops), or empty if it would draw them.
+std::string badPoints(const World& w) {
+    for (const float night : {0.0f, 1.0f}) {
+        const std::string why = play::badPoint(play::glowPoints(w, night, play::cameraAtEyes(w).eye));
+        if (!why.empty()) return why + (night > 0 ? " at night" : " by day");
+    }
+    return "";
+}
+
 int runPlaythrough(strata::Engine& engine, const Args& args) {
     World w = newWorld(args.seed);
     bridge::Scene scene(engine);
@@ -141,8 +151,10 @@ int runPlaythrough(strata::Engine& engine, const Args& args) {
     bool pushed = false, patched = false, summit = false, fell = false, night = false, trouble = false;
     int releases = 0;
     const int64_t limit = 60LL * 60 * kTickRate;
+    std::string bad;
     for (int64_t t = 0; t < limit && !playthroughDone(w); ++t) {
         tick(w, pilot.next(w));
+        if (bad.empty() && !(bad = badPoints(w)).empty()) bad = "tick " + std::to_string(w.tick) + ", " + bad;
         if (!pushed && w.pushing && w.boulder.s > 14) {
             pushed = true;
             shot.shoot(w, "pushing", play::cameraBeside(w, 1.0f, 1.0f), true, false);
@@ -214,6 +226,22 @@ int runPlaythrough(strata::Engine& engine, const Args& args) {
     sit.player.pitch = -0.1f;
     shot.shoot(sit, "sitting", play::cameraAtEyes(sit), false, false, "",
                "\"Il faut imaginer Sisyphe heureux.\"\n(One must imagine Sisyphus happy.)\n-- Albert Camus");
+    // A game nobody plays: it rots, its modules go down and glow, the users
+    // leave, and night falls on it, in the rain as well as dry.
+    {
+        World idle = newWorld(args.seed);
+        for (int64_t t = 0; t < 20LL * 60 * kTickRate && bad.empty(); ++t) {
+            tick(idle, Input{});
+            World wet = idle;
+            wet.rain = 1;
+            if (!(bad = badPoints(idle)).empty() || !(bad = badPoints(wet)).empty())
+                bad = "an idle game at tick " + std::to_string(idle.tick) + ", " + bad;
+        }
+    }
+    if (!bad.empty()) {
+        std::fprintf(stderr, "sisyphus: Strata would refuse a frame: %s\n", bad.c_str());
+        return 1;
+    }
     const uint64_t fp = fingerprint(w);
     std::printf("playthrough: %s in %.1f min, %d releases, %d incidents, %d patched, %d down, %d retired, users %.0f\n",
                 versionText(w).c_str(), static_cast<double>(w.tick) / kTickRate / 60.0, w.releases, w.incidents, w.patched,
