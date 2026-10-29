@@ -71,6 +71,7 @@ cmake -S . -B build
 cmake --build build -j
 ./build/sisyphus                 # play; continues from the save in ~/.local/share/sisyphus/default
 ./build/sisyphus --new           # start over (the old save is kept as the previous one)
+./build/sisyphus --from DIR      # play on from the save in DIR, never saving (for playtests)
 ./build/sisyphus --autopilot --speed 4   # watch the autopilot play
 ctest --test-dir build           # the rules, the meshes, the saves, the pinned playthrough
 ```

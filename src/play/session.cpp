@@ -40,7 +40,12 @@ Session::Session(strata::Engine& engine, const SessionOptions& options)
     if (options_.sound) sound_.start();
     World start = w_;
     outside_ = false;  // his eyes; V for behind him
-    if (!options_.slot.empty() && !options_.fresh && hasSave(options_.slot)) {
+    if (!options_.from.empty()) {
+        World loaded;
+        const LoadResult r = loadSave(options_.from, loaded);
+        if (r.ok) start = loaded;
+        say(r.ok ? r.message : r.message + " A new game was started.");
+    } else if (!options_.slot.empty() && !options_.fresh && hasSave(options_.slot)) {
         World loaded;
         const LoadResult r = loadSave(options_.slot, loaded);
         if (r.ok) start = loaded;

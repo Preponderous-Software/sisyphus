@@ -20,6 +20,9 @@ struct SessionOptions {
     uint64_t seed = 1;
     std::string slot;        // the save slot directory; empty = no saves
     bool fresh = false;      // start a new game even if there is a save
+    // Start from the save in this slot directory instead, and never save: for
+    // playtests and recordings that begin mid-game.
+    std::string from;
     bool autopilot = false;  // the autopilot plays, watched from behind
     int speed = 1;           // game seconds per second of real time
     // In a browser the page owns the pointer lock and the canvas size; Esc
