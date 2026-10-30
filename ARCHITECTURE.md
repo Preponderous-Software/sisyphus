@@ -6,6 +6,8 @@ src/bridge   geometry.*: the hill, town, boulder and Sisyphus as triangle meshes
              scene.*: uploads them to Strata and keeps them in step with the world
 src/play     view.*: sky, lights, camera, HUD; session.*: input, news, autosave
 src/save     the World as a checksummed file, the previous save kept
+src/audio    cues.* and synth.*: the hill's sounds, worked out from the world and synthesized   (no engine)
+             device.*: plays them through miniaudio, or stays silent if there is no device
 app/         main.cpp (desktop: play, watch the autopilot, headless playthrough), web_main.cpp (browser)
 web/         the page around the browser build, and its smoke test
 ```
@@ -34,7 +36,8 @@ web/         the page around the browser build, and its smoke test
   and a new module (until all 48 have shipped). The summit ships the next major. After `kSummitPause` seconds the
   boulder rolls all the way back to the trailhead, and the major version goes up.
 - **Work**: holding E on the module under the crosshair (within `kReach`) patches it in `patchSeconds`. Holding R
-  retires it, down to `kMinModules`.
+  retires it (`kRetireSeconds`), down to `kMinModules`. Holding F refactors it into the module it uses
+  (`kRefactorSeconds`, when `canRefactor` allows). At the summit, holding R chooses a rewrite (`kRewriteSeconds`).
 - **The autopilot** (`autopilot.*`) plays by simple rules. On a terrace it patches the worst module it can reach.
   It pushes on when the load is low, and rolls the boulder to bring modules out from underneath. When the boulder
   is too heavy and nothing can be patched, it retires a module. `test_autopilot` and the headless playthrough pin

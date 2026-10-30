@@ -55,6 +55,7 @@ Or play it in a browser at https://sisyphus.play.danielstephenson.dev.
 | Sit and look at the view | `Q` | **Sit** |
 | Every climb so far | `Tab` | **History** |
 | From behind him, or back to his eyes (the default) | `V` | **Camera** |
+| Sound on or off | `M` | **Sound** |
 | Save / load the last save | `F5` / `F9` | **Save** |
 | Controls on screen / free the mouse | `F1` / `Esc` | |
 
