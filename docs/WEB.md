@@ -21,7 +21,7 @@ python3 -m http.server 8080 --directory web-site
 | | Desktop | Browser |
 |---|---|---|
 | Mouse look | the game takes the mouse | the page owns the pointer lock (click to play, Esc frees it) and calls `sisyphus_look` |
-| Touch | | a stick on the left half, look on the right half; **Patch** and **Retire** are held (`sisyphus_hold`), **Sit** and **Camera** pressed |
+| Touch | | a stick on the left half, look on the right half; **Patch**, **Retire** and **Refactor** are held (`sisyphus_hold`), **Sit**, **Camera** and **History** pressed (`sisyphus_press`), **Sound** toggled (`sisyphus_sound`) |
 | HUD | drawn on the canvas | on a page narrower than 760 CSS pixels, the page draws the HUD, the prompt and the words itself, from `sisyphus_status()` |
 | Saves | `~/.local/share/sisyphus/default` or `%APPDATA%\Sisyphus\default` | `/sisyphus-save/default` on IndexedDB (IDBFS), loaded before `main()`, flushed after every save and when the page is hidden |
 | Quit | Esc twice | none |
