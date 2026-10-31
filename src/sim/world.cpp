@@ -662,6 +662,11 @@ int aimedModule(const World& w) {
     return moduleOnSight(w, eyePosition(w), lookDirection(w.player.yaw, w.player.pitch));
 }
 
+float boulderBearing(const World& w) {
+    const Vec3 c = boulderCentre(w);
+    return wrapAngle(detAtan2(c.x - w.player.x, w.player.z - c.z) - w.player.yaw);
+}
+
 int dependency(const World& w, int i) {
     // Older means added earlier, and modules take slots in the order they
     // are added. Ties go to the lower slot, the same on every compiler.

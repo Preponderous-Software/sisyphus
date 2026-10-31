@@ -205,6 +205,9 @@ int moduleOnSight(const World& w, Vec3 eye, Vec3 dir, Vec3* hit = nullptr);
 Vec3 eyePosition(const World& w);
 // The module the player is looking at, within reach, or -1.
 int aimedModule(const World& w);
+// Which way the boulder is from where he faces, in radians: 0 dead ahead,
+// positive to his right, up to pi either way behind him.
+float boulderBearing(const World& w);
 // The module that module i uses: the nearest older active module on the
 // stone, or -1 for the oldest.
 int dependency(const World& w, int i);

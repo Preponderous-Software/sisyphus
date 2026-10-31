@@ -92,7 +92,9 @@ void Session::noticeChanges() {
         if (b.summitSeconds >= 0) s = versionText(b) + " shipped, at the summit. Look down at the town.";
         say(s, 7);
     } else if (b.falling && !a.falling) {
-        say("The platform it runs on reached its end of life.\nThe boulder rolls. Every module goes with it.", 9);
+        say(b.rewriteChosen ? "It rolls down to be rewritten.\nAt the trailhead it starts again light, and most users will not follow."
+                            : "The platform it runs on reached its end of life.\nThe boulder rolls. Every module goes with it.",
+            9);
     } else if (!b.falling && a.falling && a.rewriteChosen) {
         say("Rewritten. " + std::to_string(activeModules(b)) + " fresh modules, and most of the users did not follow.\n" +
                 std::to_string(b.major) + ".x starts here, light.",
