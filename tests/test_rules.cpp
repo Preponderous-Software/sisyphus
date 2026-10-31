@@ -557,6 +557,29 @@ int main() {
         CHECK(std::fabs(w.player.z - bz) < 0.3f);
         CHECK(w.boulder.s == H::terraceStart(1) + 4.0f);
     }
+    // Which way the boulder is, from where he faces: standing uphill of it on
+    // a terrace and facing it, it is ahead, not behind him (a playtest was
+    // told it was behind him while it was on screen).
+    {
+        World w = quiet();
+        w.boulder.s = H::terraceStart(1) + 4.0f;
+        const float bz = H::zOf(w.boulder.s);
+        w.player.x = 0;
+        w.player.z = bz - boulderRadius(w) - 6.0f;  // uphill of it
+        w.player.yaw = kPi;  // facing down the hill
+        CHECK(std::fabs(boulderBearing(w)) < 0.01f);
+        w.player.yaw = 0;  // facing up the hill
+        CHECK(std::fabs(boulderBearing(w)) > kPi - 0.01f);
+        w.player.yaw = kPi / 2;  // facing +x: down the hill is to his right
+        CHECK(std::fabs(boulderBearing(w) - kPi / 2) < 0.01f);
+        w.player.yaw = -kPi / 2;  // facing -x: to his left
+        CHECK(std::fabs(boulderBearing(w) + kPi / 2) < 0.01f);
+        // Off to +x, facing down the hill (+z): his right is -x, so it is a
+        // little to his right.
+        w.player.yaw = kPi;
+        w.player.x = 2.0f;
+        CHECK(boulderBearing(w) > 0.05f && boulderBearing(w) < 0.5f);
+    }
     // Dependencies: every module but the oldest uses an older one, and a
     // module that is down makes the ones that use it rot fast.
     {

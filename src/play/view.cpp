@@ -341,6 +341,14 @@ std::string uphillWay(const World& w) {
     return std::fabs(turn) > 2.5f ? " (behind you)" : turn > 0 ? " (to your right)" : " (to your left)";
 }
 
+namespace {
+// Which way the boulder is, from where he faces.
+const char* boulderWay(const World& w) {
+    const float turn = boulderBearing(w);
+    return std::fabs(turn) < 0.5f ? "ahead" : std::fabs(turn) > 2.6f ? "behind you" : turn > 0 ? "to your right" : "to your left";
+}
+}  // namespace
+
 std::vector<HudLine> hudLines(const World& w) {
     std::vector<HudLine> out;
     out.push_back({"SISYPHUS   version " + versionText(w) + "   " + seasonName(season(w)), true});
@@ -368,7 +376,7 @@ std::vector<HudLine> hudLines(const World& w) {
     if (w.player.stamina < 0.9f)
         out.push_back({"Stamina " + bar(w.player.stamina, 10) + (tired(w) ? "  tired: rest (Q) on a terrace" : ""), false, tired(w), !tired(w)});
     if (w.summitSeconds >= 0) out.push_back({"At the summit: " + versionText(w) + " ships."});
-    else if (w.falling) out.push_back({"It rolls. Follow it down."});
+    else if (w.falling) out.push_back({w.rewriteChosen ? "It rolls down to be rewritten. Follow it down." : "It rolls. Follow it down."});
     else if (w.boulder.v < -0.5f && !w.pushing && !hill::level(w.boulder.s))
         out.push_back({"The boulder is rolling back down!", false, true});
     else {
@@ -382,14 +390,8 @@ std::vector<HudLine> hudLines(const World& w) {
         const Vec3 c = boulderCentre(w);
         const float dx = c.x - w.player.x, dz = c.z - w.player.z;
         const float d = std::sqrt(dx * dx + dz * dz);
-        if (d > boulderRadius(w) + 4.0f) {
-            float turn = std::atan2(dx, -dz) - w.player.yaw;
-            while (turn > kPi) turn -= 2 * kPi;
-            while (turn < -kPi) turn += 2 * kPi;
-            const char* where = std::fabs(turn) < 0.5f ? "ahead" : std::fabs(turn) > 2.6f ? "behind you"
-                                : turn > 0 ? "to your right" : "to your left";
-            out.push_back({"The boulder: " + std::to_string(static_cast<int>(d)) + " m " + where});
-        }
+        if (d > boulderRadius(w) + 4.0f)
+            out.push_back({"The boulder: " + std::to_string(static_cast<int>(d)) + " m " + boulderWay(w)});
     }
     // Whoever is helping.
     if (w.helper.name >= 0) {
@@ -537,9 +539,11 @@ std::string prompt(const World& w) {
         if (d < boulderRadius(w) + 2.5f && !w.falling && w.summitSeconds < 0)
             return dz < 0 ? "Face the boulder and walk into it (W) to push it up the hill"
                           : "From up here, walking into it (W) rolls it back (on level ground)";
-        // Walked on up without it: it slipped away, or was let go.
-        if (dz > 0 && d > boulderRadius(w) + 4.0f && !w.falling && w.summitSeconds < 0)
-            return "The boulder is behind you, down the hill: go back down to it";
+        // Walked on up without it: it slipped away, or was let go. Not said
+        // while it is ahead of him, and said which way to turn.
+        if (dz > 0 && d > boulderRadius(w) + 4.0f && !w.falling && w.summitSeconds < 0 &&
+            std::fabs(boulderBearing(w)) >= 0.5f)
+            return std::string("The boulder is down the hill, ") + boulderWay(w) + ": go back down to it";
         return "";
     }
     const Module& m = w.modules[static_cast<size_t>(i)];
