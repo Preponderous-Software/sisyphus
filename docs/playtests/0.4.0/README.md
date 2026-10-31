@@ -29,13 +29,12 @@ were checked against the screenshots and the source, and an issue was filed for 
 
 - **After the rewrite, the roll-down message describes the other choice** (s01): it says "The boulder rolls. Every
   module goes with it." whatever was chosen, and the HUD still shows 13 modules and 500 users on the way down, so
-  nothing confirms the rewrite until the trailhead ([after5.png](ai-playtest-run6/s01/shots/after5.png)). See the issue
-  filed for it.
+  nothing confirms the rewrite until the trailhead ([after5.png](ai-playtest-run6/s01/shots/after5.png)). Filed as #33.
 - **"The boulder is behind you, down the hill" shows while the boulder is in view** (s04, and s01 at the trailhead): the
   lost-boulder prompt added in #31 fires whenever the boulder is lower than he is, whichever way he faces. On a terrace,
   walking round it to roll it back sets it off, and s04 spent about 40 game seconds circling it while a module rotted
-  ([back12.png](ai-playtest-run6/s04/shots/back12.png), [nav_fail.png](ai-playtest-run6/s04/shots/nav_fail.png)). See
-  the issue filed for it.
+  ([back12.png](ai-playtest-run6/s04/shots/back12.png), [nav_fail.png](ai-playtest-run6/s04/shots/nav_fail.png)). Filed
+  as #34.
 
 The minors, not filed (details in [summary.md](ai-playtest-run6/summary.md)):
 
