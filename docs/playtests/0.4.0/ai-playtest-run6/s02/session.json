@@ -1,0 +1,39 @@
+{
+  "session": "s02",
+  "dir": "<run>/s02",
+  "driver": "strata",
+  "clock": "stepped",
+  "step": 0.016666666666666666,
+  "driveSocket": "<run>/s02/drive.sock",
+  "controlSocket": "<run>/s02/control.sock",
+  "profile": "sisyphus-strata",
+  "size": "640x360",
+  "seed": "2",
+  "args": [
+    "--from",
+    "<saves>/wet-dusk"
+  ],
+  "command": [
+    "<sisyphus checkout>/build/sisyphus",
+    "--width",
+    "640",
+    "--height",
+    "360",
+    "--new",
+    "--seed",
+    "2",
+    "--from",
+    "<saves>/wet-dusk"
+  ],
+  "probe": false,
+  "ticksPerSecond": null,
+  "startedAtMs": 1793405759107,
+  "version": null,
+  "commit": "9a68cbf",
+  "dirty": false,
+  "builtAtMs": 1793405604204,
+  "buildWarnings": [],
+  "strata": "0.6.0",
+  "abi": "1.12",
+  "surface": "headless"
+}

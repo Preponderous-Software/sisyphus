@@ -1,5 +1,66 @@
 # Playtests for 0.4.0
 
+## AI playtest, run 6 (2026-10-30)
+
+Run 5 again, on the **stepped clock**. Four AI agents played commit `9a68cbf` (`main`: 0.3.1 with #30 `--from`, #31
+and the #32 docs) through [playtester](https://github.com/Preponderous-Software/playtester)'s `sisyphus-strata`
+profile (playtester `0561475`), headless on the Strata driver at 640x360, steering by screenshots. Every session was
+started with `--clock stepped`, so the world moved only while an agent held a key or waited, never while it read a
+screenshot. Everything else was kept from run 5: the four goals, the seeds and the three start saves (loaded with
+`--from`), so the clock is the one thing that changed. The balance was not touched between the runs. The harness smoke
+(`pt smoke --clock stepped`) printed PASS, all four reports validated, and `pt aggregate` reported no problems.
+
+| Session | Start | Goal | Outcome | Fun (run 5) |
+| --- | --- | --- | --- | --- |
+| s01 | 0.6, on the terrace below the summit | ship 1.0 and choose the rewrite | achieved: 1.0 shipped, rewrite chosen, 1.1 shipped after it | 3/5 (2) |
+| s02 | 1.1, a shower late in the afternoon | climb through the rain into nightfall | achieved: 1.2 and 1.3 shipped at night, no module down, users 570 to 740 | 3/5 (2) |
+| s03 | 0.2, a helper just come up from the town | the helper, then the History screen | achieved: 0.3 and 0.4 shipped, the helper watched to the end | 4/5 (2) |
+| s04 | a new game | a brand-new player | partial: 0.1 to 0.5 shipped, then lost the boulder on a terrace | 3/5 (2) |
+
+The sessions played 226 to 248 seconds of game time each (s04: 13,660 frames) over 20 to 28 minutes of wall time.
+
+**The run 5 spiral did not recur.** No module went down in any session, and no boulder became
+too heavy to push. A brand-new player shipped five releases where run 5's never reached 0.1, and the s02 save that
+spiralled from 570 users to 1 in run 5 shipped two releases and gained users. Run 5's balance findings came from the
+free clock, so this run gives no reason to change the pace of rot or the push.
+
+**Findings:** 0 blocker, 2 major, 14 minor and 12 polish (28 reports in 24 groups, three of them praise). Both majors
+were checked against the screenshots and the source, and an issue was filed for each:
+
+- **After the rewrite, the roll-down message describes the other choice** (s01): it says "The boulder rolls. Every
+  module goes with it." whatever was chosen, and the HUD still shows 13 modules and 500 users on the way down, so
+  nothing confirms the rewrite until the trailhead ([after5.png](ai-playtest-run6/s01/shots/after5.png)). Filed as #33.
+- **"The boulder is behind you, down the hill" shows while the boulder is in view** (s04, and s01 at the trailhead): the
+  lost-boulder prompt added in #31 fires whenever the boulder is lower than he is, whichever way he faces. On a terrace,
+  walking round it to roll it back sets it off, and s04 spent about 40 game seconds circling it while a module rotted
+  ([back12.png](ai-playtest-run6/s04/shots/back12.png), [nav_fail.png](ai-playtest-run6/s04/shots/nav_fail.png)). Filed
+  as #34.
+
+The minors, not filed (details in [summary.md](ai-playtest-run6/summary.md)):
+
+- **Finding the module an issue names.** "right" and "far side" turn as he circles the boulder, and three or more issues
+  collapse into "... and N more lines" (s02).
+- **The helper's timer.** "on the way up, 2:30 left" does not count down while the helper walks up, and it reads as if
+  they are still in the town (s02, s03, s04). The timer stopped during the roll down (s01) but ran on one slope and not
+  on another (s03).
+- **History.** Mid-climb it is one row of numbers ("0.x" for the current climb). A rewritten climb shows only the users
+  and modules from before the rewrite (s01, s03, s04).
+- **Weather and night.** The shower's "Rain: the path is slick" arrives about 16 s after the load and leaves without a
+  word. At night the boulder and the hill are near-black, though modules with open issues glow clearly (s02).
+- **Smaller ones.** The summit choice has no countdown, and R is also retire (s01). A push slightly off-centre does
+  nothing, with no hint, because the module prompt takes the place of "Not lined up" (s02).
+- **Text.** HUD lines are clipped at the right edge, and "-60%/min left" reads as time left rather than the side of the
+  boulder (s01, s03, s04, polish).
+
+What landed: the summit choice text and the hold-R bar (s01); "Rewritten. 6 fresh modules, and most of the users did not
+follow." (s01); the helper's status lines and "Kofi moved on. Nobody else knew how search worked.", followed at once by
+a drift issue on search (s03, its best moment); and the onboarding, pushing, releasing and patching, which a new player
+got right first time (s04). All four agents read the game as the endless upkeep of software, with terraces as releases
+and rot as drift and decay (answers in [summary.md](ai-playtest-run6/summary.md)).
+
+Nothing was changed for this run: it is evidence only. The full reports, findings and cited screenshots are in
+[ai-playtest-run6/](ai-playtest-run6/). Local paths are replaced with `<run>`, `<sisyphus checkout>` and `<saves>`.
+
 ## AI playtest, run 5 (2026-10-29)
 
 Four AI agents played commit `8ef2a7f` (0.3.1 with `--from`) through

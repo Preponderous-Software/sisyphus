@@ -1,0 +1,39 @@
+{
+  "session": "s03",
+  "dir": "<run>/s03",
+  "driver": "strata",
+  "clock": "stepped",
+  "step": 0.016666666666666666,
+  "driveSocket": "<run>/s03/drive.sock",
+  "controlSocket": "<run>/s03/control.sock",
+  "profile": "sisyphus-strata",
+  "size": "640x360",
+  "seed": "1",
+  "args": [
+    "--from",
+    "<saves>/helper"
+  ],
+  "command": [
+    "<sisyphus checkout>/build/sisyphus",
+    "--width",
+    "640",
+    "--height",
+    "360",
+    "--new",
+    "--seed",
+    "1",
+    "--from",
+    "<saves>/helper"
+  ],
+  "probe": false,
+  "ticksPerSecond": null,
+  "startedAtMs": 1793405758647,
+  "version": null,
+  "commit": "9a68cbf",
+  "dirty": false,
+  "builtAtMs": 1793405604204,
+  "buildWarnings": [],
+  "strata": "0.6.0",
+  "abi": "1.12",
+  "surface": "headless"
+}

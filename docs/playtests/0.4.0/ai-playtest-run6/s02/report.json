@@ -1,0 +1,110 @@
+{
+  "session": "s02",
+  "goal": "You start in a shower late in the afternoon (version 1.1, two open issues, a helper on the way). Keep the software alive and climb while the path is slick, through the rain and on into nightfall. Judge whether the weather is clear (what the slick path does to pushing and rolling) and whether the hill, the modules and the issues stay readable at dusk and at night. Note every moment of confusion and anything hard to see.",
+  "build": {"version": "1.1 (in-game software version at start; game build version not shown)", "commit": "9a68cbf"},
+  "seed": 2,
+  "durationSec": 1694,
+  "outcome": "achieved",
+  "findings": [
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Shower state is not announced at load; 'Rain: the path is slick' appears only after ~16 s and disappears silently ~45 s later",
+      "detail": "At load the HUD said only 'spring', the sky was bright blue and rain streaks were faint, so the shower the goal describes wasn't visible. The 'Rain: the path is slick' line showed up only after I patched core (~frame 1150), then vanished with no message around frame 2700. The only way I could tell the path was slick was pushing speed: about 0.5 m/s in the rain (36->22 m in ~28 s of W) against about 1 m/s dry later (25->17 m in 8 s). The rain didn't seem to make the boulder slide back any more than usual. I expected a clear 'it starts raining / the rain stops' message and a visible wet look on the path.",
+      "repro": "pt start --profile sisyphus-strata ... --seed 2 --clock stepped --from saves/wet-dusk; pt shot start (no rain line); pt hold w 7; pt hold e 5; pt shot (rain line appears); pt hold w 12 (line gone)",
+      "screenshot": "shots/rain-late.png",
+      "tick": 1150
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Issue direction hint ('right' / 'far side') flips as you circle the boulder and never led me to sessions",
+      "detail": "sessions (flaky test) was listed as 'right' from below-left. One metre to the right and facing the boulder it became 'far side', and from the uphill side it was also 'far side'. I spent about 2 minutes of real time walking around a boulder only a few metres across without ever getting the crosshair on it, and Noor patched it in the end. I expected the hint, or a glow I can see from where I stand, to lead me to the module.",
+      "repro": "From the wet-dusk save: pt hold d 1.5; pt look -150 0; ... walk around the boulder and watch the sessions line's position word",
+      "screenshot": "shots/side-flip.png",
+      "tick": 1850
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "W into the boulder silently does nothing when slightly off-centre; 'Not lined up' hint loses to the module prompt",
+      "detail": "On the 1.2 terrace I held W three times for 6-10 s and the distance stayed at '33 m'. The boulder was about 50 px left of the crosshair. In first person the prompt area showed only 'mailer: healthy... Nothing to patch', so I got no sign that pushing wasn't working. In the behind view 'Not lined up to push' did show, even though the boulder looked centred behind the character. The boulder also drifts sideways as you push, so this happened again and again (16 s of W gained 2 m). I expected a more tolerant push cone, or the not-lined-up hint to always show while W is held against the boulder.",
+      "repro": "After shipping 1.2: get below the boulder, aim ~50 px off its centre, pt hold w 10; HUD 'Next 1.3' doesn't change",
+      "screenshot": "shots/align.png",
+      "tick": 9400
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "At 3+ open issues the HUD collapses the rest into '... and N more lines', hiding which modules are failing",
+      "detail": "With 4 issues the HUD showed only 'auth certificate 29%' and then '... and 3 more lines'. I couldn't tell which modules the other issues were on or where they were, even though there is empty screen space below the list. This happened again at 1.3 ('core ... far side / ... and 2 more lines'). Tab history doesn't list current issues.",
+      "repro": "From wet-dusk: push to the 1.2 terrace (~60 s of W); pt shot",
+      "screenshot": "shots/more-lines.png",
+      "tick": 4900
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "At night the boulder and the hill are near-black; first person against the boulder is a featureless wall",
+      "detail": "From the 1.2 terrace onwards (night), the boulder is a dark silhouette against a dark hill in the behind view and is mostly hidden behind Sisyphus's dark body. In first person up close it fills the screen with plain black, with no facets or module borders. Healthy modules can be found only through the crosshair prompt. Modules with open issues do stay readable (see the positive finding).",
+      "repro": "Play from wet-dusk past the 1.2 release (~80 s game time); pt key v; pt shot",
+      "screenshot": "shots/black-wall.png",
+      "tick": 13890
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "At dusk the boulder's module facets are hard to tell apart",
+      "detail": "Late afternoon/dusk in the rain, seen from the uphill side, the facets are almost all one dark purple/navy. I couldn't see where one module ends and the next begins, and the 'sessions' issue on the far side gave no glow I could see.",
+      "repro": "From wet-dusk: walk to the uphill side of the boulder (~20 s game time) and face it",
+      "screenshot": "shots/dusk-boulder.png",
+      "tick": 1400
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "HUD lines run off the right edge at 640x360 ('under: roll', Noor's '2:28 left')",
+      "detail": "'core drift 17% -37%/min under: roll' is cut off mid-word (I assume it's meant to say 'roll it back'). The 'Noor is helping: waiting for it to settle, 2:28 left' line touches or clips the right edge. Floating module labels (e.g. 'mailer') also draw on top of the centre message text (shots/n14.png, shots/n12.png).",
+      "repro": "From wet-dusk: pt look 0 120; pt hold w 4; pt shot",
+      "screenshot": "shots/hud-cutoff.png",
+      "tick": 700
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Helper countdown frozen at '2:30 left' while 'on the way up'",
+      "detail": "'Noor is helping: on the way up, 2:30 left' didn't count down at all for the first ~40 s of game time. It started at 2:28 once she arrived. If the timer only starts on arrival, 'arrives in…' would be clearer.",
+      "repro": "From wet-dusk: pt hold w 3; pt hold w 4; pt hold e 5; compare the Noor line",
+      "screenshot": "shots/noor-arrives.png",
+      "tick": 2700
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Positive: issue modules glow clearly at night and rolling back from uphill shows them well",
+      "detail": "At night a module with an open issue (core, flaky test) glows bright purple with sparks and a floating label, which is very readable. From the uphill side of the 1.3 terrace, the 'Rolling it back to turn it' mechanic plus the glow made core easy to find and patch. Helper messages ('Noor moved on. Nobody else knew how mailer worked.', 'No open issues. It will not last.') are good touches.",
+      "repro": "Ship 1.3, walk to the uphill side of the boulder, face it, pt hold w 1.5",
+      "screenshot": "shots/night-glow.png",
+      "tick": 12000
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 2,
+    "deaths": 0,
+    "secondsToObjective": {"Ship 1.2 (wall-clock)": 815.0, "Ship 1.3 (wall-clock)": 1580.0},
+    "gameSecondsPlayed": 248,
+    "releasesShipped": 2,
+    "modulesPatchedByMe": 4,
+    "modulesDown": 0,
+    "usersStartEnd": "570 -> 740",
+    "pushSpeedWetMps": 0.5,
+    "pushSpeedDryMps": 1.0
+  },
+  "fun": 3,
+  "verdict": "With a helper, the wet-dusk climb is easy to survive: I shipped 1.2 and 1.3 with nothing going down. The friction came from finding things: issue position hints that flip as you circle the boulder, a 3-issue cap on the HUD list, a strict push cone that gives no feedback in first person, and a boulder and hill that go near-black at night (glowing issue modules are the exception and work well). The rain mostly showed up as halved push speed with little on-screen signal, and it ended quietly within a minute. Times in secondsToObjective are wall-clock (no probe); game time was ~248 s (frame 14888 at 60 fps)."
+  ,
+  "answers": [
+    {"question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?", "answer": "It's about keeping software alive: the boulder is the codebase (made of modules like core, auth, mailer), every terrace is a release that adds users and a new module (more weight), and rot is dependency drift, flaky tests, expiring certificates and security advisories that build up whether or not you're pushing. Contributors like Noor help for a while and then leave, taking knowledge with them ('Nobody else knew how mailer worked'). The climb is endless upkeep, the Sisyphus myth applied to maintenance."},
+    {"question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?", "answer": "The rot felt fair. Each issue shows a % and a rate per minute, and it's clear that you can only patch safely on a terrace. New issues popped up quickly but never felt arbitrary, and with the helper it was easy. The hardest part was getting to the module: the 'right / far side / under: roll' hints changed as I moved and I couldn't find sessions; once there were 3 or more issues the HUD hid the rest behind '... and N more lines'; and lining up a push was fussy, with W silently doing nothing when I was slightly off-centre. At night I couldn't see healthy modules or the boulder's outline well. I also couldn't really tell when the rain started or stopped, except that pushing got faster."}
+  ]
+}

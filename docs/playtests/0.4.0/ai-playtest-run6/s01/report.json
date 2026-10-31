@@ -1,0 +1,102 @@
+{
+  "session": "s01",
+  "goal": "You start near the top of the hill (version 0.6), with the boulder resting on the terrace below the summit. Push it up to the summit and ship 1.0. While the summit pause lasts, the game offers a choice: let it roll back down with every module aboard, or hold R to rewrite it. Work out the choice from the screen, choose the rewrite, follow it down, and play on from the trailhead. Then open the History screen (Tab) and judge whether the rewrite was clear and felt like a real decision. Note every moment of confusion.",
+  "build": {
+    "version": "1.1 (in-game; session.json version null)",
+    "commit": "9a68cbf"
+  },
+  "seed": 1,
+  "durationSec": 1204,
+  "outcome": "achieved",
+  "findings": [
+    {
+      "severity": "major",
+      "category": "text",
+      "title": "After choosing the rewrite, the roll-down banner says 'Every module goes with it' (the other option's text)",
+      "detail": "Right after 'Rewrite chosen: it starts again light at the trailhead', the next banner reads 'The platform it runs on reached its end of life. The boulder rolls. Every module goes with it.' This is the description of NOT rewriting, and made me doubt the rewrite had registered. HUD still showed Modules 13 / Users 500 during the roll, so nothing on screen confirmed the rewrite until the trailhead. Expected rewrite-specific roll text (e.g. 'It rolls down to be rewritten').",
+      "repro": "pt start ... --from saves/summit; pt hold w 39 (reach summit); pt hold r 3.2; pt wait 5; pt shot",
+      "screenshot": "shots/after5.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "History screen hides the cost of the rewrite (only pre-rewrite users/modules shown)",
+      "detail": "History marks the climb '1.0*' with a footnote 'rewritten at the summit (modules and users at the end, before the rewrite)'. The rewrite is identifiable, but the drop it caused (500->200 users, 13->6 modules) appears nowhere, so the decision does not read as a trade-off in hindsight; the users chart just looks like decline. Expected a column or line showing users/modules after the rewrite.",
+      "repro": "after the rewrite, ship 1.1, then pt key Tab",
+      "screenshot": "shots/history.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "text",
+      "title": "Direction hints contradict each other after the roll ('behind you' vs 'ahead')",
+      "detail": "On one screen: 'Next 1.1: 33 m uphill (behind you)', 'The boulder: 140 m ahead', and centre prompt 'The boulder is behind you, down the hill: go back down to it'. The centre prompt stays even when the boulder is visibly ahead and HUD says '8 m ahead'; it seems to ignore facing.",
+      "repro": "after the rewrite, follow it down with pt hold Shift_L+w 30; pt shot",
+      "screenshot": "shots/back.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Summit choice gives no countdown, and R doubles as 'retire module'",
+      "detail": "The choice text is clear ('It will roll back down with every module aboard. Or hold R to rewrite it: start again light, and lose most users'), but there is no indication how long the pause lasts or how long to hold R. R is the 'retire module' key everywhere else and the crosshair was on the boulder, so I worried I'd retire a module. The Rewriting bar that appears when held is good.",
+      "repro": "reach summit; pt shot",
+      "screenshot": "shots/summit_choice.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "bug",
+      "title": "Helper (Kofi) countdown frozen at 0:49 for ~70 s of game time during the roll down",
+      "detail": "'Kofi is helping: on the way up, 0:49 left' stayed at 0:49 from the summit through the whole walk down to the trailhead, then resumed counting. Either it should count or say he's paused.",
+      "repro": "with a helper present, choose the rewrite and follow the boulder down; watch the Kofi line",
+      "screenshot": "shots/down2.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "Helper HUD line clipped at right edge; '-60%/min left' hard to parse",
+      "detail": "'Kofi is helping: waiting for it to settle, 1:31 left' runs off screen at 640 wide. Issue row 'mailer certificate 62% -60%/min left' is unclear (rate or time?). 'waiting for it to settle' shown for the whole push, so the helper seems idle while you climb.",
+      "repro": "pt start ... --from saves/summit; pt hold w 5; pt shot",
+      "screenshot": "shots/kofi_clip.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "Rewrite confirmation shown twice in near-identical words",
+      "detail": "'Rewrite chosen: it starts again light at the trailhead, and most users will not follow' and 'A rewrite. It will start again light at the trailhead.' appear together.",
+      "repro": "at summit pt hold r 3.2; pt shot",
+      "screenshot": "shots/r_done.png",
+      "tick": null
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 4,
+    "deaths": 0,
+    "secondsToObjective": {
+      "ship 1.0 at summit (game s held W)": 39.0,
+      "rewrite chosen (wall s from start)": 230.0,
+      "back at trailhead (wall s)": 700.0,
+      "ship 1.1 after rewrite (wall s)": 1180.0
+    },
+    "usersBeforeRewrite": 500,
+    "usersAfterRewrite": 200,
+    "modulesBeforeRewrite": 13,
+    "modulesAfterRewrite": 6
+  },
+  "fun": 3,
+  "verdict": "The rewrite choice itself is well staged: the summit text names both options and their costs, the hold-R bar is responsive, and the trailhead payoff ('6 fresh modules, most users did not follow', 500->200 users) lands. It is undercut by the roll-down banner that says 'every module goes with it' right after choosing the rewrite, by contradictory 'behind you/ahead' hints, and by a History screen that shows only the pre-rewrite numbers, so the trade-off is invisible afterwards. secondsToObjective values are wall-clock except the summit push, which is game seconds of held W (stepped clock).",
+  "answers": [
+    {
+      "question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?",
+      "answer": "Maintaining software forever. The boulder is the codebase itself (it literally carries the modules), each terrace is a release that adds a module and users, and the rot is bit-rot/dependency decay (certificates expiring, modules wearing out). The summit is 1.0 and the roll-down is a platform end-of-life; the rewrite is the classic 'start over light and lose your users' trade-off."
+    },
+    {
+      "question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?",
+      "answer": "From this short run it felt fair: decay was slow and visible (health bar, issue list with a percentage), and a helper patched the one open issue for me, so I barely had to patch myself; I could not really judge rot pressure. Hardest was navigation: lining up below the boulder facing uphill at the trailhead took several tries, and the direction hints ('behind you' vs 'ahead') contradicted each other. The '-60%/min left' issue rate was also hard to read."
+    }
+  ]
+}
