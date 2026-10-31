@@ -1,0 +1,95 @@
+{
+  "session": "s03",
+  "goal": "You start early in a game (version 0.2), just as someone from the town has come up to help. Work out from the screen what the helper does and how long they stay, keep climbing and patching while they help, and watch what happens when they move on. Then open the History screen (Tab) and judge whether it tells the story of your climb. Note every moment of confusion.",
+  "build": {
+    "version": "0.2 (in-game, climbed to 0.4)",
+    "commit": "9a68cbf"
+  },
+  "seed": 1,
+  "durationSec": 1484,
+  "outcome": "achieved",
+  "findings": [
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "Helper line 'on the way up, 2:30 left' reads as 'still coming from town'; Kofi unseen in first person, clock frozen",
+      "detail": "From load until the boulder reached the 0.3 terrace (~70 s of game time) the HUD said 'on the way up, 2:30 left' and never ticked. Looking down the path in first person showed nobody, so I concluded the helper was stuck. Only the V camera on the terrace showed Kofi standing beside Sisyphus, and the line then changed to 'patching search, 2:29 left'. Expected wording that says he is climbing with me and helps on terraces, and some sign of him in first person.",
+      "repro": "pt start --profile sisyphus-strata ... --seed 1 --clock stepped --from saves/helper; pt key F1; pt wait 5; pt look 1200 0; pt step 2; pt shot a (no one on the path, 2:30 unchanged); push to the 0.3 terrace; pt key v; pt step 3",
+      "screenshot": "shots/kofi-arrives.png",
+      "tick": 4255
+    },
+    {
+      "severity": "minor",
+      "category": "balance",
+      "title": "Helper's time runs out on the 0.3->0.4 slope but not on the 0.2->0.3 slope",
+      "detail": "On the first slope the helper timer stayed at 2:30. On the second slope it counted down while I pushed (1:58 -> 1:43 in 15 s, 'waiting for it to settle'), so his help drained while he could not patch. One rule or the other would be fine, but having both is confusing.",
+      "repro": "After shipping 0.3 with Kofi present: walk below the boulder, pt hold w 15; pt shot x (timer has dropped ~15 s)",
+      "screenshot": "shots/kofi-timer-slope.png",
+      "tick": 7000
+    },
+    {
+      "severity": "minor",
+      "category": "ux",
+      "title": "History (Tab) shows a single row of numbers that does not tell the story of the climb",
+      "detail": "Mid-climb the History screen reads 'now 0.x 4 10 230 5 0 0 0 1' and 'No climb has finished yet.' It has nothing on the 0.3/0.4 releases, Kofi's name, what he fixed, or that his leaving broke search. 'patched 5' seems to count only my patches (Kofi did ~7). 'helpers 1' is the only trace of him. Because I could not finish a whole climb in the time budget, I did not see a completed row or a cairn.",
+      "repro": "Continue to 0.4 with the helper, wait until he leaves, pt key Tab; pt step 3; pt shot h",
+      "screenshot": "shots/history-thin.png",
+      "tick": 13557
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "HUD lines clip at the right edge ('under: roll', '1:43 lef')",
+      "detail": "At 640x360 the open-issue line 'billing drift 82% -35%/min under: roll...' and the helper line '...waiting for it to settle, 1:43 left' are cut off at the screen edge.",
+      "repro": "Reach the 0.3 terrace with billing under the boulder; pt shot x",
+      "screenshot": "shots/hud-clip.png",
+      "tick": 4100
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "Open-issue suffix '-60%/min left' is cryptic",
+      "detail": "Nothing explains that 'left/right/far side/on top/under' means where on the boulder the issue is. On first read '-60%/min left' looked like 'time left'. The rate also did not match what I saw: auth fell 74->68% in 5 s, about 72%/min, perhaps because it depended on a rotting module.",
+      "repro": "pt start ...; pt wait 5; pt shot x",
+      "screenshot": "shots/issue-text.png",
+      "tick": 383
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Good: helper status messages and the departure toast are clear and land the theme",
+      "detail": "'nothing they can reach', 'waiting for it to settle', 'patching storage, 2:25 left' told me exactly what Kofi was doing. When he left, the toast 'Kofi moved on. Nobody else knew how search worked.' appeared and search immediately opened a drift issue, which is a strong bus-factor moment. He also took the billing issue as soon as I rolled it into reach.",
+      "repro": "Stay on the 0.4 terrace until the helper timer hits 0 (pt wait 65)",
+      "screenshot": "shots/kofi-leaves.png",
+      "tick": 13500
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 4,
+    "deaths": 0,
+    "secondsToObjective": {
+      "ship 0.3": 560.0,
+      "ship 0.4": 1000.0,
+      "helper leaves": 1400.0,
+      "history opened": 1453.0
+    },
+    "gameSecondsTotal": 226,
+    "helperHelpSeconds": 150,
+    "releasesShipped": 2,
+    "modulesPatchedByMe": 4,
+    "usersStart": 100,
+    "usersEnd": 230
+  },
+  "fun": 4,
+  "verdict": "The helper arc works: Kofi patches whatever he can reach, the status line says what he is doing, and his exit line ('Nobody else knew how search worked') followed by search breaking is the best moment of the session. The confusion comes at the start: 'on the way up, 2:30 left' with a frozen clock and no visible helper in first person made me think he was stuck for the first 70 s, and the timer drains on one slope but not the other. History is just a row of numbers and does not tell this climb's story (no releases, no Kofi). secondsToObjective is wall-clock (no probe, stepped clock at a few fps); about 226 s of game time elapsed.",
+  "answers": [
+    {
+      "question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?",
+      "answer": "Maintaining software forever. The boulder is the codebase: each module is a coloured patch on it, and it gets heavier and harder to keep in reach as it grows. The terraces are releases: each one ships a version, brings more users and adds a module, which means more to look after. The rot is entropy in software, like expiring certificates, flaky tests and dependency drift, which keeps arriving however often you patch ('It will not last'). The helper is a passing contributor: while he is around things feel easy, and when he leaves he takes knowledge with him (bus factor)."
+    },
+    {
+      "question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?",
+      "answer": "Mostly fair: issues come with a rate and a location, and at version 0.2-0.4 with a helper I was never overwhelmed. Search breaking right as Kofi left felt deliberate and thematic, not arbitrary. The hardest part was physical: aiming the crosshair at the right module from up close. The boulder settles and the crosshair drifted from auth onto router, so I patched the wrong module once, and modules under the boulder need it rolled back from the uphill side, which means walking awkwardly around it. Also hard: knowing where Kofi was and why his timer was frozen on one slope but running on the next, and reading the cryptic '-60%/min left' location suffix."
+    }
+  ]
+}

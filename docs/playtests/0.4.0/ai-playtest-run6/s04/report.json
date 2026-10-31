@@ -1,0 +1,78 @@
+{
+  "session": "s04",
+  "goal": "Play as a brand-new player who has never heard of the game. Read the HUD and the first message, work out how to push the boulder and how to patch a module, and get as far up the hill as you can (each terrace is a release: 0.1, 0.2, ...). Note every moment of confusion, and answer the questions at the end.",
+  "build": {"version": "0.5 reached in game (HUD shows release, not build); session.json version null", "commit": "9a68cbf"},
+  "seed": 1,
+  "durationSec": 1686,
+  "outcome": "partial",
+  "findings": [
+    {
+      "severity": "major",
+      "category": "ux",
+      "title": "Getting back to the boulder after walking round it is very hard: no marker, and direction hints lag or contradict the view",
+      "detail": "On the 0.5 terrace I walked round the boulder to roll it back (to reach 'billing ... under'). For ~5 wall minutes (~40 s game time) I could not get back into contact with it: I would turn until it was on screen, hold W, and walk past it. The HUD line 'The boulder: 6 m to your right' and the prompt 'The boulder is behind you, down the hill' were shown while the boulder was visibly right-ahead (back12), and the line disappears entirely when close (uphill4). In the V view the camera swings late after a turn, so screenshots do not show the current heading. billing rotted 47% -> 23% while I was lost. Expected a reliable direction indicator (compass arrow or a current hint) or some help approaching the boulder.",
+      "repro": "pt start --profile sisyphus-strata --seed 1 --clock stepped; push to 0.5 (hold w ~110 s total, patch when needed); pt hold s 0.5; pt hold d 2; pt hold w 3.5; then try to turn (pt look) and walk back into the boulder",
+      "screenshot": "shots/nav_fail.png",
+      "tick": 13466
+    },
+    {
+      "severity": "minor",
+      "category": "text",
+      "title": "Issue-row location hint ('left', 'far side', 'under: roll') reads as time left and is cut off at the right edge",
+      "detail": "The open-issue row shows 'auth certificate 90% -60%/min left'. Next to a rate, 'left' reads as 'time remaining'; only when it changed to 'far side' and 'facing you' did I realise it is where the module sits on the boulder. 'billing drift 94% -35%/min under: roll' runs into the 640 px window edge and the rest of the hint (presumably 'roll it back') is cut off.",
+      "repro": "pt start ... --seed 1 --clock stepped; pt hold w 40; pt shot a (auth issue row); continue to 0.3 for billing 'under: roll'",
+      "screenshot": "shots/rel03_note.png",
+      "tick": null
+    },
+    {
+      "severity": "minor",
+      "category": "text",
+      "title": "Contributor line says '2:30 left' while he is still walking up from town",
+      "detail": "After 0.3 the HUD showed 'Gus is helping: on the way up, 2:30 left' and the number did not change for ~45 s of game time; later Gus was seen walking up the path and the timer only started when he began 'patching search'. The countdown looks frozen/wrong; expected 'Gus is on his way' without a timer, or an ETA.",
+      "repro": "pt start ... --seed 1 --clock stepped; push to 0.3; pt hold w 15; compare the Gus line before and after",
+      "screenshot": "shots/gus_frozen.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "History table shows version '0.x' for the current climb instead of 0.5",
+      "detail": "Tab history row 'now 0.x 3 11 310 2 0 0 0 1' while the HUD says version 0.5.",
+      "repro": "push to 0.5; pt key Tab; pt shot h",
+      "screenshot": "shots/history_note.png",
+      "tick": 13660
+    },
+    {
+      "severity": "polish",
+      "category": "text",
+      "title": "Module prompt '(hold R to retire it, F to refactor it into parser)' wraps onto two lines",
+      "detail": "With a longer module name the retire/refactor hint wraps ('...refactor it into' / 'parser)') under the crosshair; the shorter 'core'/'auth' variants fit on one line.",
+      "repro": "push toward 0.3 with the crosshair on the storage module",
+      "screenshot": "shots/push7.png",
+      "tick": null
+    },
+    {
+      "severity": "polish",
+      "category": "ux",
+      "title": "Good: onboarding, pushing, releasing and patching are immediately clear",
+      "detail": "The first message ('The boulder is your software. Push it up to the next terrace to ship a release (W, into it)... Hold E on one to patch it.') was enough to play. 'Shipped 0.1. New module: search.' toasts, the 'On the slope it rolls back if you stop: patch on a terrace' hint, and the patch progress bar all worked first try. Stamina appears only after 0.1; it drained slowly and was never a factor in 5 releases.",
+      "repro": "pt start ... --seed 1 --clock stepped; pt shot a; pt hold w 30",
+      "screenshot": "shots/patch_ok.png",
+      "tick": null
+    }
+  ],
+  "metrics": {
+    "objectivesCompleted": 5,
+    "deaths": 0,
+    "secondsToObjective": {"Ship 0.1": 165.0, "Ship 0.2": 444.0, "Ship 0.3": 795.0, "Ship 0.4": 988.0, "Ship 0.5": 1244.0},
+    "highestVersion": 0.5,
+    "modulesPatched": 2,
+    "gameFramesRun": 13660
+  },
+  "fun": 3,
+  "answers": [
+    {"question": "In your own words, what did you think the game was about? What did the boulder, the terraces and the rot stand for?", "answer": "It is about maintaining software: the boulder is the codebase you keep pushing forward, each terrace is shipping a release (more users, one more module, more weight), and rot is entropy - certificates expiring, drift - that grows whether or not you touch it. The more you ship the more there is to look after, and the 'It will not last' line plus the summit roll-back say the work is never finished."},
+    {"question": "Did the rot and the upkeep feel fair, or arbitrary? What was hardest to tell or to do?", "answer": "The rot felt fair: each issue shows a percentage and a per-minute rate, so I could plan to finish a climb and patch on the terrace, and patching itself is quick. The hardest part was reaching a module: I misread the location hint ('left' as time left), 'under: roll' was cut off, and when I walked round the boulder to roll it back I could not find my way back to it, so billing rotted from 47% to 23% while I wandered. That felt like a fight with the camera, not with the rot."}
+  ],
+  "verdict": "The core loop (push to a terrace, ship, patch on the flat) is clear from the first message and worked first try; I reached 0.5 in about 21 wall minutes. The weak point is spatial: finding a module on the far side or underneath, and walking back to the boulder after going round it, where the direction hints lag the view and there is no marker. secondsToObjective are wall-clock seconds from pt start on a slow shared machine (stepped clock), not game time."
+}
