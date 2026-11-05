@@ -23,14 +23,15 @@ web/         the page around the browser build, and its smoke test
   side rises into ridges. Below the trailhead is the valley and its town.
 - **The boulder** is a position along the path (`s`), a speed and a roll angle. Its radius grows with the number of
   active modules. Pushing (close behind it, facing up the hill, walking forward) drives it towards
-  `kPushSpeed * (1 - load)`, which is easier on level ground. Left on a slope it rolls back until a terrace stops it.
+  `kPushSpeed * (1 - load)`, which is easier on level ground and slower when Sisyphus is tired or it is raining. Left
+  on a slope it rolls back until a terrace stops it.
   At `load >= 1` it slides back even while pushed, though on level ground it can always be inched along. From
   above, on level ground, it can be pushed back to turn it, as far as the terrace's edge and no further.
 - **Modules** sit at fixed points on the sphere: a Fibonacci sphere visited 29 points at a time, so a young boulder's
   few modules are spread out. Each face of the boulder belongs to the nearest active module. A module has a health
   (1 fresh, 0 down), an issue, and the release it shipped in. It rots slowly on its own, faster when it is old, and
-  fast with an issue. Incidents arrive at a rate that grows with the number of modules and the major version. An
-  advisory left to rot spreads to its nearest neighbour.
+  fast with an issue or while the module it uses is down. Incidents arrive at a rate that grows with the number of
+  modules and the major version. An advisory left to rot spreads to its nearest neighbour.
 - **Weight**: `load = 0.25 + 0.01 * modules + 0.7 * (1 - mean health) + 0.15 * modules down`.
 - **Releases**: the first time the boulder reaches each terrace in a major version, a release ships. It adds users
   and a new module (until all 48 have shipped). The summit ships the next major. After `kSummitPause` seconds the
@@ -38,6 +39,10 @@ web/         the page around the browser build, and its smoke test
 - **Work**: holding E on the module under the crosshair (within `kReach`) patches it in `patchSeconds`. Holding R
   retires it (`kRetireSeconds`), down to `kMinModules`. Holding F refactors it into the module it uses
   (`kRefactorSeconds`, when `canRefactor` allows). At the summit, holding R chooses a rewrite (`kRewriteSeconds`).
+- **Also in the World**: Sisyphus's stamina (pushing and working wear him out, tired he does both slowly, and sitting
+  rests him); the weather (showers make the path slick, the seasons turn every `kSeasonDays` days, and in winter
+  certificates expire twice as often); helpers, who may come up at a release (`kHelperChance`), stay `kHelperStays`
+  seconds and leave a module drifting when they go; and a cairn for each climb (the newest `kMaxCairns`).
 - **The autopilot** (`autopilot.*`) plays by simple rules. On a terrace it patches the worst module it can reach.
   It pushes on when the load is low, and rolls the boulder to bring modules out from underneath. When the boulder
   is too heavy and nothing can be patched, it retires a module. `test_autopilot` and the headless playthrough pin
@@ -61,12 +66,13 @@ Strata's 8x8 text.
 ## Saves (`src/save`)
 
 One file per slot. It starts with the magic `SISYPHUS`, then the format version, the payload length, the payload
-(every World field, little-endian) and a SHA-256 of the payload. The checksum is checked before any field is read.
-Every read is bounds-checked, and a decoded world must be plausible (finite numbers, the boulder on the path, the
-modules consistent) before the rules may run on it. Writes go to a temporary file that is renamed into place. The
-save it replaces is kept as the previous save, and is loaded instead if the current one is damaged.
-`test_saves` flips every byte of a save and expects each one to be refused. The format is Kindling's and Atman's,
-with Sisyphus's World.
+(the World's fields, little-endian, all but `blocked`, which is shown and never saved) and a SHA-256 of the payload.
+The checksum is checked before any field is read. `Fields::world` reads only the fields the save's format has, so a
+save in an older format still loads. Every read is bounds-checked, and a decoded world must be plausible (finite
+numbers, the boulder on the path, the modules consistent) before the rules may run on it. Writes go to a temporary
+file that is renamed into place. The save it replaces is kept as the previous save, and is loaded instead if the
+current one is damaged. `test_saves` flips every byte of a save and expects each one to be refused, and loads the
+real saves in `tests/fixtures`. The format is Kindling's and Atman's, with Sisyphus's World.
 
 ## The browser
 

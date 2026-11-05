@@ -74,7 +74,7 @@ cmake --build build -j
 ./build/sisyphus --new           # start over (the old save is kept as the previous one)
 ./build/sisyphus --from DIR      # play on from the save in DIR, never saving (for playtests)
 ./build/sisyphus --autopilot --speed 4   # watch the autopilot play
-ctest --test-dir build           # the rules, the meshes, the saves, the pinned playthrough
+ctest --test-dir build           # the rules, the meshes, the saves, the sounds, the pinned playthrough
 ```
 
 On Windows saves go to `%APPDATA%\Sisyphus\default`, and `tools/play-sisyphus.bat` clones, builds and starts the
@@ -90,8 +90,8 @@ MSVC and Emscripten.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md). In short: `src/sim` is the deterministic rules (no engine, no libm
 trigonometry), `src/bridge` turns the world into meshes for Strata, `src/play` is the camera, the HUD and the session,
-and `src/save` is a checksummed save format whose previous save is kept. The save code follows Kindling and Atman,
-two other games on Strata.
+`src/audio` works out the hill's sounds and synthesizes them, and `src/save` is a checksummed save format whose
+previous save is kept. The save code follows Kindling and Atman, two other games on Strata.
 
 The words that come after you have sat a while include one line by Albert Camus, from *Le Mythe de Sisyphe* (1942),
 quoted with its attribution. The rest of the game, its writing included, is original.

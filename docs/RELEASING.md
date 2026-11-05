@@ -47,6 +47,18 @@ to `main` ([WEB.md](WEB.md)).
 Pushing a version tag without creating a release also works: the workflow builds the tag and
 creates a pre-release for it with generated notes.
 
+## Release automation
+
+Steps 1 and 2 can also be done by release automation, which runs outside this repository. It opens the pull request
+that sets the version ([#37](https://github.com/Preponderous-Software/sisyphus/pull/37)). Once that is merged, it tags
+the merge commit only after the save fixtures, every CI check on the commit and a packaging dry run of `release.yml`
+have passed, and the `Release` workflow then builds the downloads from the tag.
+
+A candidate that fails gets an issue labelled `release-blocked` that names the failed check
+([#38](https://github.com/Preponderous-Software/sisyphus/issues/38)), and the next attempt is made once `main` moves.
+The fixtures check wants a `v<N>-*.save` file in `tests/fixtures` for every save format
+([tests/fixtures/README.md](../tests/fixtures/README.md)).
+
 ## What is in a download
 
 Strata and SDL3 are linked into the executable, and the Windows build links the C++ runtime

@@ -5,6 +5,11 @@ exactly (its fingerprint, version and module count), so a change that stops a pl
 fails the tests. A fixture is never edited or regenerated once it is committed: a new save format gets new fixtures
 of its own.
 
+Every save format needs a `v<N>-*.save` fixture, including one that never reached a tag: every push to `main` deploys
+the browser build, so players can hold saves in formats no release wrote, and the release's `fixtures-complete` check
+refuses a candidate without them. Formats 2, 3, 5 and 6 have none yet
+([#38](https://github.com/Preponderous-Software/sisyphus/issues/38)).
+
 | File | Format | Written by | State |
 |---|---|---|---|
 | `v1-first-climb.save` | 1 | 0.1.0, tag `0.1.0` (`fefce4aa08b91c7231c3fea5b254f14d5419c3b1`) | tick 2773, on the way up after the third release, 0.3, with 9 modules (fingerprint `aa131e98cf4f4146`) |

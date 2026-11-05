@@ -17,9 +17,10 @@ Linux:    ./sisyphus   (needs OpenGL 4.5, which any current Mesa or vendor
 
 Click in the window to look around with the mouse. W A S D walk: walk into
 the boulder from below to push it. Hold E on a module to patch it, hold R
-to retire it. Q sits, V switches between his eyes and over his shoulder,
-M turns the sound off or on, F1 shows the controls. Esc frees the mouse,
-and Esc again quits.
+to retire it, hold F to refactor it into the module it uses. Q sits, V
+switches between his eyes and over his shoulder, Tab shows every climb so
+far, M turns the sound off or on, F1 shows the controls. Esc frees the
+mouse, and Esc again quits.
 
 The game saves on its own every minute, on F5 and when you quit, and
 continues where you left off (F9 loads the last save):
