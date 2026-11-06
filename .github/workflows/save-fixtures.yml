@@ -1,0 +1,67 @@
+# Writes the save fixtures for the formats that never reached a tag, so each
+# file is a real save from the last commit on main at that format. The files
+# are kept as workflow artifacts; nothing is committed from here. See
+# tests/fixtures/README.md.
+#
+# The current tools/make_save_fixtures.cpp is built against that commit's src/.
+# Each build must end its playthrough on the commit's own pinned fingerprint,
+# which shows the rules being run are the ones that commit deployed.
+name: Save fixtures
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/save-fixtures.yml"
+      - "tools/make_save_fixtures.cpp"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fixtures:
+    name: Format ${{ matrix.format }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - format: 2
+            commit: 8fdcf8d09908fe915666a241833ef68bb4e5e3eb
+          - format: 3
+            commit: f1d2bc1b2d5ad3e4d816c8a2095491abf3fa97c9
+          - format: 5
+            commit: 7375908820dd52949cb2526f8c211e2a08615386
+          - format: 6
+            commit: 6f15708963d1f4bce5b243cbb89056c10feb8e16
+    env:
+      FORMAT: ${{ matrix.format }}
+      COMMIT: ${{ matrix.commit }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build the tool against the format's last commit
+        run: |
+          git worktree add --detach "$RUNNER_TEMP/at" "$COMMIT"
+          g++ --version | head -n1
+          g++ -std=c++17 -O2 -ffp-contract=off -I"$RUNNER_TEMP/at/src" tools/make_save_fixtures.cpp \
+            "$RUNNER_TEMP"/at/src/sim/*.cpp "$RUNNER_TEMP"/at/src/save/*.cpp -o make_save_fixtures
+
+      - name: Write the fixtures and check them against the commit's pin
+        run: |
+          mkdir -p fixtures-out
+          ./make_save_fixtures fixtures-out | tee fixtures-out.log
+          test -f "fixtures-out/v$FORMAT-after-summit.save"
+          pin=$(sed -n 's/.*kPlaythroughFingerprint = 0x\([0-9a-f]*\)ull.*/\1/p' "$RUNNER_TEMP/at/src/sim/autopilot.h")
+          echo "pinned $pin"
+          grep -q "^v$FORMAT-after-summit.save .*fingerprint $pin\$" fixtures-out.log
+          cd fixtures-out
+          sha256sum ./*.save
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: save-fixtures-v${{ matrix.format }}
+          path: fixtures-out/*.save
+          if-no-files-found: error
