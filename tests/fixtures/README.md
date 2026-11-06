@@ -67,3 +67,8 @@ g++ -std=c++17 -O2 -ffp-contract=off -I../at-0.3.0/src ../at-0.3.0/tools/make_sa
 456780d5e01ec5713da578d3463953a5722075a3e4188ec6ead8ec8e9d838e30  v7-after-summit.save
 d434a9991d826324c0b07a282fb285f847f01148519cb8fe4cffe77c8a35f68e  v7-second-climb.save
 ```
+
+Formats 2, 3, 5 and 6 never reached a tag. The
+[`Save fixtures`](../../.github/workflows/save-fixtures.yml) workflow writes theirs the same way, on a runner, with the
+current tool built against the last commit on `main` at each format. It fails unless the playthrough ends on that
+commit's own pinned fingerprint. The files are kept as workflow artifacts until they are committed here.
