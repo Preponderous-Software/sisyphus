@@ -6,10 +6,13 @@
 // Format 1 (0.1.0):
 //   v1-first-climb.save   on the way up, after the third release (0.3)
 //   v1-after-summit.save  back at the trailhead after 1.0, the next major begun
-// Format 4 (0.2.0), with stamina and cairns:
+// Formats 2 and 3 (never tagged), with stamina, then refactoring:
+//   v2-after-summit.save, v3-after-summit.save  as format 1's
+// Format 4 (0.2.0), with cairns:
 //   v4-after-summit.save  back at the trailhead after 1.0, its cairn raised
 //   v4-second-climb.save  on the way up again, after the tenth release
-// Format 7 (0.3.0), with helpers, rewrites and weather: the same two, as v7-.
+// Formats 5 and 6 (never tagged), with helpers, then rewrites, and format 7
+// (0.3.0), with weather: the same two, as v5-, v6- and v7-.
 #include <cinttypes>
 #include <cstdio>
 #include <filesystem>
