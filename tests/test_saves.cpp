@@ -146,23 +146,32 @@ int main(int argc, char** argv) {
     CHECK(r.ok && !r.fromPrevious && fingerprint(loaded) == fingerprint(w));
     fs::remove_all(slot);
 
-    // Saves written by released builds still load, exactly: the fixtures were
-    // written by 0.1.0, 0.2.0 and 0.3.0 (tools/make_save_fixtures.cpp; tests/fixtures/README.md).
+    // Saves in every format ever deployed still load, exactly: the fixtures were
+    // written by 0.1.0, 0.2.0 and 0.3.0, and for formats 2, 3, 5 and 6, which never
+    // reached a tag, by the last commit on main at that format
+    // (tools/make_save_fixtures.cpp; tests/fixtures/README.md).
     // A fixture is never edited; a new save format gets fixtures of its own.
     struct Fixture {
         const char* name;
         uint64_t fingerprint;
         const char* version;
         int modules;
-        int cairns;  // format 1 had none, and loads rested
+        int cairns;  // formats before 4 had none
+        bool rested;  // format 1 had no stamina, so it loads rested
     };
     const Fixture fixtures[] = {
-        {"v1-first-climb.save", 0xaa131e98cf4f4146ull, "0.3", 9, 0},
-        {"v1-after-summit.save", 0xb0a2e0bdfaae817full, "1.0", 13, 0},
-        {"v4-after-summit.save", 0xa3efaf36e40ffa97ull, "1.0", 13, 1},
-        {"v4-second-climb.save", 0x63e8b136888800c6ull, "1.3", 16, 1},
-        {"v7-after-summit.save", 0xd84c7b4cb80b963bull, "1.0", 13, 1},
-        {"v7-second-climb.save", 0xcacdbd88b81446d3ull, "1.3", 16, 1},
+        {"v1-first-climb.save", 0xaa131e98cf4f4146ull, "0.3", 9, 0, true},
+        {"v1-after-summit.save", 0xb0a2e0bdfaae817full, "1.0", 13, 0, true},
+        {"v2-after-summit.save", 0xb4a941683f19d955ull, "1.0", 13, 0, false},
+        {"v3-after-summit.save", 0xb4a941683f19d955ull, "1.0", 13, 0, false},
+        {"v4-after-summit.save", 0xa3efaf36e40ffa97ull, "1.0", 13, 1, false},
+        {"v4-second-climb.save", 0x63e8b136888800c6ull, "1.3", 16, 1, false},
+        {"v5-after-summit.save", 0x01ebcfd568c044c2ull, "1.0", 13, 1, false},
+        {"v5-second-climb.save", 0xae1ef90f4735fd71ull, "1.3", 16, 1, false},
+        {"v6-after-summit.save", 0x01ebcfd568c044c2ull, "1.0", 13, 1, false},
+        {"v6-second-climb.save", 0xae1ef90f4735fd71ull, "1.3", 16, 1, false},
+        {"v7-after-summit.save", 0xd84c7b4cb80b963bull, "1.0", 13, 1, false},
+        {"v7-second-climb.save", 0xcacdbd88b81446d3ull, "1.3", 16, 1, false},
     };
     for (const Fixture& f : fixtures) {
         std::ifstream in(fs::path(SISYPHUS_FIXTURES) / f.name, std::ios::binary);
@@ -175,7 +184,7 @@ int main(int argc, char** argv) {
         CHECK(versionText(x) == f.version);
         CHECK(activeModules(x) == f.modules);
         CHECK(x.cairnCount == f.cairns);
-        if (f.cairns == 0) CHECK(x.player.stamina == 1);  // format 1 had no stamina: he loads rested
+        if (f.rested) CHECK(x.player.stamina == 1);
         else CHECK(x.player.stamina < 1);
         // ... and the game plays on from it.
         Autopilot a;
