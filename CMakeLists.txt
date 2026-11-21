@@ -76,7 +76,7 @@ sisyphus_warnings(sisyphus_audio)
 
 if(SISYPHUS_BUILD_TESTS)
   enable_testing()
-  foreach(t hill math rules autopilot determinism geometry saves audio)
+  foreach(t hill math rules autopilot determinism geometry saves sha256 audio)
     add_executable(test_${t} tests/test_${t}.cpp)
     target_link_libraries(test_${t} PRIVATE sisyphus_sim sisyphus_geometry sisyphus_save sisyphus_audio)
     target_include_directories(test_${t} PRIVATE tests)
